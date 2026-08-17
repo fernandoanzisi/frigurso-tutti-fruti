@@ -1000,6 +1000,7 @@ function renderOnlineLobbyGuest(app){
 let onlineTimer = null;
 function renderOnlinePlaying(app){
   const o = state.online; const r = o.round;
+  onlineSubmitted = false;
   document.getElementById('bottomnav').style.display='none';
   app.innerHTML = `
     <div class="screen" style="padding-top:20px">
@@ -1026,15 +1027,17 @@ function renderOnlinePlaying(app){
   };
   onlineTimer = setInterval(tick, 250); tick();
 }
+let onlineSubmitted = false;
 function submitOnlineAnswers(manual){
-  if(!state.online.round) return;
+  if(!state.online.round || onlineSubmitted) return;
+  onlineSubmitted = true;
   clearInterval(onlineTimer);
   const r = state.online.round;
   const answers = {};
   r.deck.forEach((c,i)=>{ const el = document.getElementById('oi-'+i); answers[c] = el ? el.value.trim() : ''; });
   const o = state.online;
   if(o.role==='host'){
-    o.myAnswers = answers; state.online.round = null;
+    o.myAnswers = answers;
     maybeFinishRoundHost();
   } else {
     o.myAnswers = answers;
