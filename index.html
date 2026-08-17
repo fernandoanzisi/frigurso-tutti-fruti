@@ -1104,6 +1104,15 @@ function renderOnlineLobbyGuest(app){
 
 // -------- COMPARTIDO (host juega su propia ronda igual que un guest) --------
 let onlineTimer = null;
+let onlineTick = null;
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden) return;
+  if(state.screen==='onlinePlaying' && onlineTick) onlineTick();
+  const o = state.online;
+  if(state.screen==='onlineWaiting' && o && o.role==='guest' && o.myAnswers && o.conn){
+    try{ if(o.conn.open) o.conn.send({ type:'answers', roundNum: o.round ? o.round.roundNum : undefined, answers: o.myAnswers }); }catch(e){}
+  }
+});
 function renderOnlinePlaying(app){
   const o = state.online; const r = o.round;
   onlineSubmitted = false;
@@ -1131,6 +1140,7 @@ function renderOnlinePlaying(app){
     if(secLeft===3) soundCountdown();
     if(secLeft<=0){ clearInterval(onlineTimer); soundEnd(); submitOnlineAnswers(false); }
   };
+  onlineTick = tick;
   onlineTimer = setInterval(tick, 250); tick();
 }
 let onlineSubmitted = false;
@@ -1147,7 +1157,7 @@ function submitOnlineAnswers(manual){
     maybeFinishRoundHost();
   } else {
     o.myAnswers = answers;
-    o.conn.send({ type:'answers', roundNum: r.roundNum, answers });
+    try{ o.conn.send({ type:'answers', roundNum: r.roundNum, answers }); }catch(e){}
     state.screen = 'onlineWaiting'; render();
   }
 }
