@@ -1059,11 +1059,28 @@ function renderOnlineScoreboard(app){
   if(o.role==='host'){ players = o.lastPlayers; scores = o.scores; results = o.lastResults; }
   else { players = o.lastScoreboard.players; scores = o.lastScoreboard.scores; results = o.lastScoreboard.results; }
   const sorted = [...players].sort((a,b)=>(scores[b.id]||0)-(scores[a.id]||0));
+  const cats = players.length && results[players[0].id] ? Object.keys(results[players[0].id]) : [];
+  const statusLabel = { ok:'Válida', rep:'Repetida', bad:'Inválida' };
   app.innerHTML = `
     ${topbar('Puntaje de la ronda')}
     <div class="screen">
       <div class="score-list">
         ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${esc(p.name)}</span><span class="pt">${scores[p.id]||0}</span></div>`).join('')}
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>Respuestas de la ronda</h3>
+        ${cats.map(cat => `
+          <div class="correct-cat"><h4>${esc(cat)}</h4>
+            ${players.map(p => {
+              const r = (results[p.id]||{})[cat] || {text:'',status:'bad',points:0};
+              return `<div class="ans-row">
+                <span class="name">${esc(p.name)}</span>
+                <span class="txt ${r.text?'':'empty'}">${r.text?esc(r.text):'(vacío)'}</span>
+                <span class="status-btn ${r.status}">${statusLabel[r.status]||r.status}</span>
+                <span class="pts">${r.points}</span>
+              </div>`;
+            }).join('')}
+          </div>`).join('')}
       </div>
       ${o.role==='host' ? `
       <div class="row" style="margin-top:18px">
