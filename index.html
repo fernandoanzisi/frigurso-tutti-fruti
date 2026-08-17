@@ -899,9 +899,8 @@ function hostStartRound(){
   o.myAnswers = null;
   o.awaitingAnswers = true;
   const secs = state.settings.seconds || 90;
-  const startsAt = Date.now() + 1500;
-  o.round = { letter, deck: o.deck, startsAt, seconds: secs, roundNum: o.roundNum };
-  hostBroadcast({ type:'roundStart', letter, deck:o.deck, startsAt, seconds:secs, roundNum:o.roundNum });
+  o.round = { letter, deck: o.deck, seconds: secs, roundNum: o.roundNum, localEndsAt: Date.now() + 1000 + secs*1000 };
+  hostBroadcast({ type:'roundStart', letter, deck:o.deck, seconds:secs, roundNum:o.roundNum });
   state.screen = 'onlinePlaying'; render();
 }
 function maybeFinishRoundHost(){
@@ -967,7 +966,8 @@ function guestJoinRoom(codeOverride){
 function handleGuestMessage(data){
   const o = state.online;
   if(data.type==='roundStart'){
-    o.round = data; o.myAnswers = null;
+    o.round = Object.assign({}, data, { localEndsAt: Date.now() + 1000 + data.seconds*1000 });
+    o.myAnswers = null;
     state.screen = 'onlinePlaying'; render();
   } else if(data.type==='scoreboard'){
     o.lastScoreboard = data; o.round = null;
@@ -1015,10 +1015,10 @@ function renderOnlinePlaying(app){
     </div>`;
   clearInterval(onlineTimer);
   const tick = ()=>{
-    const msLeft = r.startsAt + r.seconds*1000 - Date.now();
+    const msLeft = r.localEndsAt - Date.now();
     const secLeft = Math.max(0, Math.ceil(msLeft/1000));
     const disp = document.getElementById('timer-display'); if(!disp){ clearInterval(onlineTimer); return; }
-    if(Date.now() < r.startsAt){ disp.textContent = '¡Ya sale!'; return; }
+    if(secLeft > r.seconds){ disp.textContent = '¡Ya sale!'; return; }
     disp.textContent = secLeft;
     document.getElementById('timer-bar').style.width = (secLeft/r.seconds*100)+'%';
     disp.classList.toggle('low', secLeft<=10);
