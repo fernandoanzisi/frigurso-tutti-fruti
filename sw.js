@@ -1,4 +1,4 @@
-const CACHE = 'tuttifruti-v7';
+const CACHE = 'tuttifruti-v8';
 const PRECACHE = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {

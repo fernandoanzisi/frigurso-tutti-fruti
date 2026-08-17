@@ -365,6 +365,10 @@ function startsWithLetter(text, letter){
   const t = normalize(text); const l = normalize(letter);
   return t.length>0 && t.startsWith(l);
 }
+function inviteToPlay(){
+  const msg = '🍓 ¿Están para jugar una partida de Tutti Fruti? Avisen si se prenden y armamos la sala 👉 https://fernandoanzisi.github.io/frigurso-tutti-fruti/';
+  window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank');
+}
 function toast(msg){
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(), 2200);
@@ -433,6 +437,7 @@ function renderHome(app){
       <div class="cta-grid">
         <div class="cta" onclick="openSetupLocal()"><span class="ic">📱</span><div class="t">Jugar local</div><div class="d">Pasando el celular</div></div>
         <div class="cta" onclick="nav('onlineHome')"><span class="ic">🌐</span><div class="t">Jugar online</div><div class="d">Cada uno desde el suyo</div></div>
+        <div class="cta wide" onclick="inviteToPlay()"><span class="ic">📣</span><div><div class="t">Invitar a jugar</div><div class="d">Mandar un mensaje por WhatsApp para ver quién se prende</div></div></div>
       </div>
       <div class="kpi-row">
         <div class="kpi"><b>${state.players.length}</b><span>Jugadores</span></div>
@@ -830,13 +835,23 @@ function renderRoundScoreboard(app){
       <div class="score-list">
         ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span>
           <span class="avatar" style="background:${p.color}">${esc(p.name[0]).toUpperCase()}</span>
-          <span class="nm">${esc(p.name)}</span><span class="pt">${m.scores[p.id]}</span></div>`).join('')}
+          <span class="nm grow">${esc(p.name)}</span><span class="pt">${m.scores[p.id]}</span>
+          <button class="btn btn-sm btn-danger" style="margin-left:6px" onclick="removeFromMatch('${p.id}')">✕</button></div>`).join('')}
       </div>
       <div class="row" style="margin-top:18px">
         <button class="btn btn-danger grow" onclick="if(confirm('¿Terminar la partida acá?'))endLocalMatch()">Terminar partida</button>
         <button class="btn btn-primary grow" onclick="m.roundNumber++;drawNextLetter();startTurn()">Otra ronda</button>
       </div>
     </div>`;
+}
+function removeFromMatch(playerId){
+  const m = state.match;
+  if(m.players.length<=2){ toast('Necesitás al menos 2 jugadores para seguir la partida'); return; }
+  const p = m.players.find(x=>x.id===playerId);
+  if(!p || !confirm(`¿Sacar a ${p.name} de esta partida? Lo que ya sumó queda, pero no juega más rondas.`)) return;
+  m.players = m.players.filter(x=>x.id!==playerId);
+  saveMatch();
+  render();
 }
 function endLocalMatch(){
   const m = state.match;
@@ -916,7 +931,12 @@ function hostCreateRoom(){
     peer.on('connection', conn => {
       conn.on('open', ()=>{});
       conn.on('data', data => handleHostMessage(conn, data));
-      conn.on('close', ()=>{ if(state.online){ delete state.online.conns[conn.peer]; delete state.online.guests[conn.peer]; if(state.screen==='onlineLobbyHost') render(); } });
+      conn.on('close', ()=>{
+        if(!state.online) return;
+        delete state.online.conns[conn.peer]; delete state.online.guests[conn.peer];
+        maybeFinishRoundHost();
+        if(state.screen==='onlineLobbyHost' || state.screen==='onlineWaiting') render();
+      });
       state.online.conns[conn.peer] = conn;
     });
   }).catch(e=>toast('No se pudo cargar el modo online'));
@@ -938,7 +958,7 @@ function handleHostMessage(conn, data){
 }
 function renderOnlineLobbyHost(app){
   const o = state.online;
-  const guestList = Object.values(o.guests);
+  const guestList = Object.entries(o.guests);
   app.innerHTML = `
     ${topbar('Sala creada', 'Compartí el código con el resto')}
     <div class="screen">
@@ -947,7 +967,8 @@ function renderOnlineLobbyHost(app){
       <div class="card" style="margin-top:14px">
         <h3>Jugadores en la sala <span class="n">(${guestList.length+1})</span></h3>
         <div class="lobby-player"><span class="pulse"></span>${esc(o.myName)} (vos, anfitrión)</div>
-        ${guestList.map(g=>`<div class="lobby-player"><span class="pulse"></span>${esc(g.name)}</div>`).join('')}
+        ${guestList.map(([pid,g])=>`<div class="lobby-player"><span class="pulse"></span><span class="grow">${esc(g.name)}</span>
+          <button class="btn btn-sm btn-danger" onclick="kickGuest('${pid}')">Sacar</button></div>`).join('')}
       </div>
       <div class="card">
         <h3>Mazo de categorías</h3>
@@ -964,6 +985,16 @@ function renderOnlineLobbyHost(app){
     </div>`;
 }
 function onlinePickDeck(name){ state.online.deckName = name; state.online.deck = [...allDecks()[name]]; }
+function kickGuest(peerId){
+  const o = state.online;
+  const conn = o.conns[peerId];
+  try{ if(conn) conn.send({ type:'kicked' }); }catch(e){}
+  try{ if(conn) conn.close(); }catch(e){}
+  delete o.guests[peerId];
+  delete o.conns[peerId];
+  maybeFinishRoundHost();
+  render();
+}
 function shareRoomCode(){
   const url = location.origin + location.pathname + '?join=' + state.online.code;
   const text = `¡Jugamos al Tutti Fruti! Entrá con el código ${state.online.code} o directo desde este link: ${url}`;
@@ -1064,7 +1095,7 @@ function guestJoinRoom(codeOverride){
       conn.on('open', ()=>{ conn.send({type:'join', name}); nav('onlineLobbyGuest'); });
       conn.on('data', data => handleGuestMessage(data));
       conn.on('error', ()=>toast('No se pudo conectar a la sala'));
-      conn.on('close', ()=>toast('Se cerró la sala'));
+      conn.on('close', ()=>guestLeaveRoom('Se cortó la conexión con el anfitrión.'));
     });
     peer.on('error', err => { console.error(err); toast('Error: no existe esa sala o falló la conexión'); });
   }).catch(()=>toast('No se pudo cargar el modo online'));
@@ -1082,7 +1113,15 @@ function handleGuestMessage(data){
     o.round = null;
     state._lastRecord = { rounds: [], roundsCount: data.roundsCount, players: data.players };
     state.screen = 'matchEnd'; render();
+  } else if(data.type==='kicked'){
+    guestLeaveRoom('El anfitrión te sacó de la sala.');
   }
+}
+function guestLeaveRoom(message){
+  try{ state.online?.peer?.destroy(); }catch(e){}
+  state.online = null;
+  nav('home');
+  if(message) toast(message);
 }
 function renderOnlineJoin(app){
   app.innerHTML = `
@@ -1162,11 +1201,26 @@ function submitOnlineAnswers(manual){
   }
 }
 function renderOnlineWaiting(app){
+  const o = state.online;
+  if(o.role!=='host'){
+    app.innerHTML = `
+      ${topbar('Esperando al resto')}
+      <div class="screen center" style="padding-top:50px">
+        <div style="font-size:44px;margin-bottom:12px">✅</div>
+        <div class="sub">Ya mandaste tus respuestas. Esperando que terminen los demás...</div>
+      </div>`;
+    return;
+  }
+  const guestEntries = Object.entries(o.guests);
   app.innerHTML = `
-    ${topbar('Esperando al resto')}
-    <div class="screen center" style="padding-top:50px">
-      <div style="font-size:44px;margin-bottom:12px">✅</div>
-      <div class="sub">Ya mandaste tus respuestas. Esperando que terminen los demás...</div>
+    ${topbar('Esperando al resto', 'Si alguien no contesta más, lo podés sacar')}
+    <div class="screen">
+      <div class="lobby-player"><span class="pulse" style="background:var(--ok);animation:none"></span><span class="grow">${esc(o.myName)} (vos) — listo</span></div>
+      ${guestEntries.map(([pid,g])=>`<div class="lobby-player">
+        <span class="pulse" style="${g.answers?'background:var(--ok);animation:none':'background:var(--warn)'}"></span>
+        <span class="grow">${esc(g.name)}${g.answers?' — listo':' — esperando...'}</span>
+        ${!g.answers?`<button class="btn btn-sm btn-danger" onclick="kickGuest('${pid}')">Sacar</button>`:''}
+      </div>`).join('')}
     </div>`;
 }
 function renderOnlineScoreboard(app){
