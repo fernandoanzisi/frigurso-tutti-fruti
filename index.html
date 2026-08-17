@@ -644,23 +644,31 @@ function renderTurnLocal(app){
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitTurn()">✅ Terminé / ¡Basta!</button>
     </div>`;
 }
+let turnSubmitted = false;
+let turnCountdownPlayed = false;
 function beginTurnTimer(){
   const secs = state.settings.seconds;
+  turnSubmitted = false;
   if(secs===0) return;
-  let remaining = secs;
-  const disp = document.getElementById('timer-display'); const bar = document.getElementById('timer-bar');
+  turnCountdownPlayed = false;
+  const endsAt = Date.now() + secs*1000;
   clearInterval(turnTimer);
-  turnTimer = setInterval(()=>{
-    remaining--;
-    if(!disp) { clearInterval(turnTimer); return; }
+  const tick = ()=>{
+    const disp = document.getElementById('timer-display'); const bar = document.getElementById('timer-bar');
+    if(!disp){ clearInterval(turnTimer); return; }
+    const remaining = Math.max(0, Math.ceil((endsAt - Date.now())/1000));
     disp.textContent = remaining;
     bar.style.width = (remaining/secs*100)+'%';
     disp.classList.toggle('low', remaining<=10);
-    if(remaining===3) soundCountdown();
+    if(remaining<=3 && remaining>0 && !turnCountdownPlayed){ turnCountdownPlayed = true; soundCountdown(); }
     if(remaining<=0){ clearInterval(turnTimer); soundEnd(); submitTurn(); }
-  },1000);
+  };
+  turnTimer = setInterval(tick, 250);
+  tick();
 }
 function submitTurn(){
+  if(turnSubmitted) return;
+  turnSubmitted = true;
   clearInterval(turnTimer);
   const m = state.match; const player = m.players[m.turnIndex];
   const answers = {};
