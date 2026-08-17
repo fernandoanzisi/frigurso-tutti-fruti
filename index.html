@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Frigurso Tutti Fruti</title>
+<meta name="theme-color" content="#0b1220">
+<meta name="description" content="El Tutti Fruti más completo: local o multijugador online con cualquiera">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior-y:contain;height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  min-height:100vh;min-height:100dvh;
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+}
+:root{
+  --bg:#0b1220;--card:#111a2e;--card2:#0e1626;--border:#1e2b47;
+  --text:#e8edf7;--text2:#9fb0cc;--text3:#63739a;
+  --accent:#FF7A29;--accent2:#8BC34A;--accent3:#5FB0E8;
+  --danger:#ef4444;--ok:#22c55e;--warn:#F7D046;
+}
+button,input,select,textarea{font-family:inherit;color:inherit}
+input,select,textarea{background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:11px 12px;font-size:15px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+button{cursor:pointer;border:none;background:none}
+.btn{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-weight:700;font-size:14px;color:var(--text)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#ff9d5c);color:#1a0d00}
+.btn-block{width:100%}
+.btn-lg{padding:16px 20px;font-size:16px;border-radius:14px}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--text2)}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:9px}
+.row{display:flex;gap:8px}
+.col{display:flex;flex-direction:column;gap:8px}
+.wrap{display:flex;flex-wrap:wrap;gap:8px}
+.grow{flex:1}
+.center{text-align:center}
+.muted{color:var(--text3)}
+.sub{color:var(--text2);font-size:13px}
+
+.topbar{padding:18px 16px 10px;display:flex;align-items:center;gap:10px}
+.topbar h1{font-size:19px;font-weight:800}
+.topbar .sub{font-size:12px;margin-top:1px}
+.topbar-icon{margin-left:auto;background:var(--card);border:1px solid var(--border);border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:16px}
+
+.screen{padding:0 16px 24px;max-width:640px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
+.card h3{font-size:14px;font-weight:700;margin-bottom:10px}
+.card h3 .n{color:var(--text3);font-weight:500}
+
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600}
+.chip .x{color:var(--text3);font-size:13px;cursor:pointer;padding:0 2px}
+.avatar{width:22px;height:22px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#06131f;flex-shrink:0}
+
+.cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.cta{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px 14px;text-align:center}
+.cta .ic{font-size:32px;margin-bottom:8px;display:block}
+.cta .t{font-weight:800;font-size:14px}
+.cta .d{font-size:11px;color:var(--text3);margin-top:3px}
+.cta.wide{grid-column:1/-1;display:flex;align-items:center;text-align:left;gap:14px}
+.cta.wide .ic{margin:0;font-size:30px}
+
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:20px;font-weight:800;color:var(--accent)}
+.kpi span{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.03em}
+
+.nav-bottom{position:fixed;left:0;right:0;bottom:0;z-index:500;background:var(--card);border-top:1px solid var(--border);
+  display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;border-radius:10px;color:var(--text3);font-size:10px;font-weight:700}
+.nav-btn.active{color:var(--accent)}
+.nav-btn .ni{font-size:19px}
+
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600}
+.seg{display:flex;background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;padding:9px 6px;border-radius:8px;font-size:12px;font-weight:700;color:var(--text3)}
+.seg button.active{background:var(--accent);color:#1a0d00}
+
+.letter-badge{width:88px;height:88px;border-radius:22px;background:linear-gradient(135deg,var(--accent),#ff9d5c);
+  display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:800;color:#1a0d00;margin:0 auto 14px;
+  box-shadow:0 8px 24px rgba(255,122,41,.35)}
+.timer{font-size:34px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.timer.low{color:var(--danger)}
+.timerbar{height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin-bottom:18px}
+.timerbar i{display:block;height:100%;background:var(--accent);transition:width 1s linear}
+
+.cat-input{margin-bottom:10px}
+.cat-input label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:700}
+.cat-input .dot{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+.cat-input input{font-size:16px;text-transform:capitalize}
+
+.handoff{position:fixed;inset:0;z-index:600;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.handoff .ic{font-size:56px;margin-bottom:16px}
+.handoff h2{font-size:20px;margin-bottom:6px}
+
+.correct-cat{border-bottom:1px solid var(--border);padding:12px 0}
+.correct-cat:last-child{border-bottom:none}
+.correct-cat h4{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.ans-row{display:flex;align-items:center;gap:8px;padding:6px 0}
+.ans-row .name{width:76px;flex-shrink:0;font-size:12px;color:var(--text2);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ans-row .txt{flex:1;font-size:14px;font-weight:600}
+.ans-row .txt.empty{color:var(--text3);font-style:italic;font-weight:400}
+.status-btn{border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;border:1px solid var(--border);flex-shrink:0}
+.status-btn.ok{background:rgba(34,197,94,.15);color:var(--ok);border-color:rgba(34,197,94,.3)}
+.status-btn.rep{background:rgba(247,208,70,.15);color:var(--warn);border-color:rgba(247,208,70,.3)}
+.status-btn.bad{background:rgba(239,68,68,.12);color:var(--danger);border-color:rgba(239,68,68,.3)}
+.pts{width:34px;text-align:right;flex-shrink:0;font-size:12px;font-weight:800;color:var(--text3)}
+
+.score-list{display:flex;flex-direction:column;gap:8px}
+.score-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.score-item .pos{width:20px;font-size:12px;color:var(--text3);font-weight:800}
+.score-item .nm{flex:1;font-weight:700;font-size:14px}
+.score-item .pt{font-weight:800;color:var(--accent);font-size:16px}
+.score-item.first{border-color:rgba(255,122,41,.5);background:rgba(255,122,41,.08)}
+
+.deck-cat{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;margin-bottom:7px}
+.deck-cat span{flex:1;font-size:14px}
+.letters-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
+.letter-tog{aspect-ratio:1;border-radius:9px;background:var(--card2);border:1px solid var(--border);font-weight:800;font-size:13px;color:var(--text3)}
+.letter-tog.on{background:var(--accent);color:#1a0d00;border-color:var(--accent)}
+
+.room-code{font-size:38px;font-weight:800;letter-spacing:.12em;text-align:center;color:var(--accent);
+  background:var(--card2);border:1px dashed var(--border);border-radius:14px;padding:16px;margin:14px 0}
+.lobby-player{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-bottom:7px}
+.pulse{width:8px;height:8px;border-radius:99px;background:var(--ok);flex-shrink:0;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.empty-state{text-align:center;padding:40px 16px;color:var(--text3)}
+.empty-state .ic{font-size:38px;margin-bottom:10px;display:block;opacity:.6}
+.toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:var(--text);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:700;z-index:900;
+  box-shadow:0 6px 20px rgba(0,0,0,.3)}
+
+/* ═══════════════════════════════════════════════════════════════
+   IDENTIDAD FRIGURSO — splash (puro CSS, se va solo) + traba de
+   privacidad simple (contraseña, no cifra datos). Bloque copiado
+   del patrón ya usado en el resto del portafolio.
+   ═══════════════════════════════════════════════════════════════ */
+#fg-splash{
+  position:fixed;inset:0;z-index:9000;background:#0b1220;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;
+  animation:fg-splash-out .6s ease 2.8s forwards;
+}
+.fg-sash{
+  position:absolute;width:130vw;height:22vh;max-height:170px;
+  background:linear-gradient(90deg,#d7263d 0%,#d7263d 92%,#5fb0e8 100%);
+  transform:rotate(-22deg) translateX(-140vw);top:46%;left:0;margin-top:-11vh;
+  box-shadow:0 0 60px rgba(215,38,61,.3);
+  animation:fg-sash-sweep 1.3s cubic-bezier(.16,.8,.24,1) both;
+}
+@keyframes fg-sash-sweep{0%{transform:rotate(-22deg) translateX(-140vw);}55%{transform:rotate(-22deg) translateX(0);}100%{transform:rotate(-22deg) translateX(0);}}
+@keyframes fg-splash-out{to{opacity:0;pointer-events:none;visibility:hidden;}}
+.fg-wordmark{
+  position:relative;z-index:5;font-weight:800;font-stretch:condensed;
+  font-size:min(11vw,42px);letter-spacing:.02em;
+  color:#f5f7fa;text-transform:uppercase;
+  opacity:0;transform:translateY(10px);animation:fg-word-in .5s ease .85s both;
+}
+@keyframes fg-word-in{to{opacity:1;transform:translateY(0);}}
+.fg-tagline{
+  position:relative;z-index:5;font-family:monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:#9fb0cc;margin-top:8px;
+  opacity:0;animation:fg-word-in .5s ease 1.05s both;
+}
+#fg-lock{position:fixed;inset:0;z-index:8000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:24px;}
+.fg-lock-card{width:100%;max-width:380px;}
+.fg-lock-brand{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:30px;font-weight:800;font-stretch:condensed;font-size:15px;letter-spacing:.04em;color:#9fb0cc;text-transform:uppercase;}
+.fg-lock-brand .dot{width:9px;height:9px;border-radius:2px;background:#d7263d;transform:rotate(45deg);flex-shrink:0;}
+.fg-lock-title{font-size:14px;font-weight:700;margin-bottom:4px;color:#e8edf7;}
+.fg-lock-sub{font-size:12px;color:#63739a;margin-bottom:16px;}
+.fg-card{background:#111a2e;border:1px solid #1e2b47;border-radius:12px;padding:20px;}
+.fg-card label{display:block;font-size:12px;color:#9fb0cc;margin-bottom:6px;}
+.fg-card input{width:100%;background:#0e1626;border:1px solid #1e2b47;border-radius:9px;padding:11px 12px;color:#e8edf7;font-size:14px;box-sizing:border-box;}
+.fg-card .field{margin-bottom:14px;}
+.fg-card .btn-block{width:100%;border:none;border-radius:12px;padding:12px 18px;font-weight:700;font-size:13px;background:linear-gradient(135deg,#2dd4bf,#3b82f6);color:#06131f;cursor:pointer;}
+.fg-err{color:#ef4444;font-size:12px;margin:-4px 0 10px;display:none;}
+.fg-switch{text-align:center;margin-top:16px;font-size:12px;color:#63739a;}
+.fg-switch a{color:#2dd4bf;cursor:pointer;text-decoration:underline;}
+@media (prefers-reduced-motion: reduce){
+  .fg-sash{animation:none;transform:rotate(-22deg) translateX(0);}
+  .fg-wordmark,.fg-tagline{animation:none;opacity:1;transform:none;}
+  #fg-splash{animation-delay:.1s;}
+}
+</style>
+</head>
+<body>
+
+<div id="fg-splash" aria-hidden="true">
+  <div class="fg-sash"></div>
+  <div class="fg-wordmark">Frigurso</div>
+  <div class="fg-tagline">Tutti Fruti</div>
+</div>
+
+<div id="fg-lock">
+  <div class="fg-lock-card">
+    <div class="fg-lock-brand"><div class="dot"></div><span>Frigurso</span></div>
+
+    <div id="lk-crear" class="fg-card" style="display:block;">
+      <div class="fg-lock-title">Creá tu acceso</div>
+      <div class="fg-lock-sub">Es solo para que nadie más abra la app desde este celular. No cifra los datos.</div>
+      <div class="field"><label>Contraseña (mínimo 4 caracteres)</label><input type="password" id="lk-pass" placeholder="••••••••"></div>
+      <div class="field"><label>Repetir contraseña</label><input type="password" id="lk-pass2" placeholder="••••••••"></div>
+      <div class="fg-err" id="lk-crear-err"></div>
+      <button class="btn-block" onclick="fgCrearAcceso()">Crear y entrar</button>
+    </div>
+
+    <div id="lk-ingresar" class="fg-card" style="display:none;">
+      <div class="fg-lock-title">Ingresá tu contraseña</div>
+      <div class="field"><input type="password" id="lk-pass-in" placeholder="Contraseña" onkeydown="if(event.key==='Enter')fgIngresarAcceso()"></div>
+      <div class="fg-err" id="lk-ing-err"></div>
+      <button class="btn-block" onclick="fgIngresarAcceso()">Ingresar</button>
+      <div class="fg-switch"><a onclick="fgOlvideAcceso()">Olvidé mi contraseña</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="app"></div>
+
+<nav class="nav-bottom" id="bottomnav">
+  <button class="nav-btn active" id="nav-home" onclick="nav('home')"><span class="ni">🏠</span><span>Inicio</span></button>
+  <button class="nav-btn" id="nav-jugadores" onclick="nav('jugadores')"><span class="ni">👥</span><span>Jugadores</span></button>
+  <button class="nav-btn" id="nav-mazos" onclick="nav('mazos')"><span class="ni">🃏</span><span>Mazos</span></button>
+  <button class="nav-btn" id="nav-historial" onclick="nav('historial')"><span class="ni">📊</span><span>Historial</span></button>
+  <button class="nav-btn" id="nav-config" onclick="nav('config')"><span class="ni">⚙️</span><span>Ajustes</span></button>
+</nav>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DATA / STORAGE
+   ═══════════════════════════════════════════════════════════════ */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+
+const PRESETS = {
+  'Clásico': ['Nombre','Apellido','Animal','Fruta o verdura','Color','País','Ciudad','Objeto','Marca','Comida o bebida','Película o serie','Profesión u oficio'],
+  'Para chicos': ['Animal','Color','Fruta','Juguete','Personaje de dibujitos','Comida'],
+  'Geografía': ['País','Ciudad','Río o lago','Montaña','Capital','Provincia o estado'],
+  'Cultura pop': ['Película','Serie','Cantante o banda','Videojuego','Personaje ficticio','Canción'],
+  'Picante': ['Insulto (sano)','Excusa para faltar al trabajo','Cosa que no le prestarías a nadie','Cosa que hacés en el baño','Sobrenombre','Cosa que se rompe fácil'],
+};
+
+const AVATAR_COLORS = ['#FF7A29','#8BC34A','#5FB0E8','#F7D046','#D7263D','#a78bfa','#22c55e','#f472b6'];
+const ALL_LETTERS = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('');
+const DEFAULT_LETTERS_OFF = ['K','W','X'];
+
+function defaultSettings(){
+  const letters = {}; ALL_LETTERS.forEach(l => letters[l] = !DEFAULT_LETTERS_OFF.includes(l));
+  return { seconds: 90, scoreUnique: 100, scoreRepeated: 50, scoreEmpty: 0, letters };
+}
+
+const state = {
+  screen: 'home',
+  players: LS.get('ftf_players', []),
+  decks: LS.get('ftf_decks', {}),
+  settings: LS.get('ftf_settings', defaultSettings()),
+  history: LS.get('ftf_history', []),
+  match: LS.get('ftf_match_inprogress', null),
+  setup: null,
+  online: null,
+};
+
+function saveAll(){
+  LS.set('ftf_players', state.players);
+  LS.set('ftf_decks', state.decks);
+  LS.set('ftf_settings', state.settings);
+  LS.set('ftf_history', state.history);
+}
+function saveMatch(){ LS.set('ftf_match_inprogress', state.match); }
+function clearMatch(){ state.match = null; localStorage.removeItem('ftf_match_inprogress'); }
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function normalize(s){
+  return String(s||'').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,' ');
+}
+function startsWithLetter(text, letter){
+  const t = normalize(text); const l = normalize(letter);
+  return t.length>0 && t.startsWith(l);
+}
+function toast(msg){
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), 2200);
+}
+function allDecks(){ return Object.assign({}, PRESETS, state.decks); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SOUND — beep generado, sin archivos externos
+   ═══════════════════════════════════════════════════════════════ */
+let audioCtx = null;
+function beep(freq, dur, delay){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = audioCtx.currentTime + (delay||0);
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.25, t0+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(t0); osc.stop(t0+dur+0.05);
+  }catch(e){}
+}
+function soundCountdown(){ beep(880,0.1,0); beep(880,0.1,0.35); beep(880,0.1,0.7); }
+function soundEnd(){ beep(440,0.5,0); beep(660,0.6,0.15); }
+
+/* ═══════════════════════════════════════════════════════════════
+   NAV / RENDER
+   ═══════════════════════════════════════════════════════════════ */
+function nav(screen){
+  state.screen = screen;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('nav-'+screen); if(btn) btn.classList.add('active');
+  document.getElementById('bottomnav').style.display = 'flex';
+  render();
+  window.scrollTo(0,0);
+}
+function render(){
+  const app = document.getElementById('app');
+  const fns = {
+    home: renderHome, jugadores: renderJugadores, mazos: renderMazos,
+    historial: renderHistorial, config: renderConfig,
+    setupLocal: renderSetupLocal, turnLocal: renderTurnLocal,
+    correctionLocal: renderCorrectionLocal, roundScoreboard: renderRoundScoreboard,
+    matchEnd: renderMatchEnd,
+    onlineHome: renderOnlineHome, onlineLobbyHost: renderOnlineLobbyHost,
+    onlineJoin: renderOnlineJoin, onlineLobbyGuest: renderOnlineLobbyGuest,
+    onlinePlaying: renderOnlinePlaying, onlineWaiting: renderOnlineWaiting,
+    onlineScoreboard: renderOnlineScoreboard,
+  };
+  (fns[state.screen] || renderHome)(app);
+}
+function topbar(title, sub){
+  return `<div class="topbar"><div><h1>${esc(title)}</h1>${sub?`<div class="sub">${esc(sub)}</div>`:''}</div></div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HOME
+   ═══════════════════════════════════════════════════════════════ */
+function renderHome(app){
+  const totalGames = state.history.length;
+  const topPlayer = [...state.players].sort((a,b)=>b.points-a.points)[0];
+  app.innerHTML = `
+    ${topbar('🍉 Frigurso Tutti Fruti', 'El tutti fruti más completo del mundo')}
+    <div class="screen">
+      <div class="cta-grid">
+        <div class="cta" onclick="openSetupLocal()"><span class="ic">📱</span><div class="t">Jugar local</div><div class="d">Pasando el celular</div></div>
+        <div class="cta" onclick="nav('onlineHome')"><span class="ic">🌐</span><div class="t">Jugar online</div><div class="d">Cada uno desde el suyo</div></div>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><b>${state.players.length}</b><span>Jugadores</span></div>
+        <div class="kpi"><b>${totalGames}</b><span>Partidas</span></div>
+        <div class="kpi"><b>${topPlayer ? esc(topPlayer.name) : '—'}</b><span>Líder</span></div>
+      </div>
+      ${state.match ? `<div class="card" style="border-color:var(--accent)">
+        <h3>⏸️ Tenés una partida local sin terminar</h3>
+        <div class="sub" style="margin-bottom:10px">Ronda ${state.match.roundNumber} · ${state.match.players.length} jugadores</div>
+        <div class="row"><button class="btn btn-primary grow" onclick="resumeMatch()">Continuar</button>
+        <button class="btn btn-danger" onclick="if(confirm('¿Borrar esta partida en curso?')){clearMatch();render();}">Borrar</button></div>
+      </div>` : ''}
+      <div class="card">
+        <h3>Cómo se juega</h3>
+        <div class="sub">Sale una letra al azar. Cada jugador completa todas las categorías con palabras que empiecen con esa letra, antes de que se acabe el tiempo. Respuesta única vale ${state.settings.scoreUnique} pts, repetida ${state.settings.scoreRepeated} pts, vacía o inválida ${state.settings.scoreEmpty} pts.</div>
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   JUGADORES
+   ═══════════════════════════════════════════════════════════════ */
+function renderJugadores(app){
+  const list = [...state.players].sort((a,b)=>b.points-a.points);
+  app.innerHTML = `
+    ${topbar('Jugadores')}
+    <div class="screen">
+      <div class="card">
+        <div class="row"><input id="np-name" placeholder="Nombre nuevo jugador" onkeydown="if(event.key==='Enter')addPlayerGlobal()">
+        <button class="btn btn-primary" onclick="addPlayerGlobal()">Agregar</button></div>
+      </div>
+      ${list.length===0 ? `<div class="empty-state"><span class="ic">👥</span>Todavía no agregaste jugadores</div>` :
+      list.map((p,i)=>`
+        <div class="card" style="display:flex;align-items:center;gap:12px;padding:12px 16px">
+          <div class="avatar" style="background:${p.color};width:34px;height:34px;font-size:14px">${esc(p.name[0]||'?').toUpperCase()}</div>
+          <div class="grow">
+            <div style="font-weight:700">${esc(p.name)}</div>
+            <div class="sub">${p.games} partidas · ${p.points} pts totales · mejor ronda ${p.bestRound||0}</div>
+          </div>
+          <button class="btn btn-sm btn-danger" onclick="removePlayerGlobal('${p.id}')">Quitar</button>
+        </div>`).join('')}
+    </div>`;
+}
+function addPlayerGlobal(){
+  const inp = document.getElementById('np-name'); const name = inp.value.trim();
+  if(!name) return;
+  state.players.push({ id: uid(), name, color: AVATAR_COLORS[state.players.length % AVATAR_COLORS.length],
+    games:0, points:0, bestRound:0 });
+  saveAll(); render();
+}
+function removePlayerGlobal(id){
+  if(!confirm('¿Quitar este jugador? Su historial de partidas anteriores se conserva igual.')) return;
+  state.players = state.players.filter(p=>p.id!==id); saveAll(); render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAZOS (categorías)
+   ═══════════════════════════════════════════════════════════════ */
+function renderMazos(app){
+  const decks = allDecks();
+  app.innerHTML = `
+    ${topbar('Mazos de categorías')}
+    <div class="screen">
+      ${Object.keys(decks).map(name => {
+        const isCustom = !!state.decks[name];
+        return `<div class="card">
+          <h3>${esc(name)} <span class="n">(${decks[name].length})</span></h3>
+          <div class="wrap">${decks[name].map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn-sm grow" onclick="editDeck('${esc(name).replace(/'/g,"\\'")}')">Editar copia</button>
+            ${isCustom ? `<button class="btn btn-sm btn-danger" onclick="deleteDeck('${esc(name).replace(/'/g,"\\'")}')">Borrar</button>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
+      <button class="btn btn-block btn-ghost" onclick="editDeck(null)">+ Crear mazo nuevo</button>
+    </div>`;
+}
+let deckEditState = null;
+function editDeck(sourceName){
+  const decks = allDecks();
+  deckEditState = { name: sourceName ? sourceName+' (copia)' : 'Mi mazo', cats: sourceName ? [...decks[sourceName]] : [] };
+  if(sourceName && state.decks[sourceName]) deckEditState.name = sourceName;
+  renderDeckEditor();
+}
+function renderDeckEditor(){
+  const app = document.getElementById('app');
+  document.getElementById('bottomnav').style.display = 'none';
+  app.innerHTML = `
+    ${topbar('Editar mazo')}
+    <div class="screen">
+      <div class="field"><label>Nombre del mazo</label>
+        <input id="dk-name" value="${esc(deckEditState.name)}" oninput="deckEditState.name=this.value"></div>
+      <div id="dk-cats">${deckEditState.cats.map((c,i)=>`
+        <div class="deck-cat"><span>${esc(c)}</span><button class="btn btn-sm btn-danger" onclick="dkRemove(${i})">✕</button></div>`).join('')}
+      </div>
+      <div class="row"><input id="dk-new" placeholder="Nueva categoría" onkeydown="if(event.key==='Enter')dkAdd()">
+      <button class="btn" onclick="dkAdd()">+</button></div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn btn-ghost grow" onclick="deckEditState=null;nav('mazos')">Cancelar</button>
+        <button class="btn btn-primary grow" onclick="dkSave()">Guardar mazo</button>
+      </div>
+    </div>`;
+}
+function dkAdd(){
+  const inp = document.getElementById('dk-new'); const v = inp.value.trim();
+  if(!v) return; deckEditState.cats.push(v); renderDeckEditor();
+}
+function dkRemove(i){ deckEditState.cats.splice(i,1); renderDeckEditor(); }
+function dkSave(){
+  if(!deckEditState.name.trim()){ toast('Ponele un nombre al mazo'); return; }
+  if(deckEditState.cats.length<3){ toast('Necesitás al menos 3 categorías'); return; }
+  state.decks[deckEditState.name.trim()] = deckEditState.cats;
+  saveAll(); deckEditState=null; document.getElementById('bottomnav').style.display='flex'; nav('mazos');
+  toast('Mazo guardado');
+}
+function deleteDeck(name){
+  if(!confirm(`¿Borrar el mazo "${name}"?`)) return;
+  delete state.decks[name]; saveAll(); render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HISTORIAL
+   ═══════════════════════════════════════════════════════════════ */
+function renderHistorial(app){
+  const hist = [...state.history].reverse();
+  app.innerHTML = `
+    ${topbar('Historial de partidas')}
+    <div class="screen">
+      ${hist.length===0 ? `<div class="empty-state"><span class="ic">📊</span>Todavía no jugaste ninguna partida</div>` :
+      hist.map(h => {
+        const sorted = [...h.players].sort((a,b)=>b.points-a.points);
+        const winner = sorted[0];
+        return `<div class="card">
+          <div class="row" style="align-items:center;margin-bottom:8px">
+            <div class="grow"><b>${h.mode==='online'?'🌐 Online':'📱 Local'}</b> <span class="sub">${new Date(h.date).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
+            <span class="sub">${h.rounds.length} rondas</span>
+          </div>
+          <div class="score-list">
+            ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${i===0?'👑 ':''}${esc(p.name)}</span><span class="pt">${p.points}</span></div>`).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+      ${hist.length>0?`<button class="btn btn-block btn-danger" onclick="clearHistory()">Borrar historial</button>`:''}
+    </div>`;
+}
+function clearHistory(){
+  if(!confirm('¿Borrar todo el historial de partidas? Esto no borra los jugadores.')) return;
+  state.history = []; saveAll(); render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════════════════════════ */
+function renderConfig(app){
+  const s = state.settings;
+  app.innerHTML = `
+    ${topbar('Ajustes del juego')}
+    <div class="screen">
+      <div class="card">
+        <h3>Tiempo por ronda</h3>
+        <div class="seg">
+          ${[60,90,120,0].map(v=>`<button class="${s.seconds===v?'active':''}" onclick="setSeconds(${v})">${v===0?'Manual':v+'s'}</button>`).join('')}
+        </div>
+        <div class="sub" style="margin-top:8px">${s.seconds===0?'Sin cronómetro: el primero en terminar toca "¡Basta!"':'Cuenta regresiva automática con sonido.'}</div>
+      </div>
+      <div class="card">
+        <h3>Puntaje</h3>
+        <div class="field"><label>Respuesta única y válida</label><input type="number" value="${s.scoreUnique}" oninput="state.settings.scoreUnique=+this.value||0;saveAll()"></div>
+        <div class="field"><label>Respuesta repetida (más de uno la puso)</label><input type="number" value="${s.scoreRepeated}" oninput="state.settings.scoreRepeated=+this.value||0;saveAll()"></div>
+        <div class="field"><label>Vacía o inválida</label><input type="number" value="${s.scoreEmpty}" oninput="state.settings.scoreEmpty=+this.value||0;saveAll()"></div>
+      </div>
+      <div class="card">
+        <h3>Letras habilitadas <span class="n">(${ALL_LETTERS.filter(l=>s.letters[l]).length}/${ALL_LETTERS.length})</span></h3>
+        <div class="letters-grid">
+          ${ALL_LETTERS.map(l=>`<button class="letter-tog ${s.letters[l]?'on':''}" onclick="toggleLetter('${l}')">${l}</button>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+function setSeconds(v){ state.settings.seconds = v; saveAll(); render(); }
+function toggleLetter(l){ state.settings.letters[l] = !state.settings.letters[l]; saveAll(); render(); }
+
+/* ═══════════════════════════════════════════════════════════════
+   MODO LOCAL — pasar y jugar
+   ═══════════════════════════════════════════════════════════════ */
+function openSetupLocal(){
+  state.setup = { playerIds: state.players.slice(0,4).map(p=>p.id), newPlayers: [], deckName: 'Clásico', deck: [...PRESETS['Clásico']] };
+  state.screen = 'setupLocal'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function renderSetupLocal(app){
+  const su = state.setup;
+  app.innerHTML = `
+    ${topbar('Nueva partida local')}
+    <div class="screen">
+      <div class="card">
+        <h3>¿Quién juega? <span class="n">(${su.playerIds.length + su.newPlayers.length})</span></h3>
+        <div class="wrap" style="margin-bottom:10px">
+          ${state.players.map(p=>`<span class="chip" style="opacity:${su.playerIds.includes(p.id)?1:.4};cursor:pointer" onclick="toggleSetupPlayer('${p.id}')">
+            <span class="avatar" style="background:${p.color};width:16px;height:16px;font-size:9px">${esc(p.name[0]||'?').toUpperCase()}</span>${esc(p.name)}</span>`).join('')}
+          ${su.newPlayers.map((n,i)=>`<span class="chip">${esc(n)} <span class="x" onclick="su.newPlayers.splice(${i},1);render()">✕</span></span>`).join('')}
+        </div>
+        <div class="row"><input id="su-newname" placeholder="Agregar jugador nuevo" onkeydown="if(event.key==='Enter')setupAddNew()">
+        <button class="btn" onclick="setupAddNew()">+</button></div>
+      </div>
+      <div class="card">
+        <h3>Mazo de categorías</h3>
+        <select onchange="setupPickDeck(this.value)">
+          ${Object.keys(allDecks()).map(n=>`<option value="${esc(n)}" ${n===su.deckName?'selected':''}>${esc(n)} (${allDecks()[n].length})</option>`).join('')}
+        </select>
+        <div class="wrap" style="margin-top:10px">${su.deck.map(c=>`<span class="chip">${esc(c)}</span>`).join('')}</div>
+      </div>
+      <div class="card">
+        <h3>Tiempo por ronda</h3>
+        <div class="seg">${[60,90,120,0].map(v=>`<button class="${state.settings.seconds===v?'active':''}" onclick="setSeconds(${v});render()">${v===0?'Manual':v+'s'}</button>`).join('')}</div>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost grow" onclick="state.setup=null;nav('home')">Cancelar</button>
+        <button class="btn btn-primary btn-lg grow" onclick="startLocalMatch()">¡Arrancar!</button>
+      </div>
+    </div>`;
+}
+function toggleSetupPlayer(id){
+  const su = state.setup; const i = su.playerIds.indexOf(id);
+  if(i>=0) su.playerIds.splice(i,1); else su.playerIds.push(id); render();
+}
+function setupAddNew(){
+  const inp = document.getElementById('su-newname'); const v = inp.value.trim();
+  if(!v) return; state.setup.newPlayers.push(v); render();
+}
+function setupPickDeck(name){ state.setup.deckName = name; state.setup.deck = [...allDecks()[name]]; render(); }
+function startLocalMatch(){
+  const su = state.setup;
+  const players = su.playerIds.map(id => state.players.find(p=>p.id===id)).filter(Boolean)
+    .concat(su.newPlayers.map(name => {
+      const p = { id: uid(), name, color: AVATAR_COLORS[state.players.length % AVATAR_COLORS.length], games:0, points:0, bestRound:0 };
+      state.players.push(p); return p;
+    }));
+  if(players.length<2){ toast('Necesitás al menos 2 jugadores'); return; }
+  saveAll();
+  state.match = {
+    mode: 'local', players: players.map(p=>({id:p.id, name:p.name, color:p.color})),
+    deck: su.deck, usedLetters: [], roundNumber: 1, currentLetter: null,
+    turnIndex: 0, roundAnswers: {}, scores: Object.fromEntries(players.map(p=>[p.id,0])),
+    rounds: [],
+  };
+  saveMatch();
+  state.setup = null;
+  drawNextLetter();
+  startTurn();
+}
+function resumeMatch(){
+  if(!state.match) return;
+  state.screen = state.match.currentLetter ? 'turnLocal' : 'roundScoreboard';
+  document.getElementById('bottomnav').style.display='none';
+  render();
+}
+function drawNextLetter(){
+  const m = state.match;
+  let pool = ALL_LETTERS.filter(l => state.settings.letters[l] && !m.usedLetters.includes(l));
+  if(pool.length===0){ m.usedLetters = []; pool = ALL_LETTERS.filter(l => state.settings.letters[l]); }
+  m.currentLetter = pool[Math.floor(Math.random()*pool.length)];
+  m.usedLetters.push(m.currentLetter);
+  m.turnIndex = 0; m.roundAnswers = {};
+  saveMatch();
+}
+let turnTimer = null;
+function startTurn(){
+  state.screen = 'turnLocal'; render();
+}
+function renderTurnLocal(app){
+  const m = state.match; const player = m.players[m.turnIndex];
+  document.getElementById('bottomnav').style.display='none';
+  app.innerHTML = `
+    <div class="handoff" id="handoff-overlay">
+      <span class="ic">📱</span>
+      <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
+      <div class="sub" style="margin-bottom:24px">Que nadie más mire la pantalla</div>
+      <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove();beginTurnTimer()">Listo, soy ${esc(player.name)}</button>
+    </div>
+    <div class="screen" style="padding-top:20px">
+      <div class="letter-badge">${m.currentLetter}</div>
+      <div class="timer" id="timer-display">${state.settings.seconds===0?'∞':state.settings.seconds}</div>
+      <div class="timerbar"><i id="timer-bar" style="width:100%"></i></div>
+      <div id="cat-inputs">
+        ${m.deck.map((c,i)=>`<div class="cat-input"><label><span class="dot" style="background:${AVATAR_COLORS[i%AVATAR_COLORS.length]}"></span>${esc(c)}</label>
+          <input id="ci-${i}" autocomplete="off" autocorrect="off" placeholder="${m.currentLetter}..."></div>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitTurn()">✅ Terminé / ¡Basta!</button>
+    </div>`;
+}
+function beginTurnTimer(){
+  const secs = state.settings.seconds;
+  if(secs===0) return;
+  let remaining = secs;
+  const disp = document.getElementById('timer-display'); const bar = document.getElementById('timer-bar');
+  clearInterval(turnTimer);
+  turnTimer = setInterval(()=>{
+    remaining--;
+    if(!disp) { clearInterval(turnTimer); return; }
+    disp.textContent = remaining;
+    bar.style.width = (remaining/secs*100)+'%';
+    disp.classList.toggle('low', remaining<=10);
+    if(remaining===3) soundCountdown();
+    if(remaining<=0){ clearInterval(turnTimer); soundEnd(); submitTurn(); }
+  },1000);
+}
+function submitTurn(){
+  clearInterval(turnTimer);
+  const m = state.match; const player = m.players[m.turnIndex];
+  const answers = {};
+  m.deck.forEach((c,i)=>{ const el = document.getElementById('ci-'+i); answers[c] = el ? el.value.trim() : ''; });
+  m.roundAnswers[player.id] = answers;
+  m.turnIndex++;
+  saveMatch();
+  if(m.turnIndex < m.players.length){ startTurn(); }
+  else { state.screen = 'correctionLocal'; render(); }
+}
+
+function scoreRound(m){
+  const results = {};
+  m.deck.forEach(cat => {
+    const perPlayer = m.players.map(p => ({ id:p.id, text: (m.roundAnswers[p.id]||{})[cat] || '' }));
+    const counts = {};
+    perPlayer.forEach(a => { const n = normalize(a.text); if(n) counts[n] = (counts[n]||0)+1; });
+    perPlayer.forEach(a => {
+      const n = normalize(a.text);
+      let status, pts;
+      if(!n){ status='bad'; pts=state.settings.scoreEmpty; }
+      else if(!startsWithLetter(a.text, m.currentLetter)){ status='bad'; pts=state.settings.scoreEmpty; }
+      else if(counts[n]>1){ status='rep'; pts=state.settings.scoreRepeated; }
+      else { status='ok'; pts=state.settings.scoreUnique; }
+      if(!results[a.id]) results[a.id] = {};
+      results[a.id][cat] = { text: a.text, status, points: pts };
+    });
+  });
+  return results;
+}
+function renderCorrectionLocal(app){
+  const m = state.match;
+  if(!m._results) m._results = scoreRound(m);
+  const results = m._results;
+  app.innerHTML = `
+    ${topbar('Corrección — letra '+m.currentLetter, 'Tocá una respuesta para cambiar su estado')}
+    <div class="screen">
+      ${m.deck.map(cat => `
+        <div class="correct-cat"><h4>${esc(cat)}</h4>
+          ${m.players.map(p => {
+            const r = (results[p.id]||{})[cat] || {text:'',status:'bad',points:state.settings.scoreEmpty};
+            return `<div class="ans-row">
+              <span class="name">${esc(p.name)}</span>
+              <span class="txt ${r.text?'':'empty'}">${r.text?esc(r.text):'(vacío)'}</span>
+              <button class="status-btn ${r.status}" onclick="cycleStatus('${p.id}','${cat.replace(/'/g,"\\'")}')">${r.status==='ok'?'Válida':r.status==='rep'?'Repetida':'Inválida'}</button>
+              <span class="pts">${r.points}</span>
+            </div>`;
+          }).join('')}
+        </div>`).join('')}
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:16px" onclick="confirmRoundScore()">Confirmar puntaje de la ronda</button>
+    </div>`;
+}
+function cycleStatus(playerId, cat){
+  const m = state.match; const r = m._results[playerId][cat];
+  const order = ['ok','rep','bad']; const next = order[(order.indexOf(r.status)+1)%order.length];
+  r.status = next;
+  r.points = next==='ok' ? state.settings.scoreUnique : next==='rep' ? state.settings.scoreRepeated : state.settings.scoreEmpty;
+  render();
+}
+function confirmRoundScore(){
+  const m = state.match; const results = m._results;
+  m.players.forEach(p => {
+    const total = Object.values(results[p.id]||{}).reduce((s,r)=>s+r.points,0);
+    m.scores[p.id] = (m.scores[p.id]||0) + total;
+  });
+  m.rounds.push({ letter: m.currentLetter, results });
+  m.currentLetter = null; m._results = null;
+  saveMatch();
+  state.screen = 'roundScoreboard'; render();
+}
+function renderRoundScoreboard(app){
+  const m = state.match;
+  const sorted = [...m.players].sort((a,b)=>m.scores[b.id]-m.scores[a.id]);
+  app.innerHTML = `
+    ${topbar('Puntaje — ronda '+m.rounds.length, m.deck.length+' categorías por ronda')}
+    <div class="screen">
+      <div class="score-list">
+        ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span>
+          <span class="avatar" style="background:${p.color}">${esc(p.name[0]).toUpperCase()}</span>
+          <span class="nm">${esc(p.name)}</span><span class="pt">${m.scores[p.id]}</span></div>`).join('')}
+      </div>
+      <div class="row" style="margin-top:18px">
+        <button class="btn btn-danger grow" onclick="if(confirm('¿Terminar la partida acá?'))endLocalMatch()">Terminar partida</button>
+        <button class="btn btn-primary grow" onclick="m.roundNumber++;drawNextLetter();startTurn()">Otra ronda</button>
+      </div>
+    </div>`;
+}
+function endLocalMatch(){
+  const m = state.match;
+  const record = { id: uid(), date: Date.now(), mode: 'local', rounds: m.rounds,
+    players: m.players.map(p => ({ name: p.name, points: m.scores[p.id] })) };
+  state.history.push(record);
+  m.players.forEach(pm => {
+    const p = state.players.find(x=>x.id===pm.id); if(!p) return;
+    p.games++; p.points += m.scores[pm.id];
+    const bestThisMatch = Math.max(0, ...m.rounds.map(r => Object.values(r.results[pm.id]||{}).reduce((s,x)=>s+x.points,0)));
+    p.bestRound = Math.max(p.bestRound||0, bestThisMatch);
+  });
+  saveAll(); clearMatch();
+  state.screen = 'matchEnd'; state._lastRecord = record; render();
+}
+function renderMatchEnd(app){
+  const record = state._lastRecord;
+  const sorted = [...record.players].sort((a,b)=>b.points-a.points);
+  app.innerHTML = `
+    <div class="screen" style="padding-top:60px;text-align:center">
+      <div style="font-size:60px">🏆</div>
+      <h1 style="margin:10px 0 4px">${esc(sorted[0].name)} ganó</h1>
+      <div class="sub" style="margin-bottom:20px">${record.roundsCount ?? record.rounds.length} rondas jugadas</div>
+      <div class="score-list">
+        ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${esc(p.name)}</span><span class="pt">${p.points}</span></div>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:24px" onclick="nav('home')">Volver al inicio</button>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODO ONLINE — PeerJS, código de sala, sin backend propio
+   ═══════════════════════════════════════════════════════════════ */
+let peerLoaded = null;
+function loadPeerJS(){
+  if(peerLoaded) return peerLoaded;
+  peerLoaded = new Promise((resolve,reject)=>{
+    if(window.Peer) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+    s.onload = ()=>resolve(); s.onerror = ()=>reject(new Error('no se pudo cargar PeerJS'));
+    document.head.appendChild(s);
+  });
+  return peerLoaded;
+}
+function randCode(){ const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<4;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+
+function renderOnlineHome(app){
+  app.innerHTML = `
+    ${topbar('Jugar online', 'Cada uno desde su celular, cualquier red — necesita internet')}
+    <div class="screen">
+      <div class="card">
+        <h3>Crear sala</h3>
+        <div class="field"><label>Tu nombre</label><input id="oh-name" placeholder="Tu nombre"></div>
+        <button class="btn btn-primary btn-block" onclick="hostCreateRoom()">Crear sala como anfitrión</button>
+      </div>
+      <div class="card">
+        <h3>Unirme a una sala</h3>
+        <div class="field"><label>Tu nombre</label><input id="oh-name2" placeholder="Tu nombre"></div>
+        <div class="field"><label>Código de sala</label><input id="oh-code" placeholder="Ej: A3F9" style="text-transform:uppercase;letter-spacing:.1em" maxlength="4"></div>
+        <button class="btn btn-primary btn-block" onclick="guestJoinRoom()">Unirme</button>
+      </div>
+    </div>`;
+}
+
+// -------- HOST --------
+function hostCreateRoom(){
+  const name = document.getElementById('oh-name').value.trim() || 'Anfitrión';
+  toast('Conectando...');
+  loadPeerJS().then(()=>{
+    const code = randCode();
+    const peer = new Peer('ftf-host-'+code);
+    state.online = { role:'host', code, peer, name, conns: {}, guests: {}, deckName:'Clásico', deck:[...PRESETS['Clásico']],
+      usedLetters: [], scores:{me:0}, myName:name, round:null, roundNum:0, history:[], awaitingAnswers:false };
+    peer.on('open', ()=>{ nav('onlineLobbyHost'); });
+    peer.on('error', err => { console.error(err); toast('Error de conexión: '+err.type); });
+    peer.on('connection', conn => {
+      conn.on('open', ()=>{});
+      conn.on('data', data => handleHostMessage(conn, data));
+      conn.on('close', ()=>{ if(state.online){ delete state.online.conns[conn.peer]; delete state.online.guests[conn.peer]; if(state.screen==='onlineLobbyHost') render(); } });
+      state.online.conns[conn.peer] = conn;
+    });
+  }).catch(e=>toast('No se pudo cargar el modo online'));
+}
+function hostBroadcast(obj){
+  Object.values(state.online.conns).forEach(c => { try{ c.send(obj); }catch(e){} });
+}
+function handleHostMessage(conn, data){
+  const o = state.online;
+  if(data.type==='join'){
+    o.guests[conn.peer] = { name: data.name || 'Jugador', answers:null };
+    if(state.screen==='onlineLobbyHost') render();
+  } else if(data.type==='answers'){
+    if(o.awaitingAnswers && data.roundNum===o.roundNum && o.guests[conn.peer]){
+      o.guests[conn.peer].answers = data.answers;
+      maybeFinishRoundHost();
+    }
+  }
+}
+function renderOnlineLobbyHost(app){
+  const o = state.online;
+  const guestList = Object.values(o.guests);
+  app.innerHTML = `
+    ${topbar('Sala creada', 'Compartí el código con el resto')}
+    <div class="screen">
+      <div class="room-code">${o.code}</div>
+      <button class="btn btn-block" onclick="shareRoomCode()">📤 Compartir código</button>
+      <div class="card" style="margin-top:14px">
+        <h3>Jugadores en la sala <span class="n">(${guestList.length+1})</span></h3>
+        <div class="lobby-player"><span class="pulse"></span>${esc(o.myName)} (vos, anfitrión)</div>
+        ${guestList.map(g=>`<div class="lobby-player"><span class="pulse"></span>${esc(g.name)}</div>`).join('')}
+      </div>
+      <div class="card">
+        <h3>Mazo de categorías</h3>
+        <select onchange="onlinePickDeck(this.value)">
+          ${Object.keys(allDecks()).map(n=>`<option value="${esc(n)}" ${n===o.deckName?'selected':''}>${esc(n)} (${allDecks()[n].length})</option>`).join('')}
+        </select>
+      </div>
+      <div class="card">
+        <h3>Tiempo por ronda</h3>
+        <div class="seg">${[60,90,120].map(v=>`<button class="${state.settings.seconds===v?'active':''}" onclick="setSeconds(${v});render()">${v}s</button>`).join('')}</div>
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" ${guestList.length===0?'disabled style="opacity:.5"':''} onclick="hostStartRound()">¡Arrancar partida!</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="closeOnline()">Cerrar sala</button>
+    </div>`;
+}
+function onlinePickDeck(name){ state.online.deckName = name; state.online.deck = [...allDecks()[name]]; }
+function shareRoomCode(){
+  const url = location.origin + location.pathname + '?join=' + state.online.code;
+  const text = `¡Jugamos al Tutti Fruti! Entrá con el código ${state.online.code} o directo desde este link: ${url}`;
+  if(navigator.share){ navigator.share({text}).catch(()=>{}); }
+  else { navigator.clipboard?.writeText(text); toast('Copiado al portapapeles'); }
+}
+function hostStartRound(){
+  const o = state.online;
+  let pool = ALL_LETTERS.filter(l => state.settings.letters[l] && !o.usedLetters.includes(l));
+  if(pool.length===0){ o.usedLetters=[]; pool = ALL_LETTERS.filter(l=>state.settings.letters[l]); }
+  const letter = pool[Math.floor(Math.random()*pool.length)];
+  o.usedLetters.push(letter);
+  o.roundNum++;
+  Object.values(o.guests).forEach(g=>g.answers=null);
+  o.myAnswers = null;
+  o.awaitingAnswers = true;
+  const secs = state.settings.seconds || 90;
+  const startsAt = Date.now() + 1500;
+  o.round = { letter, deck: o.deck, startsAt, seconds: secs, roundNum: o.roundNum };
+  hostBroadcast({ type:'roundStart', letter, deck:o.deck, startsAt, seconds:secs, roundNum:o.roundNum });
+  state.screen = 'onlinePlaying'; render();
+}
+function maybeFinishRoundHost(){
+  const o = state.online;
+  if(!o.awaitingAnswers) return;
+  const allIn = o.myAnswers && Object.values(o.guests).every(g=>g.answers);
+  if(allIn){ finishRoundHost(); return; }
+  if(o.myAnswers && state.screen!=='onlineWaiting'){ state.screen='onlineWaiting'; render(); }
+}
+function finishRoundHost(){
+  const o = state.online;
+  o.awaitingAnswers = false;
+  const players = [{ id:'me', name:o.myName, answers:o.myAnswers }]
+    .concat(Object.entries(o.guests).map(([pid,g])=>({ id:pid, name:g.name, answers:g.answers||{} })));
+  const results = {};
+  o.round.deck.forEach(cat => {
+    const perPlayer = players.map(p => ({ id:p.id, text: (p.answers||{})[cat] || '' }));
+    const counts = {};
+    perPlayer.forEach(a => { const n = normalize(a.text); if(n) counts[n]=(counts[n]||0)+1; });
+    perPlayer.forEach(a => {
+      const n = normalize(a.text); let status, pts;
+      if(!n){ status='bad'; pts=state.settings.scoreEmpty; }
+      else if(!startsWithLetter(a.text, o.round.letter)){ status='bad'; pts=state.settings.scoreEmpty; }
+      else if(counts[n]>1){ status='rep'; pts=state.settings.scoreRepeated; }
+      else { status='ok'; pts=state.settings.scoreUnique; }
+      if(!results[a.id]) results[a.id]={};
+      results[a.id][cat] = { text:a.text, status, points:pts };
+    });
+  });
+  o.lastResults = results; o.lastPlayers = players;
+  players.forEach(p => { o.scores[p.id] = (o.scores[p.id]||0) + Object.values(results[p.id]||{}).reduce((s,r)=>s+r.points,0); });
+  o.history.push({ letter:o.round.letter, results });
+  hostBroadcast({ type:'scoreboard', results, players: players.map(p=>({id:p.id,name:p.name})), scores:o.scores });
+  o.round = null;
+  state.screen = 'onlineScoreboard'; render();
+}
+function closeOnline(){
+  try{ state.online?.peer?.destroy(); }catch(e){}
+  state.online = null; nav('home');
+}
+
+// -------- GUEST --------
+function guestJoinRoom(codeOverride){
+  const name = (document.getElementById('oh-name2')||{}).value?.trim() || state._pendingGuestName || 'Jugador';
+  const code = (codeOverride || (document.getElementById('oh-code')||{}).value || '').trim().toUpperCase();
+  if(!code){ toast('Falta el código de sala'); return; }
+  if(!name){ toast('Falta tu nombre'); return; }
+  toast('Conectando...');
+  loadPeerJS().then(()=>{
+    const peer = new Peer();
+    state.online = { role:'guest', peer, name, code, conn:null, myAnswers:null };
+    peer.on('open', ()=>{
+      const conn = peer.connect('ftf-host-'+code, { reliable:true });
+      state.online.conn = conn;
+      conn.on('open', ()=>{ conn.send({type:'join', name}); nav('onlineLobbyGuest'); });
+      conn.on('data', data => handleGuestMessage(data));
+      conn.on('error', ()=>toast('No se pudo conectar a la sala'));
+      conn.on('close', ()=>toast('Se cerró la sala'));
+    });
+    peer.on('error', err => { console.error(err); toast('Error: no existe esa sala o falló la conexión'); });
+  }).catch(()=>toast('No se pudo cargar el modo online'));
+}
+function handleGuestMessage(data){
+  const o = state.online;
+  if(data.type==='roundStart'){
+    o.round = data; o.myAnswers = null;
+    state.screen = 'onlinePlaying'; render();
+  } else if(data.type==='scoreboard'){
+    o.lastScoreboard = data; o.round = null;
+    state.screen = 'onlineScoreboard'; render();
+  } else if(data.type==='matchEnd'){
+    o.round = null;
+    state._lastRecord = { rounds: [], roundsCount: data.roundsCount, players: data.players };
+    state.screen = 'matchEnd'; render();
+  }
+}
+function renderOnlineJoin(app){
+  app.innerHTML = `
+    ${topbar('Unirme a una sala')}
+    <div class="screen">
+      <div class="field"><label>Tu nombre</label><input id="oj-name" placeholder="Tu nombre"></div>
+      <div class="field"><label>Código de sala</label><input id="oj-code" value="${esc(state._joinCode||'')}" style="text-transform:uppercase;letter-spacing:.1em" maxlength="4"></div>
+      <button class="btn btn-primary btn-block" onclick="state._pendingGuestName=document.getElementById('oj-name').value.trim();guestJoinRoom(document.getElementById('oj-code').value)">Unirme</button>
+    </div>`;
+}
+function renderOnlineLobbyGuest(app){
+  app.innerHTML = `
+    ${topbar('Esperando al anfitrión', 'Sala '+state.online.code)}
+    <div class="screen center" style="padding-top:40px">
+      <div style="font-size:44px;margin-bottom:12px">⏳</div>
+      <div class="sub">Cuando el anfitrión arranque la partida, empieza acá solo.</div>
+    </div>`;
+}
+
+// -------- COMPARTIDO (host juega su propia ronda igual que un guest) --------
+let onlineTimer = null;
+function renderOnlinePlaying(app){
+  const o = state.online; const r = o.round;
+  document.getElementById('bottomnav').style.display='none';
+  app.innerHTML = `
+    <div class="screen" style="padding-top:20px">
+      <div class="letter-badge">${r.letter}</div>
+      <div class="timer" id="timer-display">${r.seconds}</div>
+      <div class="timerbar"><i id="timer-bar" style="width:100%"></i></div>
+      <div id="cat-inputs">
+        ${r.deck.map((c,i)=>`<div class="cat-input"><label><span class="dot" style="background:${AVATAR_COLORS[i%AVATAR_COLORS.length]}"></span>${esc(c)}</label>
+          <input id="oi-${i}" autocomplete="off" autocorrect="off" placeholder="${r.letter}..."></div>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitOnlineAnswers(true)">✅ Listo</button>
+    </div>`;
+  clearInterval(onlineTimer);
+  const tick = ()=>{
+    const msLeft = r.startsAt + r.seconds*1000 - Date.now();
+    const secLeft = Math.max(0, Math.ceil(msLeft/1000));
+    const disp = document.getElementById('timer-display'); if(!disp){ clearInterval(onlineTimer); return; }
+    if(Date.now() < r.startsAt){ disp.textContent = '¡Ya sale!'; return; }
+    disp.textContent = secLeft;
+    document.getElementById('timer-bar').style.width = (secLeft/r.seconds*100)+'%';
+    disp.classList.toggle('low', secLeft<=10);
+    if(secLeft===3) soundCountdown();
+    if(secLeft<=0){ clearInterval(onlineTimer); soundEnd(); submitOnlineAnswers(false); }
+  };
+  onlineTimer = setInterval(tick, 250); tick();
+}
+function submitOnlineAnswers(manual){
+  if(!state.online.round) return;
+  clearInterval(onlineTimer);
+  const r = state.online.round;
+  const answers = {};
+  r.deck.forEach((c,i)=>{ const el = document.getElementById('oi-'+i); answers[c] = el ? el.value.trim() : ''; });
+  const o = state.online;
+  if(o.role==='host'){
+    o.myAnswers = answers; state.online.round = null;
+    maybeFinishRoundHost();
+  } else {
+    o.myAnswers = answers;
+    o.conn.send({ type:'answers', roundNum: r.roundNum, answers });
+    state.screen = 'onlineWaiting'; render();
+  }
+}
+function renderOnlineWaiting(app){
+  app.innerHTML = `
+    ${topbar('Esperando al resto')}
+    <div class="screen center" style="padding-top:50px">
+      <div style="font-size:44px;margin-bottom:12px">✅</div>
+      <div class="sub">Ya mandaste tus respuestas. Esperando que terminen los demás...</div>
+    </div>`;
+}
+function renderOnlineScoreboard(app){
+  const o = state.online;
+  let players, scores, results;
+  if(o.role==='host'){ players = o.lastPlayers; scores = o.scores; results = o.lastResults; }
+  else { players = o.lastScoreboard.players; scores = o.lastScoreboard.scores; results = o.lastScoreboard.results; }
+  const sorted = [...players].sort((a,b)=>(scores[b.id]||0)-(scores[a.id]||0));
+  app.innerHTML = `
+    ${topbar('Puntaje de la ronda')}
+    <div class="screen">
+      <div class="score-list">
+        ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${esc(p.name)}</span><span class="pt">${scores[p.id]||0}</span></div>`).join('')}
+      </div>
+      ${o.role==='host' ? `
+      <div class="row" style="margin-top:18px">
+        <button class="btn btn-danger grow" onclick="endOnlineMatch()">Terminar partida</button>
+        <button class="btn btn-primary grow" onclick="hostStartRound()">Otra ronda</button>
+      </div>` : `<div class="sub center" style="margin-top:16px">Esperando que el anfitrión siga jugando...</div>`}
+    </div>`;
+}
+function endOnlineMatch(){
+  const o = state.online;
+  const record = { id: uid(), date: Date.now(), mode:'online', rounds: o.history,
+    players: [{name:o.myName, points:o.scores.me||0}].concat(Object.entries(o.guests).map(([pid,g])=>({name:g.name, points:o.scores[pid]||0}))) };
+  state.history.push(record); saveAll();
+  hostBroadcast({ type:'matchEnd', players: record.players, roundsCount: o.roundNum });
+  try{ o.peer.destroy(); }catch(e){}
+  state.online = null;
+  state.screen = 'matchEnd'; state._lastRecord = record; render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════ */
+function boot(){
+  const params = new URLSearchParams(location.search);
+  const joinCode = params.get('join');
+  if(joinCode){
+    document.getElementById('fg-splash').style.display = 'none';
+    document.getElementById('fg-lock').style.display = 'none';
+    document.getElementById('bottomnav').style.display = 'none';
+    state._joinCode = joinCode.toUpperCase();
+    state.screen = 'onlineJoin';
+  }
+  render();
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+}
+boot();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   IDENTIDAD FRIGURSO — traba de privacidad simple, independiente del
+   resto de la app. No cifra datos, solo tapa la vista hasta que se
+   pone la contraseña. El desbloqueo es una acción del usuario, no
+   un timer, así que si esto tarda en cargar el peor caso es que el
+   botón no responda todavía — nunca queda trabado en silencio.
+   ═══════════════════════════════════════════════════════════════ */
+function fgErr(id, msg){ const el = document.getElementById(id); el.textContent = msg; el.style.display = 'block'; }
+function fgHideErr(id){ document.getElementById(id).style.display = 'none'; }
+async function _hashPass(pass){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function fgOcultarLock(){
+  document.getElementById('fg-lock').style.display = 'none';
+  try{ localStorage.setItem('ftf_unlocked','1'); }catch(e){}
+}
+function fgMostrarLock(){
+  try{ localStorage.removeItem('ftf_unlocked'); }catch(e){}
+  document.getElementById('lk-pass-in').value = '';
+  fgHideErr('lk-ing-err');
+  document.getElementById('fg-lock').style.display = 'flex';
+}
+async function fgCrearAcceso(){
+  fgHideErr('lk-crear-err');
+  const p1 = document.getElementById('lk-pass').value;
+  const p2 = document.getElementById('lk-pass2').value;
+  if(!p1 || p1.length<4){ fgErr('lk-crear-err','Mínimo 4 caracteres'); return; }
+  if(p1!==p2){ fgErr('lk-crear-err','Las contraseñas no coinciden'); return; }
+  localStorage.setItem('ftf_pass_hash', await _hashPass(p1));
+  fgOcultarLock();
+}
+async function fgIngresarAcceso(){
+  fgHideErr('lk-ing-err');
+  const p = document.getElementById('lk-pass-in').value;
+  if((await _hashPass(p)) === localStorage.getItem('ftf_pass_hash')){
+    fgOcultarLock();
+  } else {
+    fgErr('lk-ing-err','Contraseña incorrecta');
+  }
+}
+function fgOlvideAcceso(){
+  if(!confirm('Vamos a borrar la contraseña de este celular para que puedas entrar de nuevo. Tus datos NO se borran.\n\n¿Continuar?')) return;
+  localStorage.removeItem('ftf_pass_hash');
+  location.reload();
+}
+if(new URLSearchParams(location.search).get('join')){
+  // Invitado entrando por link de sala: no es Fernando, no pedimos su contraseña.
+} else if(localStorage.getItem('ftf_pass_hash')){
+  document.getElementById('lk-crear').style.display = 'none';
+  document.getElementById('lk-ingresar').style.display = 'block';
+  let yaDesbloqueado = false;
+  try{ yaDesbloqueado = localStorage.getItem('ftf_unlocked') === '1'; }catch(e){}
+  if(yaDesbloqueado) fgOcultarLock();
+}
+</script>
+</body>
+</html>
