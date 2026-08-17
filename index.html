@@ -954,6 +954,8 @@ function handleHostMessage(conn, data){
       o.guests[conn.peer].answers = data.answers;
       maybeFinishRoundHost();
     }
+  } else if(data.type==='basta'){
+    if(o.round) hostStopRoundForAll(false);
   }
 }
 function renderOnlineLobbyHost(app){
@@ -1115,6 +1117,9 @@ function handleGuestMessage(data){
     state.screen = 'matchEnd'; render();
   } else if(data.type==='kicked'){
     guestLeaveRoom('El anfitrión te sacó de la sala.');
+  } else if(data.type==='roundStop'){
+    if(!onlineSubmitted) toast('¡Alguien cantó BASTA! Se cierra la ronda para todos.');
+    forceSubmitNow();
   }
 }
 function guestLeaveRoom(message){
@@ -1165,7 +1170,8 @@ function renderOnlinePlaying(app){
         ${r.deck.map((c,i)=>`<div class="cat-input"><label><span class="dot" style="background:${AVATAR_COLORS[i%AVATAR_COLORS.length]}"></span>${esc(c)}</label>
           <input id="oi-${i}" autocomplete="off" autocorrect="off" placeholder="${r.letter}..."></div>`).join('')}
       </div>
-      <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitOnlineAnswers(true)">✅ Listo</button>
+      <button class="btn btn-danger btn-lg btn-block" style="margin-top:8px" onclick="callBasta()">🛑 ¡BASTA!</button>
+      <div class="sub center" style="margin-top:8px">Corta la ronda para todos, no solo para vos</div>
     </div>`;
   clearInterval(onlineTimer);
   const tick = ()=>{
@@ -1198,6 +1204,25 @@ function submitOnlineAnswers(manual){
     o.myAnswers = answers;
     try{ o.conn.send({ type:'answers', roundNum: r.roundNum, answers }); }catch(e){}
     state.screen = 'onlineWaiting'; render();
+  }
+}
+function forceSubmitNow(){
+  if(state.screen!=='onlinePlaying') return;
+  submitOnlineAnswers(false);
+}
+function hostStopRoundForAll(calledByMe){
+  hostBroadcast({ type:'roundStop' });
+  if(!calledByMe) toast('¡Alguien cantó BASTA! Se cierra la ronda para todos.');
+  forceSubmitNow();
+}
+function callBasta(){
+  const o = state.online;
+  if(!o || !o.round || onlineSubmitted) return;
+  if(o.role==='host'){
+    hostStopRoundForAll(true);
+  } else {
+    try{ o.conn.send({ type:'basta' }); }catch(e){}
+    forceSubmitNow();
   }
 }
 function renderOnlineWaiting(app){
