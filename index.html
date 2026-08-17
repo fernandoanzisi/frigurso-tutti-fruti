@@ -1304,6 +1304,7 @@ function endOnlineMatch(){
    BOOT
    ═══════════════════════════════════════════════════════════════ */
 let swReg = null;
+let swUpdateRequested = false;
 function boot(){
   const params = new URLSearchParams(location.search);
   const joinCode = params.get('join');
@@ -1327,6 +1328,9 @@ function boot(){
       });
       if(reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg);
     }).catch(()=>{});
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if(swUpdateRequested) location.reload();
+    });
   }
 }
 function showUpdateBanner(reg){
@@ -1338,8 +1342,9 @@ function showUpdateBanner(reg){
   b.innerHTML = '<span class="grow">🔄 Hay una versión nueva de la app</span><button id="update-btn" style="background:#1a0d00;color:#fff;border:none;border-radius:9px;padding:9px 16px;font-weight:800;font-size:13px">Actualizar</button>';
   document.body.appendChild(b);
   document.getElementById('update-btn').onclick = () => {
+    swUpdateRequested = true;
     if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
-    setTimeout(()=>location.reload(), 300);
+    else location.reload();
   };
 }
 boot();
