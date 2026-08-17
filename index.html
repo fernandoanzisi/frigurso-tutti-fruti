@@ -1309,7 +1309,30 @@ function boot(){
     state.screen = 'onlineJoin';
   }
   render();
-  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if(!nw) return;
+        nw.addEventListener('statechange', () => {
+          if(nw.state==='installed' && navigator.serviceWorker.controller) showUpdateBanner(reg);
+        });
+      });
+    }).catch(()=>{});
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if(reloaded) return; reloaded = true; location.reload();
+    });
+  }
+}
+function showUpdateBanner(reg){
+  if(document.getElementById('update-banner')) return;
+  const b = document.createElement('div');
+  b.id = 'update-banner';
+  b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9500;background:var(--accent);color:#1a0d00;padding:12px 16px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:13px;box-shadow:0 -6px 20px rgba(0,0,0,.3)';
+  b.innerHTML = '<span class="grow">🔄 Hay una versión nueva de la app</span><button id="update-btn" style="background:#1a0d00;color:#fff;border:none;border-radius:9px;padding:9px 16px;font-weight:800;font-size:13px">Actualizar</button>';
+  document.body.appendChild(b);
+  document.getElementById('update-btn').onclick = () => { if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'}); };
 }
 boot();
 </script>
