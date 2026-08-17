@@ -110,6 +110,8 @@ button{cursor:pointer;border:none;background:none}
 .status-btn.ok{background:rgba(34,197,94,.15);color:var(--ok);border-color:rgba(34,197,94,.3)}
 .status-btn.rep{background:rgba(247,208,70,.15);color:var(--warn);border-color:rgba(247,208,70,.3)}
 .status-btn.bad{background:rgba(239,68,68,.12);color:var(--danger);border-color:rgba(239,68,68,.3)}
+.status-btn.rev{background:rgba(95,176,232,.15);color:var(--accent3);border-color:rgba(95,176,232,.3)}
+.ans-desc{font-size:11px;color:var(--text3);margin:-2px 0 8px;padding-left:84px;line-height:1.4}
 .pts{width:34px;text-align:right;flex-shrink:0;font-size:12px;font-weight:800;color:var(--text3)}
 
 .score-list{display:flex;flex-direction:column;gap:8px}
@@ -277,6 +279,83 @@ function clearMatch(){ state.match = null; localStorage.removeItem('ftf_match_in
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function esc(s){ return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+const MIN_WORD_LEN = 2;
+const wordLookupCache = new Map();
+function fetchWithTimeout(url, ms){
+  return Promise.race([
+    fetch(url),
+    new Promise(resolve => setTimeout(()=>resolve(null), ms))
+  ]).catch(()=>null);
+}
+async function lookupWord(word){
+  const key = normalize(word);
+  if(!key) return { checked:true, found:false, desc:null };
+  if(wordLookupCache.has(key)) return wordLookupCache.get(key);
+  let checked = false, found = false, desc = null;
+  try{
+    const r = await fetchWithTimeout('https://es.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(word.trim().replace(/\s+/g,'_')), 4000);
+    if(r){
+      checked = true;
+      if(r.ok){
+        const data = await r.json();
+        if(data && data.extract && data.type !== 'disambiguation'){ found = true; desc = data.extract.split('\n')[0].slice(0,220); }
+      }
+    }
+  }catch(e){}
+  if(!found){
+    try{
+      const url = 'https://es.wiktionary.org/w/api.php?action=query&titles='+encodeURIComponent(word.trim())+'&prop=extracts&exintro=1&explaintext=1&format=json&origin=*&redirects=1';
+      const r = await fetchWithTimeout(url, 4000);
+      if(r){
+        checked = true;
+        if(r.ok){
+          const data = await r.json();
+          const pages = (data && data.query && data.query.pages) || {};
+          const page = Object.values(pages)[0];
+          if(page && page.pageid){
+            found = true;
+            const lines = (page.extract||'').split('\n').map(s=>s.trim()).filter(Boolean);
+            desc = lines[0] ? lines[0].slice(0,220) : null;
+          }
+        }
+      }
+    }catch(e){}
+  }
+  const result = { checked, found, desc };
+  wordLookupCache.set(key, result);
+  return result;
+}
+async function computeResults(deck, players, letter){
+  const results = {};
+  const lookups = new Map();
+  const toCheck = new Set();
+  deck.forEach(cat => players.forEach(p => {
+    const text = (p.answers||{})[cat] || '';
+    if(text.trim().length>=MIN_WORD_LEN && startsWithLetter(text, letter)) toCheck.add(text.trim());
+  }));
+  await Promise.all([...toCheck].map(async w => { lookups.set(normalize(w), await lookupWord(w)); }));
+  deck.forEach(cat => {
+    const perPlayer = players.map(p => ({ id:p.id, text: (p.answers||{})[cat] || '' }));
+    const counts = {};
+    perPlayer.forEach(a => { const n = normalize(a.text); if(n) counts[n] = (counts[n]||0)+1; });
+    perPlayer.forEach(a => {
+      const n = normalize(a.text);
+      let status, pts, desc=null;
+      if(!n || a.text.trim().length<MIN_WORD_LEN){ status='bad'; pts=state.settings.scoreEmpty; }
+      else if(!startsWithLetter(a.text, letter)){ status='bad'; pts=state.settings.scoreEmpty; }
+      else {
+        const lk = lookups.get(n) || { checked:false, found:false, desc:null };
+        desc = lk.desc;
+        if(lk.checked && !lk.found){ status='rev'; pts=state.settings.scoreEmpty; }
+        else if(counts[n]>1){ status='rep'; pts=state.settings.scoreRepeated; }
+        else { status='ok'; pts=state.settings.scoreUnique; }
+      }
+      if(!results[a.id]) results[a.id] = {};
+      results[a.id][cat] = { text: a.text, status, points: pts, desc };
+    });
+  });
+  return results;
+}
 function normalize(s){
   return String(s||'').trim().toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
@@ -333,7 +412,7 @@ function render(){
     matchEnd: renderMatchEnd,
     onlineHome: renderOnlineHome, onlineLobbyHost: renderOnlineLobbyHost,
     onlineJoin: renderOnlineJoin, onlineLobbyGuest: renderOnlineLobbyGuest,
-    onlinePlaying: renderOnlinePlaying, onlineWaiting: renderOnlineWaiting,
+    onlinePlaying: renderOnlinePlaying, onlineWaiting: renderOnlineWaiting, onlineReview: renderOnlineReview,
     onlineScoreboard: renderOnlineScoreboard,
   };
   (fns[state.screen] || renderHome)(app);
@@ -606,7 +685,10 @@ function startLocalMatch(){
 }
 function resumeMatch(){
   if(!state.match) return;
-  state.screen = state.match.currentLetter ? 'turnLocal' : 'roundScoreboard';
+  const m = state.match;
+  if(m.currentLetter && m._results){ state.screen = 'correctionLocal'; }
+  else if(m.currentLetter){ state.screen = 'turnLocal'; }
+  else { state.screen = 'roundScoreboard'; }
   document.getElementById('bottomnav').style.display='none';
   render();
 }
@@ -677,31 +759,29 @@ function submitTurn(){
   m.turnIndex++;
   saveMatch();
   if(m.turnIndex < m.players.length){ startTurn(); }
-  else { state.screen = 'correctionLocal'; render(); }
+  else { enterCorrectionLocal(); }
 }
 
-function scoreRound(m){
-  const results = {};
-  m.deck.forEach(cat => {
-    const perPlayer = m.players.map(p => ({ id:p.id, text: (m.roundAnswers[p.id]||{})[cat] || '' }));
-    const counts = {};
-    perPlayer.forEach(a => { const n = normalize(a.text); if(n) counts[n] = (counts[n]||0)+1; });
-    perPlayer.forEach(a => {
-      const n = normalize(a.text);
-      let status, pts;
-      if(!n){ status='bad'; pts=state.settings.scoreEmpty; }
-      else if(!startsWithLetter(a.text, m.currentLetter)){ status='bad'; pts=state.settings.scoreEmpty; }
-      else if(counts[n]>1){ status='rep'; pts=state.settings.scoreRepeated; }
-      else { status='ok'; pts=state.settings.scoreUnique; }
-      if(!results[a.id]) results[a.id] = {};
-      results[a.id][cat] = { text: a.text, status, points: pts };
-    });
+function enterCorrectionLocal(){
+  const m = state.match;
+  state.screen = 'correctionLocal';
+  m._results = null;
+  render();
+  const players = m.players.map(p => ({ id:p.id, answers: m.roundAnswers[p.id]||{} }));
+  computeResults(m.deck, players, m.currentLetter).then(results => {
+    if(state.match !== m) return;
+    m._results = results; saveMatch();
+    if(state.screen==='correctionLocal') render();
   });
-  return results;
 }
+const STATUS_LABEL = { ok:'Válida', rep:'Repetida', bad:'Inválida', rev:'¿Existe?' };
 function renderCorrectionLocal(app){
   const m = state.match;
-  if(!m._results) m._results = scoreRound(m);
+  if(!m._results){
+    app.innerHTML = `${topbar('Corrigiendo respuestas', 'Buscando cada palabra en el diccionario...')}
+      <div class="screen center" style="padding-top:60px"><div style="font-size:40px">📖</div></div>`;
+    return;
+  }
   const results = m._results;
   app.innerHTML = `
     ${topbar('Corrección — letra '+m.currentLetter, 'Tocá una respuesta para cambiar su estado')}
@@ -709,20 +789,22 @@ function renderCorrectionLocal(app){
       ${m.deck.map(cat => `
         <div class="correct-cat"><h4>${esc(cat)}</h4>
           ${m.players.map(p => {
-            const r = (results[p.id]||{})[cat] || {text:'',status:'bad',points:state.settings.scoreEmpty};
+            const r = (results[p.id]||{})[cat] || {text:'',status:'bad',points:state.settings.scoreEmpty,desc:null};
             return `<div class="ans-row">
               <span class="name">${esc(p.name)}</span>
               <span class="txt ${r.text?'':'empty'}">${r.text?esc(r.text):'(vacío)'}</span>
-              <button class="status-btn ${r.status}" onclick="cycleStatus('${p.id}','${cat.replace(/'/g,"\\'")}')">${r.status==='ok'?'Válida':r.status==='rep'?'Repetida':'Inválida'}</button>
+              <button class="status-btn ${r.status}" onclick="cycleStatus('${p.id}','${cat.replace(/'/g,"\\'")}')">${STATUS_LABEL[r.status]||r.status}</button>
               <span class="pts">${r.points}</span>
-            </div>`;
+            </div>
+            ${r.desc ? `<div class="ans-desc">${esc(r.desc)}</div>` : (r.status==='rev' ? `<div class="ans-desc">No la encontramos en el diccionario — revisala a mano.</div>` : '')}`;
           }).join('')}
         </div>`).join('')}
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:16px" onclick="confirmRoundScore()">Confirmar puntaje de la ronda</button>
     </div>`;
 }
 function cycleStatus(playerId, cat){
-  const m = state.match; const r = m._results[playerId][cat];
+  const results = state.screen==='onlineReview' ? state.online.reviewResults : state.match._results;
+  const r = results[playerId][cat];
   const order = ['ok','rep','bad']; const next = order[(order.indexOf(r.status)+1)%order.length];
   r.status = next;
   r.points = next==='ok' ? state.settings.scoreUnique : next==='rep' ? state.settings.scoreRepeated : state.settings.scoreEmpty;
@@ -907,34 +989,58 @@ function maybeFinishRoundHost(){
   const o = state.online;
   if(!o.awaitingAnswers) return;
   const allIn = o.myAnswers && Object.values(o.guests).every(g=>g.answers);
-  if(allIn){ finishRoundHost(); return; }
+  if(allIn){ o.awaitingAnswers = false; finishRoundHost(); return; }
   if(o.myAnswers && state.screen!=='onlineWaiting'){ state.screen='onlineWaiting'; render(); }
 }
 function finishRoundHost(){
   const o = state.online;
-  o.awaitingAnswers = false;
   const players = [{ id:'me', name:o.myName, answers:o.myAnswers }]
     .concat(Object.entries(o.guests).map(([pid,g])=>({ id:pid, name:g.name, answers:g.answers||{} })));
-  const results = {};
-  o.round.deck.forEach(cat => {
-    const perPlayer = players.map(p => ({ id:p.id, text: (p.answers||{})[cat] || '' }));
-    const counts = {};
-    perPlayer.forEach(a => { const n = normalize(a.text); if(n) counts[n]=(counts[n]||0)+1; });
-    perPlayer.forEach(a => {
-      const n = normalize(a.text); let status, pts;
-      if(!n){ status='bad'; pts=state.settings.scoreEmpty; }
-      else if(!startsWithLetter(a.text, o.round.letter)){ status='bad'; pts=state.settings.scoreEmpty; }
-      else if(counts[n]>1){ status='rep'; pts=state.settings.scoreRepeated; }
-      else { status='ok'; pts=state.settings.scoreUnique; }
-      if(!results[a.id]) results[a.id]={};
-      results[a.id][cat] = { text:a.text, status, points:pts };
-    });
+  o.lastPlayers = players;
+  o.reviewResults = null;
+  state.screen = 'onlineReview'; render();
+  computeResults(o.round.deck, players, o.round.letter).then(results => {
+    if(!state.online || state.online!==o) return;
+    o.reviewResults = results;
+    if(state.screen==='onlineReview') render();
   });
-  o.lastResults = results; o.lastPlayers = players;
+}
+function renderOnlineReview(app){
+  const o = state.online;
+  document.getElementById('bottomnav').style.display='none';
+  if(!o.reviewResults){
+    app.innerHTML = `${topbar('Corrigiendo respuestas', 'Buscando cada palabra en el diccionario...')}
+      <div class="screen center" style="padding-top:60px"><div style="font-size:40px">📖</div></div>`;
+    return;
+  }
+  const results = o.reviewResults; const players = o.lastPlayers; const deck = o.round.deck;
+  app.innerHTML = `
+    ${topbar('Corrección — letra '+o.round.letter, 'Tocá una respuesta para cambiar su estado')}
+    <div class="screen">
+      ${deck.map(cat => `
+        <div class="correct-cat"><h4>${esc(cat)}</h4>
+          ${players.map(p => {
+            const r = (results[p.id]||{})[cat] || {text:'',status:'bad',points:0,desc:null};
+            return `<div class="ans-row">
+              <span class="name">${esc(p.name)}</span>
+              <span class="txt ${r.text?'':'empty'}">${r.text?esc(r.text):'(vacío)'}</span>
+              <button class="status-btn ${r.status}" onclick="cycleStatus('${p.id}','${cat.replace(/'/g,"\\'")}')">${STATUS_LABEL[r.status]||r.status}</button>
+              <span class="pts">${r.points}</span>
+            </div>
+            ${r.desc ? `<div class="ans-desc">${esc(r.desc)}</div>` : (r.status==='rev' ? `<div class="ans-desc">No la encontramos en el diccionario — revisala a mano.</div>` : '')}`;
+          }).join('')}
+        </div>`).join('')}
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:16px" onclick="confirmOnlineRoundScore()">Confirmar y enviar puntaje</button>
+    </div>`;
+}
+function confirmOnlineRoundScore(){
+  const o = state.online;
+  const results = o.reviewResults; const players = o.lastPlayers;
   players.forEach(p => { o.scores[p.id] = (o.scores[p.id]||0) + Object.values(results[p.id]||{}).reduce((s,r)=>s+r.points,0); });
+  o.lastResults = results;
   o.history.push({ letter:o.round.letter, results });
   hostBroadcast({ type:'scoreboard', results, players: players.map(p=>({id:p.id,name:p.name})), scores:o.scores });
-  o.round = null;
+  o.round = null; o.reviewResults = null;
   state.screen = 'onlineScoreboard'; render();
 }
 function closeOnline(){
@@ -1060,7 +1166,6 @@ function renderOnlineScoreboard(app){
   else { players = o.lastScoreboard.players; scores = o.lastScoreboard.scores; results = o.lastScoreboard.results; }
   const sorted = [...players].sort((a,b)=>(scores[b.id]||0)-(scores[a.id]||0));
   const cats = players.length && results[players[0].id] ? Object.keys(results[players[0].id]) : [];
-  const statusLabel = { ok:'Válida', rep:'Repetida', bad:'Inválida' };
   app.innerHTML = `
     ${topbar('Puntaje de la ronda')}
     <div class="screen">
@@ -1072,13 +1177,14 @@ function renderOnlineScoreboard(app){
         ${cats.map(cat => `
           <div class="correct-cat"><h4>${esc(cat)}</h4>
             ${players.map(p => {
-              const r = (results[p.id]||{})[cat] || {text:'',status:'bad',points:0};
+              const r = (results[p.id]||{})[cat] || {text:'',status:'bad',points:0,desc:null};
               return `<div class="ans-row">
                 <span class="name">${esc(p.name)}</span>
                 <span class="txt ${r.text?'':'empty'}">${r.text?esc(r.text):'(vacío)'}</span>
-                <span class="status-btn ${r.status}">${statusLabel[r.status]||r.status}</span>
+                <span class="status-btn ${r.status}">${STATUS_LABEL[r.status]||r.status}</span>
                 <span class="pts">${r.points}</span>
-              </div>`;
+              </div>
+              ${r.desc ? `<div class="ans-desc">${esc(r.desc)}</div>` : ''}`;
             }).join('')}
           </div>`).join('')}
       </div>
