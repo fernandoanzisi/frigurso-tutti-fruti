@@ -369,6 +369,10 @@ function inviteToPlay(){
   const msg = '🍓 ¿Están para jugar una partida de Tutti Fruti? Avisen si se prenden y armamos la sala 👉 https://fernandoanzisi.github.io/frigurso-tutti-fruti/';
   window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank');
 }
+function focusNextInput(prefix, i, total){
+  if(i < total-1){ const next = document.getElementById(prefix+'-'+(i+1)); if(next) next.focus(); }
+  else { const cur = document.getElementById(prefix+'-'+i); if(cur) cur.blur(); }
+}
 function toast(msg){
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(), 2200);
@@ -405,6 +409,7 @@ function nav(screen){
   document.getElementById('bottomnav').style.display = 'flex';
   render();
   window.scrollTo(0,0);
+  if(screen==='home' && swReg && swReg.waiting) showUpdateBanner(swReg);
 }
 function render(){
   const app = document.getElementById('app');
@@ -726,7 +731,7 @@ function renderTurnLocal(app){
       <div class="timerbar"><i id="timer-bar" style="width:100%"></i></div>
       <div id="cat-inputs">
         ${m.deck.map((c,i)=>`<div class="cat-input"><label><span class="dot" style="background:${AVATAR_COLORS[i%AVATAR_COLORS.length]}"></span>${esc(c)}</label>
-          <input id="ci-${i}" autocomplete="off" autocorrect="off" placeholder="${m.currentLetter}..."></div>`).join('')}
+          <input id="ci-${i}" autocomplete="off" autocorrect="off" enterkeyhint="${i<m.deck.length-1?'next':'done'}" placeholder="${m.currentLetter}..." onkeydown="if(event.key==='Enter'){event.preventDefault();focusNextInput('ci',${i},${m.deck.length})}"></div>`).join('')}
       </div>
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitTurn()">✅ Terminé / ¡Basta!</button>
     </div>`;
@@ -1168,7 +1173,7 @@ function renderOnlinePlaying(app){
       <div class="timerbar"><i id="timer-bar" style="width:100%"></i></div>
       <div id="cat-inputs">
         ${r.deck.map((c,i)=>`<div class="cat-input"><label><span class="dot" style="background:${AVATAR_COLORS[i%AVATAR_COLORS.length]}"></span>${esc(c)}</label>
-          <input id="oi-${i}" autocomplete="off" autocorrect="off" placeholder="${r.letter}..."></div>`).join('')}
+          <input id="oi-${i}" autocomplete="off" autocorrect="off" enterkeyhint="${i<r.deck.length-1?'next':'done'}" placeholder="${r.letter}..." onkeydown="if(event.key==='Enter'){event.preventDefault();focusNextInput('oi',${i},${r.deck.length})}"></div>`).join('')}
       </div>
       <button class="btn btn-danger btn-lg btn-block" style="margin-top:8px" onclick="callBasta()">🛑 ¡BASTA!</button>
       <div class="sub center" style="margin-top:8px">Corta la ronda para todos, no solo para vos</div>
@@ -1298,6 +1303,7 @@ function endOnlineMatch(){
 /* ═══════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════ */
+let swReg = null;
 function boot(){
   const params = new URLSearchParams(location.search);
   const joinCode = params.get('join');
@@ -1311,6 +1317,7 @@ function boot(){
   render();
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').then(reg => {
+      swReg = reg;
       reg.addEventListener('updatefound', () => {
         const nw = reg.installing;
         if(!nw) return;
@@ -1318,21 +1325,22 @@ function boot(){
           if(nw.state==='installed' && navigator.serviceWorker.controller) showUpdateBanner(reg);
         });
       });
+      if(reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg);
     }).catch(()=>{});
-    let reloaded = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if(reloaded) return; reloaded = true; location.reload();
-    });
   }
 }
 function showUpdateBanner(reg){
   if(document.getElementById('update-banner')) return;
+  if(state.online || state.match) return;
   const b = document.createElement('div');
   b.id = 'update-banner';
   b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9500;background:var(--accent);color:#1a0d00;padding:12px 16px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:13px;box-shadow:0 -6px 20px rgba(0,0,0,.3)';
   b.innerHTML = '<span class="grow">🔄 Hay una versión nueva de la app</span><button id="update-btn" style="background:#1a0d00;color:#fff;border:none;border-radius:9px;padding:9px 16px;font-weight:800;font-size:13px">Actualizar</button>';
   document.body.appendChild(b);
-  document.getElementById('update-btn').onclick = () => { if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'}); };
+  document.getElementById('update-btn').onclick = () => {
+    if(reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+    setTimeout(()=>location.reload(), 300);
+  };
 }
 boot();
 </script>
