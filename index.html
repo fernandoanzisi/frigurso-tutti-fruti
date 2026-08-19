@@ -9,19 +9,24 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{overscroll-behavior-y:contain;height:100%}
 body{
   background:
-    radial-gradient(circle at 12% 6%, rgba(255,62,134,.11), transparent 40%),
-    radial-gradient(circle at 92% 14%, rgba(0,207,193,.11), transparent 38%),
-    radial-gradient(circle at 50% 96%, rgba(255,159,28,.09), transparent 42%),
+    radial-gradient(circle at 12% 6%, rgba(255,62,134,.14), transparent 40%),
+    radial-gradient(circle at 92% 14%, rgba(0,207,193,.14), transparent 38%),
+    radial-gradient(circle at 10% 62%, rgba(155,93,229,.10), transparent 40%),
+    radial-gradient(circle at 50% 98%, rgba(255,159,28,.12), transparent 42%),
     var(--bg);
   color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-family:'Nunito',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   min-height:100vh;min-height:100dvh;
   padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  position:relative;overflow-x:hidden;
 }
 :root{
   --bg:#0b1220;--card:#111a2e;--card2:#0e1626;--border:#1e2b47;
@@ -29,18 +34,25 @@ body{
   --accent:#FF3E86;--accent2:#FF9F1C;--accent3:#00CFC1;
   --accent4:#FFD23F;--accent5:#6BCB3D;--accent6:#9B5DE5;
   --danger:#ef4444;--ok:#6BCB3D;--warn:#FFD23F;
+  --f-display:'Fredoka',-apple-system,sans-serif;
 }
 button,input,select,textarea{font-family:inherit;color:inherit}
-input,select,textarea{background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:11px 12px;font-size:15px;width:100%}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
-button{cursor:pointer;border:none;background:none}
-.btn{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-weight:700;font-size:14px;color:var(--text)}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 6px 18px rgba(255,62,134,.3)}
+input,select,textarea{background:var(--card2);border:2px solid var(--border);border-radius:10px;padding:11px 12px;font-size:15px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,62,134,.18)}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+.btn{background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:12px 16px;font-weight:800;font-size:14px;color:var(--text);
+  box-shadow:0 3px 0 var(--border);transition:transform .12s ease,box-shadow .12s ease}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--border)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:0 4px 0 #c21d63}
+.btn-primary:active{box-shadow:0 1px 0 #c21d63}
 .btn-block{width:100%}
-.btn-lg{padding:16px 20px;font-size:16px;border-radius:14px}
-.btn-danger{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.3)}
-.btn-ghost{background:none;border:1px solid var(--border);color:var(--text2)}
-.btn-sm{padding:7px 12px;font-size:12px;border-radius:9px}
+.btn-lg{padding:16px 20px;font-size:16px;border-radius:16px}
+.btn-danger{background:rgba(239,68,68,.14);color:var(--danger);border:2px solid rgba(239,68,68,.35);box-shadow:0 3px 0 rgba(239,68,68,.22)}
+.btn-danger:active{box-shadow:0 1px 0 rgba(239,68,68,.22)}
+.btn-ghost{background:none;border:2px solid var(--border);color:var(--text2);box-shadow:none}
+.btn-ghost:active{transform:translateY(2px)}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:10px;box-shadow:0 2px 0 var(--border)}
+.btn-sm:active{box-shadow:0 1px 0 var(--border)}
 .row{display:flex;gap:8px}
 .col{display:flex;flex-direction:column;gap:8px}
 .wrap{display:flex;flex-wrap:wrap;gap:8px}
@@ -50,68 +62,77 @@ button{cursor:pointer;border:none;background:none}
 .sub{color:var(--text2);font-size:13px}
 
 .topbar{padding:18px 16px 10px;display:flex;align-items:center;gap:10px}
-.topbar h1{font-size:19px;font-weight:800}
+.topbar h1{font-size:20px;font-weight:700;font-family:var(--f-display)}
 .topbar .sub{font-size:12px;margin-top:1px}
-.topbar-icon{margin-left:auto;background:var(--card);border:1px solid var(--border);border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.topbar-icon{margin-left:auto;background:var(--card);border:2px solid var(--border);border-radius:12px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:16px}
 
-.screen{padding:0 16px 24px;max-width:640px;margin:0 auto}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
-.card h3{font-size:14px;font-weight:700;margin-bottom:10px}
+.screen{padding:0 16px 24px;max-width:640px;margin:0 auto;position:relative;z-index:1}
+.card{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.card h3{font-size:14px;font-weight:800;margin-bottom:10px;font-family:var(--f-display)}
 .card h3 .n{color:var(--text3);font-weight:500}
 
-.chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:2px solid var(--border);border-radius:99px;padding:7px 12px;font-size:13px;font-weight:700}
 .chip .x{color:var(--text3);font-size:13px;cursor:pointer;padding:0 2px}
-.avatar{width:22px;height:22px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#06131f;flex-shrink:0}
+.avatar{width:22px;height:22px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#06131f;flex-shrink:0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.15)}
 
 .cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
-.cta{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px 14px;text-align:center}
-.cta .ic{font-size:32px;margin-bottom:8px;display:block}
-.cta .t{font-weight:800;font-size:14px}
+.cta{background:var(--card);border:2px solid var(--border);border-radius:20px;padding:20px 14px;text-align:center;
+  box-shadow:0 4px 0 rgba(0,0,0,.2);transition:transform .12s ease,box-shadow .12s ease}
+.cta:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.cta .ic{font-size:34px;margin-bottom:8px;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
+.cta .t{font-weight:800;font-size:14px;font-family:var(--f-display)}
 .cta .d{font-size:11px;color:var(--text3);margin-top:3px}
 .cta.wide{grid-column:1/-1;display:flex;align-items:center;text-align:left;gap:14px}
 .cta.wide .ic{margin:0;font-size:30px}
-.cta-grid .cta:nth-child(1){background:linear-gradient(160deg,rgba(255,62,134,.16),var(--card) 65%)}
-.cta-grid .cta:nth-child(2){background:linear-gradient(160deg,rgba(0,207,193,.16),var(--card) 65%)}
-.cta-grid .cta:nth-child(3){background:linear-gradient(160deg,rgba(255,159,28,.14),var(--card) 65%)}
+.cta-grid .cta:nth-child(1){background:linear-gradient(160deg,rgba(255,62,134,.18),var(--card) 65%);border-color:rgba(255,62,134,.35)}
+.cta-grid .cta:nth-child(2){background:linear-gradient(160deg,rgba(0,207,193,.18),var(--card) 65%);border-color:rgba(0,207,193,.35)}
+.cta-grid .cta:nth-child(3){background:linear-gradient(160deg,rgba(255,159,28,.16),var(--card) 65%);border-color:rgba(255,159,28,.35)}
 
 .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
-.kpi b{display:block;font-size:20px;font-weight:800;color:var(--accent)}
+.kpi{background:var(--card);border:2px solid var(--border);border-radius:14px;padding:12px;text-align:center;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.kpi b{display:block;font-size:22px;font-weight:700;color:var(--accent);font-family:var(--f-display)}
 .kpi span{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.03em}
 .kpi:nth-child(1) b{color:var(--accent)}
 .kpi:nth-child(2) b{color:var(--accent2)}
 .kpi:nth-child(3) b{color:var(--accent3)}
 
-.nav-bottom{position:fixed;left:0;right:0;bottom:0;z-index:500;background:var(--card);border-top:1px solid var(--border);
+.nav-bottom{position:fixed;left:0;right:0;bottom:0;z-index:500;background:var(--card);border-top:2px solid var(--border);
   display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom));}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;border-radius:10px;color:var(--text3);font-size:10px;font-weight:700}
-.nav-btn.active{color:var(--accent)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px;border-radius:12px;color:var(--text3);font-size:10px;font-weight:700;transition:transform .12s ease,background .12s ease}
+.nav-btn:active{transform:scale(.9)}
+.nav-btn.active{color:var(--accent);background:rgba(255,62,134,.12)}
 .nav-btn .ni{font-size:19px}
 
 .field{margin-bottom:12px}
-.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600}
-.seg{display:flex;background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:3px;gap:3px}
-.seg button{flex:1;padding:9px 6px;border-radius:8px;font-size:12px;font-weight:700;color:var(--text3)}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:700}
+.seg{display:flex;background:var(--card2);border:2px solid var(--border);border-radius:13px;padding:3px;gap:3px}
+.seg button{flex:1;padding:9px 6px;border-radius:9px;font-size:12px;font-weight:700;color:var(--text3);transition:transform .1s ease}
 .seg button.active{background:var(--accent);color:#fff}
+.seg button:active{transform:scale(.94)}
 
-.letter-badge{width:88px;height:88px;border-radius:22px;
+.letter-badge{width:92px;height:92px;border-radius:26px;
   background:linear-gradient(135deg,var(--accent),var(--accent2) 35%,var(--accent4) 60%,var(--accent5) 80%,var(--accent3));
-  display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:800;color:#fff;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:700;font-family:var(--f-display);color:#fff;margin:0 auto 14px;
   text-shadow:0 2px 6px rgba(0,0,0,.3);
-  box-shadow:0 8px 24px rgba(255,62,134,.35)}
-.timer{font-size:34px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums;margin-bottom:4px}
-.timer.low{color:var(--danger)}
-.timerbar{height:6px;background:var(--card2);border-radius:99px;overflow:hidden;margin-bottom:18px}
+  box-shadow:0 8px 0 rgba(0,0,0,.2),0 10px 26px rgba(255,62,134,.35)}
+.letter-badge.pop{animation:letterPop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes letterPop{0%{transform:scale(.55) rotate(-10deg)}55%{transform:scale(1.18) rotate(5deg)}80%{transform:scale(.95) rotate(-2deg)}100%{transform:scale(1) rotate(0)}}
+.timer{font-size:36px;font-weight:700;font-family:var(--f-display);text-align:center;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.timer.low{color:var(--danger);animation:timerShake .5s infinite}
+@keyframes timerShake{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.timerbar{height:8px;background:var(--card2);border-radius:99px;overflow:hidden;margin-bottom:18px;border:1px solid var(--border)}
 .timerbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 1s linear}
 
-.cat-input{margin-bottom:10px}
+.cat-input{margin-bottom:10px;animation:riseIn .4s cubic-bezier(.16,.84,.44,1) both}
 .cat-input label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:700}
-.cat-input .dot{width:8px;height:8px;border-radius:99px;flex-shrink:0}
+.cat-input .dot{width:9px;height:9px;border-radius:99px;flex-shrink:0;box-shadow:inset 0 -1px 1px rgba(0,0,0,.3)}
 .cat-input input{font-size:16px;text-transform:capitalize}
+@keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
 .handoff{position:fixed;inset:0;z-index:600;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
-.handoff .ic{font-size:56px;margin-bottom:16px}
-.handoff h2{font-size:20px;margin-bottom:6px}
+.handoff .ic{font-size:56px;margin-bottom:16px;animation:float 2.4s ease-in-out infinite}
+.handoff h2{font-size:20px;margin-bottom:6px;font-family:var(--f-display);font-weight:700}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
 
 .correct-cat{border-bottom:1px solid var(--border);padding:12px 0}
 .correct-cat:last-child{border-bottom:none}
@@ -120,37 +141,53 @@ button{cursor:pointer;border:none;background:none}
 .ans-row .name{width:76px;flex-shrink:0;font-size:12px;color:var(--text2);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ans-row .txt{flex:1;font-size:14px;font-weight:600}
 .ans-row .txt.empty{color:var(--text3);font-style:italic;font-weight:400}
-.status-btn{border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;border:1px solid var(--border);flex-shrink:0}
-.status-btn.ok{background:rgba(107,203,61,.15);color:var(--ok);border-color:rgba(107,203,61,.3)}
-.status-btn.rep{background:rgba(255,210,63,.15);color:var(--warn);border-color:rgba(255,210,63,.3)}
-.status-btn.bad{background:rgba(239,68,68,.12);color:var(--danger);border-color:rgba(239,68,68,.3)}
-.status-btn.rev{background:rgba(0,207,193,.15);color:var(--accent3);border-color:rgba(0,207,193,.3)}
+.status-btn{border-radius:9px;padding:5px 9px;font-size:11px;font-weight:800;border:2px solid var(--border);flex-shrink:0;transition:transform .1s ease}
+.status-btn:active{transform:scale(.92)}
+.status-btn.ok{background:rgba(107,203,61,.15);color:var(--ok);border-color:rgba(107,203,61,.4)}
+.status-btn.rep{background:rgba(255,210,63,.15);color:var(--warn);border-color:rgba(255,210,63,.4)}
+.status-btn.bad{background:rgba(239,68,68,.12);color:var(--danger);border-color:rgba(239,68,68,.4)}
+.status-btn.rev{background:rgba(0,207,193,.15);color:var(--accent3);border-color:rgba(0,207,193,.4)}
 .ans-desc{font-size:11px;color:var(--text3);margin:-2px 0 8px;padding-left:84px;line-height:1.4}
 .pts{width:34px;text-align:right;flex-shrink:0;font-size:12px;font-weight:800;color:var(--text3)}
 
 .score-list{display:flex;flex-direction:column;gap:8px}
-.score-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.score-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:10px 12px;animation:riseIn .35s ease both}
 .score-item .pos{width:20px;font-size:12px;color:var(--text3);font-weight:800}
 .score-item .nm{flex:1;font-weight:700;font-size:14px}
-.score-item .pt{font-weight:800;color:var(--accent);font-size:16px}
-.score-item.first{border-color:rgba(255,62,134,.5);background:rgba(255,62,134,.08)}
+.score-item .pt{font-weight:700;color:var(--accent);font-size:17px;font-family:var(--f-display);font-variant-numeric:tabular-nums}
+.score-item.first{border-color:var(--accent4);background:rgba(255,210,63,.1);box-shadow:0 0 0 3px rgba(255,210,63,.15)}
 
-.deck-cat{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;margin-bottom:7px}
+.deck-cat{display:flex;align-items:center;gap:8px;background:var(--card2);border:2px solid var(--border);border-radius:11px;padding:9px 12px;margin-bottom:7px}
 .deck-cat span{flex:1;font-size:14px}
 .letters-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
-.letter-tog{aspect-ratio:1;border-radius:9px;background:var(--card2);border:1px solid var(--border);font-weight:800;font-size:13px;color:var(--text3)}
+.letter-tog{aspect-ratio:1;border-radius:10px;background:var(--card2);border:2px solid var(--border);font-weight:800;font-size:13px;color:var(--text3);transition:transform .1s ease}
+.letter-tog:active{transform:scale(.9)}
 .letter-tog.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-.room-code{font-size:38px;font-weight:800;letter-spacing:.12em;text-align:center;color:var(--accent);
-  background:var(--card2);border:1px dashed var(--border);border-radius:14px;padding:16px;margin:14px 0}
-.lobby-player{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:10px 12px;margin-bottom:7px}
+.room-code{font-size:40px;font-weight:700;font-family:var(--f-display);letter-spacing:.14em;text-align:center;color:var(--accent);
+  background:var(--card2);border:2px dashed var(--accent);border-radius:16px;padding:16px;margin:14px 0}
+.lobby-player{display:flex;align-items:center;gap:10px;background:var(--card2);border:2px solid var(--border);border-radius:13px;padding:10px 12px;margin-bottom:7px;animation:riseIn .35s ease both}
 .pulse{width:8px;height:8px;border-radius:99px;background:var(--ok);flex-shrink:0;animation:pulse 1.4s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .empty-state{text-align:center;padding:40px 16px;color:var(--text3)}
-.empty-state .ic{font-size:38px;margin-bottom:10px;display:block;opacity:.6}
+.empty-state .ic{font-size:44px;margin-bottom:10px;display:block;opacity:.75}
 .toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
-  background:var(--text);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:700;z-index:900;
-  box-shadow:0 6px 20px rgba(0,0,0,.3)}
+  background:var(--text);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;font-weight:800;z-index:900;
+  box-shadow:0 6px 20px rgba(0,0,0,.3);animation:toastIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px) scale(.9)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+
+.bg-blob{position:fixed;border-radius:50%;filter:blur(40px);pointer-events:none;z-index:0;opacity:.35;animation:blobDrift 26s ease-in-out infinite}
+.bg-blob.b1{width:220px;height:220px;background:var(--accent);top:-60px;left:-60px}
+.bg-blob.b2{width:180px;height:180px;background:var(--accent3);top:40%;right:-70px;animation-duration:31s;animation-delay:-6s}
+.bg-blob.b3{width:200px;height:200px;background:var(--accent2);bottom:-70px;left:20%;animation-duration:28s;animation-delay:-12s}
+.bg-blob.b4{width:150px;height:150px;background:var(--accent6);top:12%;right:20%;animation-duration:22s;animation-delay:-3s}
+@keyframes blobDrift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(24px,-18px) scale(1.08)}66%{transform:translate(-18px,20px) scale(.94)}}
+
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:950;overflow:hidden}
+.confetti-wrap i{position:absolute;top:-24px;width:8px;height:14px;border-radius:2px;animation:confettiFall linear forwards;opacity:.95}
+@keyframes confettiFall{to{transform:translateY(110vh) rotate(600deg);opacity:0}}
+
+.mascot{display:block;margin:0 auto;animation:float 3s ease-in-out infinite}
 
 /* ═══════════════════════════════════════════════════════════════
    IDENTIDAD FRIGURSO — splash (puro CSS, se va solo) + traba de
@@ -201,10 +238,19 @@ button{cursor:pointer;border:none;background:none}
   .fg-sash{animation:none;transform:rotate(-22deg) translateX(0);}
   .fg-wordmark,.fg-tagline{animation:none;opacity:1;transform:none;}
   #fg-splash{animation-delay:.1s;}
+  .bg-blob,.handoff .ic,.mascot{animation:none!important}
+  .cat-input,.score-item,.lobby-player{animation:none!important;opacity:1!important;transform:none!important}
+  .timer.low{animation:none!important}
+  .letter-badge.pop{animation:none!important}
 }
 </style>
 </head>
 <body>
+
+<div class="bg-blob b1" aria-hidden="true"></div>
+<div class="bg-blob b2" aria-hidden="true"></div>
+<div class="bg-blob b3" aria-hidden="true"></div>
+<div class="bg-blob b4" aria-hidden="true"></div>
 
 <div id="fg-splash" aria-hidden="true">
   <div class="fg-sash"></div>
@@ -414,6 +460,77 @@ function soundCountdown(){ beep(880,0.1,0); beep(880,0.1,0.35); beep(880,0.1,0.7
 function soundEnd(){ beep(440,0.5,0); beep(660,0.6,0.15); }
 
 /* ═══════════════════════════════════════════════════════════════
+   EFECTOS VISUALES — mascota, confeti, letra en "tragamonedas",
+   puntajes con conteo. Puramente decorativo, no toca reglas ni
+   flujo del juego.
+   ═══════════════════════════════════════════════════════════════ */
+function mascotSVG(mood, size){
+  size = size || 64;
+  const mouths = {
+    happy: '<path d="M23 38q9 9 18 0" stroke="#3a0a1f" stroke-width="3.2" fill="none" stroke-linecap="round"/>',
+    cheer: '<path d="M21 36q11 13 22 0" fill="#3a0a1f"/><path d="M21 36q11 13 22 0" fill="none" stroke="#3a0a1f" stroke-width="2"/>',
+    oops: '<ellipse cx="32" cy="39" rx="5" ry="6" fill="#3a0a1f"/>',
+  };
+  return `<svg class="mascot" width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">
+    <defs><radialGradient id="mg-${mood}" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#FF9F1C"/><stop offset="55%" stop-color="#FF3E86"/><stop offset="100%" stop-color="#9B5DE5"/>
+    </radialGradient></defs>
+    <ellipse cx="32" cy="58" rx="16" ry="3" fill="#000" opacity=".18"/>
+    <path d="M32 6c14 0 20 12 20 24s-8 24-20 24S12 42 12 30 18 6 32 6Z" fill="url(#mg-${mood})"/>
+    <path d="M28 8c1-4 4-6 8-6" stroke="#6BCB3D" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="23" cy="27" r="5.5" fill="#fff"/><circle cx="41" cy="27" r="5.5" fill="#fff"/>
+    <circle cx="24.5" cy="28" r="2.6" fill="#241226"/><circle cx="42.5" cy="28" r="2.6" fill="#241226"/>
+    <circle cx="23" cy="26" r="1" fill="#fff"/><circle cx="41" cy="26" r="1" fill="#fff"/>
+    <ellipse cx="17" cy="35" rx="4" ry="2.6" fill="#fff" opacity=".35"/><ellipse cx="47" cy="35" rx="4" ry="2.6" fill="#fff" opacity=".35"/>
+    ${mouths[mood]||mouths.happy}
+  </svg>`;
+}
+function spinLetterBadge(el, finalLetter){
+  if(!el) return;
+  clearInterval(el._spinTimer);
+  el.classList.remove('pop');
+  let i = 0; const total = 10;
+  el._spinTimer = setInterval(()=>{
+    el.textContent = ALL_LETTERS[Math.floor(Math.random()*ALL_LETTERS.length)];
+    i++;
+    if(i>=total){
+      clearInterval(el._spinTimer);
+      el.textContent = finalLetter;
+      el.classList.add('pop');
+      beep(880,0.15,0);
+      setTimeout(()=>el.classList.remove('pop'), 500);
+    }
+  }, 65);
+}
+function confettiBurst(n){
+  const colors = ['#FF3E86','#FF9F1C','#FFD23F','#6BCB3D','#00CFC1','#9B5DE5'];
+  const wrap = document.createElement('div'); wrap.className = 'confetti-wrap'; wrap.setAttribute('aria-hidden','true');
+  for(let i=0;i<n;i++){
+    const p = document.createElement('i');
+    p.style.left = (Math.random()*100)+'%';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDelay = (Math.random()*0.35)+'s';
+    p.style.animationDuration = (1.5+Math.random()*0.9)+'s';
+    wrap.appendChild(p);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(()=>wrap.remove(), 2700);
+}
+function animateScoreCounts(container){
+  (container||document).querySelectorAll('.pt[data-val]').forEach(el => {
+    const to = +el.dataset.val || 0;
+    const start = performance.now();
+    const dur = 700;
+    function step(t){
+      const p = Math.min(1, (t-start)/dur);
+      el.textContent = Math.round(to * (1-Math.pow(1-p,3)));
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
    NAV / RENDER
    ═══════════════════════════════════════════════════════════════ */
 function nav(screen){
@@ -452,6 +569,7 @@ function renderHome(app){
   app.innerHTML = `
     ${topbar('🍉 Frigurso Tutti Fruti', 'El tutti fruti más completo del mundo')}
     <div class="screen">
+      <div class="center" style="margin:-6px 0 12px">${mascotSVG('happy',68)}</div>
       <div class="cta-grid">
         <div class="cta" onclick="openSetupLocal()"><span class="ic">📱</span><div class="t">Jugar local</div><div class="d">Pasando el celular</div></div>
         <div class="cta" onclick="nav('onlineHome')"><span class="ic">🌐</span><div class="t">Jugar online</div><div class="d">Cada uno desde el suyo</div></div>
@@ -487,7 +605,7 @@ function renderJugadores(app){
         <div class="row"><input id="np-name" placeholder="Nombre nuevo jugador" onkeydown="if(event.key==='Enter')addPlayerGlobal()">
         <button class="btn btn-primary" onclick="addPlayerGlobal()">Agregar</button></div>
       </div>
-      ${list.length===0 ? `<div class="empty-state"><span class="ic">👥</span>Todavía no agregaste jugadores</div>` :
+      ${list.length===0 ? `<div class="empty-state">${mascotSVG('oops',56)}<div style="margin-top:8px">Todavía no agregaste jugadores</div></div>` :
       list.map((p,i)=>`
         <div class="card" style="display:flex;align-items:center;gap:12px;padding:12px 16px">
           <div class="avatar" style="background:${p.color};width:34px;height:34px;font-size:14px">${esc(p.name[0]||'?').toUpperCase()}</div>
@@ -584,7 +702,7 @@ function renderHistorial(app){
   app.innerHTML = `
     ${topbar('Historial de partidas')}
     <div class="screen">
-      ${hist.length===0 ? `<div class="empty-state"><span class="ic">📊</span>Todavía no jugaste ninguna partida</div>` :
+      ${hist.length===0 ? `<div class="empty-state">${mascotSVG('oops',56)}<div style="margin-top:8px">Todavía no jugaste ninguna partida</div></div>` :
       hist.map(h => {
         const sorted = [...h.players].sort((a,b)=>b.points-a.points);
         const winner = sorted[0];
@@ -739,7 +857,7 @@ function renderTurnLocal(app){
       <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove();beginTurnTimer()">Listo, soy ${esc(player.name)}</button>
     </div>
     <div class="screen" style="padding-top:20px">
-      <div class="letter-badge">${m.currentLetter}</div>
+      <div class="letter-badge" id="letter-badge">${m.currentLetter}</div>
       <div class="timer" id="timer-display">${state.settings.seconds===0?'∞':state.settings.seconds}</div>
       <div class="timerbar"><i id="timer-bar" style="width:100%"></i></div>
       <div id="cat-inputs">
@@ -754,6 +872,7 @@ let turnCountdownPlayed = false;
 function beginTurnTimer(){
   const secs = state.settings.seconds;
   turnSubmitted = false;
+  spinLetterBadge(document.getElementById('letter-badge'), state.match.currentLetter);
   if(secs===0) return;
   turnCountdownPlayed = false;
   const endsAt = Date.now() + secs*1000;
@@ -843,6 +962,7 @@ function confirmRoundScore(){
   m.currentLetter = null; m._results = null;
   saveMatch();
   state.screen = 'roundScoreboard'; render();
+  confettiBurst(16);
 }
 function renderRoundScoreboard(app){
   const m = state.match;
@@ -853,7 +973,7 @@ function renderRoundScoreboard(app){
       <div class="score-list">
         ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span>
           <span class="avatar" style="background:${p.color}">${esc(p.name[0]).toUpperCase()}</span>
-          <span class="nm grow">${esc(p.name)}</span><span class="pt">${m.scores[p.id]}</span>
+          <span class="nm grow">${esc(p.name)}</span><span class="pt" data-val="${m.scores[p.id]}">0</span>
           <button class="btn btn-sm btn-danger" style="margin-left:6px" onclick="removeFromMatch('${p.id}')">✕</button></div>`).join('')}
       </div>
       <div class="row" style="margin-top:18px">
@@ -861,6 +981,7 @@ function renderRoundScoreboard(app){
         <button class="btn btn-primary grow" onclick="m.roundNumber++;drawNextLetter();startTurn()">Otra ronda</button>
       </div>
     </div>`;
+  animateScoreCounts(app);
 }
 function removeFromMatch(playerId){
   const m = state.match;
@@ -884,20 +1005,22 @@ function endLocalMatch(){
   });
   saveAll(); clearMatch();
   state.screen = 'matchEnd'; state._lastRecord = record; render();
+  confettiBurst(40);
 }
 function renderMatchEnd(app){
   const record = state._lastRecord;
   const sorted = [...record.players].sort((a,b)=>b.points-a.points);
   app.innerHTML = `
-    <div class="screen" style="padding-top:60px;text-align:center">
-      <div style="font-size:60px">🏆</div>
-      <h1 style="margin:10px 0 4px">${esc(sorted[0].name)} ganó</h1>
+    <div class="screen" style="padding-top:40px;text-align:center">
+      ${mascotSVG('cheer',88)}
+      <h1 style="margin:10px 0 4px;font-family:var(--f-display);font-weight:700">${esc(sorted[0].name)} ganó</h1>
       <div class="sub" style="margin-bottom:20px">${record.roundsCount ?? record.rounds.length} rondas jugadas</div>
       <div class="score-list">
-        ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${esc(p.name)}</span><span class="pt">${p.points}</span></div>`).join('')}
+        ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${esc(p.name)}</span><span class="pt" data-val="${p.points}">0</span></div>`).join('')}
       </div>
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:24px" onclick="nav('home')">Volver al inicio</button>
     </div>`;
+  animateScoreCounts(app);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1093,6 +1216,7 @@ function confirmOnlineRoundScore(){
   hostBroadcast({ type:'scoreboard', results, players: players.map(p=>({id:p.id,name:p.name})), scores:o.scores });
   o.round = null; o.reviewResults = null;
   state.screen = 'onlineScoreboard'; render();
+  confettiBurst(16);
 }
 function closeOnline(){
   try{ state.online?.peer?.destroy(); }catch(e){}
@@ -1129,10 +1253,12 @@ function handleGuestMessage(data){
   } else if(data.type==='scoreboard'){
     o.lastScoreboard = data; o.round = null;
     state.screen = 'onlineScoreboard'; render();
+    confettiBurst(16);
   } else if(data.type==='matchEnd'){
     o.round = null;
     state._lastRecord = { rounds: [], roundsCount: data.roundsCount, players: data.players };
     state.screen = 'matchEnd'; render();
+    confettiBurst(40);
   } else if(data.type==='kicked'){
     guestLeaveRoom('El anfitrión te sacó de la sala.');
   } else if(data.type==='roundStop'){
@@ -1182,7 +1308,7 @@ function renderOnlinePlaying(app){
   document.getElementById('bottomnav').style.display='none';
   app.innerHTML = `
     <div class="screen" style="padding-top:20px">
-      <div class="letter-badge">${r.letter}</div>
+      <div class="letter-badge" id="letter-badge">🎲</div>
       <div class="timer" id="timer-display">${r.seconds}</div>
       <div class="timerbar"><i id="timer-bar" style="width:100%"></i></div>
       <div id="cat-inputs">
@@ -1192,6 +1318,7 @@ function renderOnlinePlaying(app){
       <button class="btn btn-danger btn-lg btn-block" style="margin-top:8px" onclick="callBasta()">🛑 ¡BASTA!</button>
       <div class="sub center" style="margin-top:8px">Corta la ronda para todos, no solo para vos</div>
     </div>`;
+  spinLetterBadge(document.getElementById('letter-badge'), r.letter);
   clearInterval(onlineTimer);
   const tick = ()=>{
     const msLeft = r.localEndsAt - Date.now();
@@ -1287,7 +1414,7 @@ function renderOnlineScoreboard(app){
     ${topbar('Puntaje de la ronda')}
     <div class="screen">
       <div class="score-list">
-        ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${esc(p.name)}</span><span class="pt">${scores[p.id]||0}</span></div>`).join('')}
+        ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${esc(p.name)}</span><span class="pt" data-val="${scores[p.id]||0}">0</span></div>`).join('')}
       </div>
       <div class="card" style="margin-top:14px">
         <h3>Respuestas de la ronda</h3>
@@ -1311,6 +1438,7 @@ function renderOnlineScoreboard(app){
         <button class="btn btn-primary grow" onclick="hostStartRound()">Otra ronda</button>
       </div>` : `<div class="sub center" style="margin-top:16px">Esperando que el anfitrión siga jugando...</div>`}
     </div>`;
+  animateScoreCounts(app);
 }
 function endOnlineMatch(){
   const o = state.online;
@@ -1321,6 +1449,7 @@ function endOnlineMatch(){
   try{ o.peer.destroy(); }catch(e){}
   state.online = null;
   state.screen = 'matchEnd'; state._lastRecord = record; render();
+  confettiBurst(40);
 }
 
 /* ═══════════════════════════════════════════════════════════════
