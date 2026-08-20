@@ -620,6 +620,7 @@ function render(){
     onlineHome: renderOnlineHome, onlineLobbyHost: renderOnlineLobbyHost,
     onlineJoin: renderOnlineJoin, onlineLobbyGuest: renderOnlineLobbyGuest,
     onlinePlaying: renderOnlinePlaying, onlineWaiting: renderOnlineWaiting, onlineReview: renderOnlineReview,
+    onlineReviewWatch: renderOnlineReviewWatch,
     onlineScoreboard: renderOnlineScoreboard,
   };
   (fns[state.screen] || renderHome)(app);
@@ -1019,6 +1020,7 @@ function cycleStatus(playerId, cat){
   r.status = next;
   r.points = next==='ok' ? state.settings.scoreUnique : next==='rep' ? state.settings.scoreRepeated : state.settings.scoreEmpty;
   render();
+  if(state.screen==='onlineReview') broadcastReviewUpdate();
 }
 function confirmRoundScore(){
   const m = state.match; const results = m._results;
@@ -1245,11 +1247,19 @@ function finishRoundHost(){
   o.lastPlayers = players;
   o.reviewResults = null;
   state.screen = 'onlineReview'; render();
+  hostBroadcast({ type:'reviewStart', letter:o.round.letter, deck:o.round.deck, players: players.map(p=>({id:p.id,name:p.name})) });
   computeResults(o.round.deck, players, o.round.letter).then(results => {
     if(!state.online || state.online!==o) return;
     o.reviewResults = results;
     if(state.screen==='onlineReview') render();
+    broadcastReviewUpdate();
   });
+}
+function broadcastReviewUpdate(){
+  const o = state.online;
+  if(!o || o.role!=='host' || !o.round || !o.reviewResults) return;
+  hostBroadcast({ type:'reviewUpdate', letter:o.round.letter, deck:o.round.deck,
+    players: o.lastPlayers.map(p=>({id:p.id,name:p.name})), results:o.reviewResults });
 }
 function renderOnlineReview(app){
   const o = state.online;
@@ -1277,6 +1287,35 @@ function renderOnlineReview(app){
           }).join('')}
         </div>`).join('')}
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:16px" onclick="confirmOnlineRoundScore()">Confirmar y enviar puntaje</button>
+    </div>`;
+}
+function renderOnlineReviewWatch(app){
+  const o = state.online;
+  document.getElementById('bottomnav').style.display='none';
+  const w = o.reviewWatch;
+  if(!w || !w.results){
+    app.innerHTML = `${topbar('Corrigiendo respuestas', '🔴 En vivo — el anfitrión está revisando cada palabra...')}
+      <div class="screen center" style="padding-top:60px"><div style="font-size:40px">📖</div></div>`;
+    return;
+  }
+  const results = w.results; const players = w.players; const deck = w.deck;
+  app.innerHTML = `
+    ${topbar('Corrección — letra '+w.letter, '🔴 En vivo — el anfitrión está corrigiendo')}
+    <div class="screen">
+      ${deck.map(cat => `
+        <div class="correct-cat"><h4>${esc(cat)}</h4>
+          ${players.map(p => {
+            const r = (results[p.id]||{})[cat] || {text:'',status:'bad',points:0,desc:null};
+            return `<div class="ans-row">
+              <span class="name">${esc(p.name)}</span>
+              <span class="txt ${r.text?'':'empty'}">${r.text?esc(r.text):'(vacío)'}</span>
+              <span class="status-btn ${r.status}">${STATUS_LABEL[r.status]||r.status}</span>
+              <span class="pts">${r.points}</span>
+            </div>
+            ${r.desc ? `<div class="ans-desc">${esc(r.desc)}</div>` : (r.status==='rev' ? `<div class="ans-desc">No la encontramos en el diccionario — revisala a mano.</div>` : '')}`;
+          }).join('')}
+        </div>`).join('')}
+      <div class="sub center" style="margin-top:16px">Esperando que el anfitrión confirme el puntaje...</div>
     </div>`;
 }
 function confirmOnlineRoundScore(){
@@ -1338,6 +1377,12 @@ function handleGuestMessage(data){
   } else if(data.type==='roundStop'){
     if(!onlineSubmitted) toast('¡Alguien cantó BASTA! Se cierra la ronda para todos.');
     forceSubmitNow();
+  } else if(data.type==='reviewStart'){
+    o.reviewWatch = { letter:data.letter, deck:data.deck, players:data.players, results:null };
+    state.screen = 'onlineReviewWatch'; render();
+  } else if(data.type==='reviewUpdate'){
+    o.reviewWatch = { letter:data.letter, deck:data.deck, players:data.players, results:data.results };
+    state.screen = 'onlineReviewWatch'; render();
   } else if(data.type==='chat'){
     addChatMessage(data);
   }
