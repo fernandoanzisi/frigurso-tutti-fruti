@@ -189,6 +189,46 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 
 .mascot{display:block;margin:0 auto;animation:float 3s ease-in-out infinite}
 
+.chat-fab{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:960;
+  width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  align-items:center;justify-content:center;font-size:24px;color:#fff;
+  box-shadow:0 6px 0 #c21d63,0 10px 24px rgba(0,0,0,.35);border:none;cursor:pointer;transition:transform .12s ease}
+.chat-fab:active{transform:translateY(3px) scale(.96)}
+.chat-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:11px;font-weight:800;
+  min-width:20px;height:20px;border-radius:99px;align-items:center;justify-content:center;padding:0 5px;
+  border:2px solid var(--bg)}
+.chat-panel{position:fixed;inset:0;z-index:970;background:rgba(6,10,20,.55);display:flex;align-items:flex-end;justify-content:center}
+.chat-sheet{width:100%;max-width:640px;height:min(78vh,640px);background:var(--card);border-radius:22px 22px 0 0;
+  display:flex;flex-direction:column;border:2px solid var(--border);border-bottom:none;overflow:hidden;
+  animation:chatSheetIn .28s cubic-bezier(.16,.84,.44,1) both}
+@keyframes chatSheetIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.chat-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:2px solid var(--border);flex-shrink:0}
+.chat-head h3{font-family:var(--f-display);font-size:15px;font-weight:700}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.chat-bub{max-width:78%;padding:9px 12px;border-radius:16px;font-size:14px;line-height:1.35;position:relative;animation:riseIn .25s ease both;word-break:break-word}
+.chat-bub .nm{font-size:11px;font-weight:800;margin-bottom:2px;opacity:.85}
+.chat-bub .ts{font-size:10px;opacity:.55;margin-top:3px;text-align:right}
+.chat-row{display:flex}
+.chat-row.mine{justify-content:flex-end}
+.chat-row.mine .chat-bub{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-bottom-right-radius:4px}
+.chat-row:not(.mine) .chat-bub{background:var(--card2);border:2px solid var(--border);border-bottom-left-radius:4px}
+.chat-bub audio{width:200px;height:34px;max-width:100%}
+.chat-sys{text-align:center;font-size:11px;color:var(--text3);margin:4px 0}
+.chat-input-wrap{border-top:2px solid var(--border);padding:10px 12px;flex-shrink:0}
+.chat-emojis{display:none;grid-template-columns:repeat(8,1fr);gap:4px;max-height:150px;overflow-y:auto;padding:8px 2px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.chat-emojis.show{display:grid}
+.chat-emojis button{font-size:20px;padding:6px 0;border-radius:8px}
+.chat-emojis button:active{background:var(--card2)}
+.chat-input-row{display:flex;align-items:center;gap:6px}
+.chat-input-row input{flex:1}
+.chat-icon-btn{width:42px;height:42px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;background:var(--card2);border:2px solid var(--border);color:var(--text2)}
+.chat-icon-btn:active{transform:scale(.92)}
+.chat-icon-btn.send{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+.chat-icon-btn.rec.active{background:rgba(239,68,68,.16);border-color:rgba(239,68,68,.4);color:var(--danger);animation:recPulse 1s infinite}
+@keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.chat-rec-indicator{display:flex;align-items:center;gap:8px;padding:8px 4px;font-size:13px;color:var(--danger);font-weight:700}
+.chat-rec-indicator .dot{width:9px;height:9px;border-radius:99px;background:var(--danger);animation:pulse 1s infinite}
+
 /* ═══════════════════════════════════════════════════════════════
    IDENTIDAD FRIGURSO — splash (puro CSS, se va solo) + traba de
    privacidad simple (contraseña, no cifra datos). Bloque copiado
@@ -242,6 +282,8 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   .cat-input,.score-item,.lobby-player{animation:none!important;opacity:1!important;transform:none!important}
   .timer.low{animation:none!important}
   .letter-badge.pop{animation:none!important}
+  .chat-sheet,.chat-bub{animation:none!important}
+  .chat-icon-btn.rec.active{animation:none!important}
 }
 </style>
 </head>
@@ -282,6 +324,32 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 </div>
 
 <div id="app"></div>
+
+<button class="chat-fab" id="ftf-chat-fab" style="display:none" onclick="openChatPanel()" aria-label="Chat de la sala">
+  💬<span class="chat-badge" id="ftf-chat-badge" style="display:none">0</span>
+</button>
+
+<div class="chat-panel" id="ftf-chat-panel" style="display:none" onclick="if(event.target===this)closeChatPanel()">
+  <div class="chat-sheet">
+    <div class="chat-head">
+      <div class="grow"><h3>💬 Chat de la sala</h3><div class="sub" id="ftf-chat-sub"></div></div>
+      <button class="chat-icon-btn" onclick="closeChatPanel()">✕</button>
+    </div>
+    <div class="chat-msgs" id="ftf-chat-msgs"></div>
+    <div class="chat-input-wrap">
+      <div class="chat-emojis" id="ftf-chat-emojis"></div>
+      <div class="chat-rec-indicator" id="ftf-chat-rec-indicator" style="display:none">
+        <span class="dot"></span><span id="ftf-chat-rec-time">Grabando... 0s</span> <span class="sub">soltá para enviar</span>
+      </div>
+      <div class="chat-input-row" id="ftf-chat-input-row">
+        <button class="chat-icon-btn" onclick="toggleEmojiPicker()" type="button">😀</button>
+        <input id="ftf-chat-text" placeholder="Escribí un mensaje..." autocomplete="off" oninput="chatUpdateSendBtn()" onkeydown="if(event.key==='Enter'){event.preventDefault();chatSendText()}">
+        <button class="chat-icon-btn" id="ftf-chat-mic-btn" type="button">🎤</button>
+        <button class="chat-icon-btn send" id="ftf-chat-send-btn" style="display:none" onclick="chatSendText()" type="button">➤</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <nav class="nav-bottom" id="bottomnav">
   <button class="nav-btn active" id="nav-home" onclick="nav('home')"><span class="ni">🏠</span><span>Inicio</span></button>
@@ -1066,8 +1134,9 @@ function hostCreateRoom(){
     const code = randCode();
     const peer = new Peer('ftf-host-'+code);
     state.online = { role:'host', code, peer, name, conns: {}, guests: {}, deckName:'Clásico', deck:[...PRESETS['Clásico']],
-      usedLetters: [], scores:{me:0}, myName:name, round:null, roundNum:0, history:[], awaitingAnswers:false };
-    peer.on('open', ()=>{ nav('onlineLobbyHost'); });
+      usedLetters: [], scores:{me:0}, myName:name, round:null, roundNum:0, history:[], awaitingAnswers:false,
+      chatLog: [], chatOpen:false, chatUnread:0 };
+    peer.on('open', ()=>{ nav('onlineLobbyHost'); showChatFab(); });
     peer.on('error', err => { console.error(err); toast('Error de conexión: '+err.type); });
     peer.on('connection', conn => {
       conn.on('open', ()=>{});
@@ -1097,6 +1166,9 @@ function handleHostMessage(conn, data){
     }
   } else if(data.type==='basta'){
     if(o.round) hostStopRoundForAll(false);
+  } else if(data.type==='chat'){
+    addChatMessage(data);
+    chatBroadcastRelay(conn, data);
   }
 }
 function renderOnlineLobbyHost(app){
@@ -1219,6 +1291,7 @@ function confirmOnlineRoundScore(){
   confettiBurst(16);
 }
 function closeOnline(){
+  hideChatFab();
   try{ state.online?.peer?.destroy(); }catch(e){}
   state.online = null; nav('home');
 }
@@ -1232,11 +1305,12 @@ function guestJoinRoom(codeOverride){
   toast('Conectando...');
   loadPeerJS().then(()=>{
     const peer = new Peer();
-    state.online = { role:'guest', peer, name, code, conn:null, myAnswers:null };
+    state.online = { role:'guest', peer, name, code, conn:null, myAnswers:null,
+      chatLog: [], chatOpen:false, chatUnread:0 };
     peer.on('open', ()=>{
       const conn = peer.connect('ftf-host-'+code, { reliable:true });
       state.online.conn = conn;
-      conn.on('open', ()=>{ conn.send({type:'join', name}); nav('onlineLobbyGuest'); });
+      conn.on('open', ()=>{ conn.send({type:'join', name}); nav('onlineLobbyGuest'); showChatFab(); });
       conn.on('data', data => handleGuestMessage(data));
       conn.on('error', ()=>toast('No se pudo conectar a la sala'));
       conn.on('close', ()=>guestLeaveRoom('Se cortó la conexión con el anfitrión.'));
@@ -1264,10 +1338,13 @@ function handleGuestMessage(data){
   } else if(data.type==='roundStop'){
     if(!onlineSubmitted) toast('¡Alguien cantó BASTA! Se cierra la ronda para todos.');
     forceSubmitNow();
+  } else if(data.type==='chat'){
+    addChatMessage(data);
   }
 }
 function guestLeaveRoom(message){
   clearInterval(waitingHeartbeat);
+  hideChatFab();
   try{ state.online?.peer?.destroy(); }catch(e){}
   state.online = null;
   nav('home');
@@ -1453,6 +1530,189 @@ function endOnlineMatch(){
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   CHAT — texto, audio y emojis entre los participantes de una sala
+   online. Viaja por los mismos DataConnection de PeerJS que ya usa
+   el juego (sin backend propio). El anfitrión es el único que tiene
+   conexión directa con cada invitado, así que retransmite los
+   mensajes de un invitado al resto ("estrella" con relay). Vive
+   fuera de #app a propósito: si usara render() se perdería lo que
+   el jugador esté tipeando en las categorías en ese momento.
+   ═══════════════════════════════════════════════════════════════ */
+const CHAT_EMOJIS = ['😀','😂','😅','😍','😘','😜','🤔','😎','🥳','😱','😭','😡','🤯','🥶','🤢','😴',
+  '👍','👎','👏','🙌','🙏','💪','🤝','✌️','🤙','👋','🍓','🍉','🍌','🎉','🔥','⭐',
+  '❤️','💔','💯','⚡','🏆','🎲','⏱️','🤡','👻','💩','🐢','🦄','☕','🍕','⚽','🎮'];
+function chatEnabled(){ return !!(state.online && state.online.peer); }
+function chatMyName(){ const o = state.online; if(!o) return ''; return o.role==='host' ? o.myName : o.name; }
+function chatMyId(){ const o = state.online; if(!o) return ''; return o.role==='host' ? 'me' : ((o.peer && o.peer.id) || 'me'); }
+function showChatFab(){ document.getElementById('ftf-chat-fab').style.display = 'flex'; }
+function hideChatFab(){
+  document.getElementById('ftf-chat-fab').style.display = 'none';
+  if(chatMediaRecorder) chatStopRecording(false);
+  closeChatPanel();
+}
+function openChatPanel(){
+  if(!chatEnabled()) return;
+  const o = state.online;
+  o.chatOpen = true; o.chatUnread = 0;
+  updateChatBadge();
+  document.getElementById('ftf-chat-sub').textContent = 'Sala '+o.code;
+  document.getElementById('ftf-chat-panel').style.display = 'flex';
+  renderChatMessages();
+  setTimeout(()=>{ const el = document.getElementById('ftf-chat-text'); if(el) el.focus(); }, 50);
+}
+function closeChatPanel(){
+  if(state.online) state.online.chatOpen = false;
+  const panel = document.getElementById('ftf-chat-panel'); if(panel) panel.style.display = 'none';
+  const em = document.getElementById('ftf-chat-emojis'); if(em) em.classList.remove('show');
+}
+function updateChatBadge(){
+  const o = state.online; const badge = document.getElementById('ftf-chat-badge');
+  if(!o || !o.chatUnread){ badge.style.display = 'none'; return; }
+  badge.style.display = 'flex'; badge.textContent = o.chatUnread>9 ? '9+' : o.chatUnread;
+}
+function chatBubbleHTML(m){
+  const mine = m.from === chatMyId();
+  const time = new Date(m.ts).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  const body = m.kind==='audio'
+    ? `<audio controls preload="none" src="${m.audio}"></audio>`
+    : `<div>${esc(m.text)}</div>`;
+  return `<div class="chat-row ${mine?'mine':''}"><div class="chat-bub">
+    ${mine?'':`<div class="nm">${esc(m.fromName)}</div>`}
+    ${body}
+    <div class="ts">${time}</div>
+  </div></div>`;
+}
+function renderChatMessages(){
+  const wrap = document.getElementById('ftf-chat-msgs');
+  const o = state.online;
+  wrap.innerHTML = (o.chatLog||[]).map(chatBubbleHTML).join('');
+  wrap.scrollTop = wrap.scrollHeight;
+}
+function appendChatBubble(m){
+  const wrap = document.getElementById('ftf-chat-msgs');
+  wrap.insertAdjacentHTML('beforeend', chatBubbleHTML(m));
+  wrap.scrollTop = wrap.scrollHeight;
+}
+function addChatMessage(m){
+  const o = state.online; if(!o) return;
+  if(!o.chatLog) o.chatLog = [];
+  if(o.chatLog.some(x=>x.id===m.id)) return;
+  o.chatLog.push(m);
+  if(o.chatOpen && document.getElementById('ftf-chat-panel').style.display!=='none'){
+    appendChatBubble(m);
+  } else {
+    o.chatUnread = (o.chatUnread||0)+1;
+    updateChatBadge();
+    beep(1046,0.08,0);
+    if(navigator.vibrate){ try{ navigator.vibrate(40); }catch(e){} }
+  }
+}
+function chatBroadcastRelay(fromConn, msg){
+  Object.values(state.online.conns).forEach(c => { if(c!==fromConn){ try{ c.send(msg); }catch(e){} } });
+}
+function chatDispatch(msg){
+  const o = state.online;
+  if(o.role==='host'){ hostBroadcast(msg); }
+  else { try{ o.conn.send(msg); }catch(e){} }
+}
+function chatUpdateSendBtn(){
+  const has = document.getElementById('ftf-chat-text').value.trim().length>0;
+  document.getElementById('ftf-chat-mic-btn').style.display = has ? 'none' : 'flex';
+  document.getElementById('ftf-chat-send-btn').style.display = has ? 'flex' : 'none';
+}
+function chatSendText(){
+  if(!chatEnabled()) return;
+  const inp = document.getElementById('ftf-chat-text');
+  const text = inp.value.trim();
+  if(!text) return;
+  const msg = { type:'chat', id:uid(), kind:'text', from:chatMyId(), fromName:chatMyName(), text, ts:Date.now() };
+  inp.value = ''; chatUpdateSendBtn();
+  document.getElementById('ftf-chat-emojis').classList.remove('show');
+  addChatMessage(msg);
+  chatDispatch(msg);
+}
+function toggleEmojiPicker(){
+  const el = document.getElementById('ftf-chat-emojis');
+  if(!el.dataset.built){
+    el.innerHTML = CHAT_EMOJIS.map(e=>`<button type="button" onclick="insertEmoji('${e}')">${e}</button>`).join('');
+    el.dataset.built = '1';
+  }
+  el.classList.toggle('show');
+}
+function insertEmoji(e){
+  const inp = document.getElementById('ftf-chat-text');
+  inp.value += e; inp.focus(); chatUpdateSendBtn();
+}
+
+// -------- audio: grabar y mandar como nota de voz --------
+let chatMediaRecorder = null, chatMediaChunks = [], chatRecStart = 0, chatRecTimer = null, chatRecStream = null;
+function chatRecSupported(){ return !!(window.MediaRecorder && navigator.mediaDevices && navigator.mediaDevices.getUserMedia); }
+async function chatStartRecording(){
+  if(!chatEnabled() || !chatRecSupported() || chatMediaRecorder) return;
+  try{ chatRecStream = await navigator.mediaDevices.getUserMedia({audio:true}); }
+  catch(e){ toast('No se pudo acceder al micrófono'); return; }
+  chatMediaChunks = [];
+  try{ chatMediaRecorder = new MediaRecorder(chatRecStream); }
+  catch(e){ toast('Grabar audio no está disponible en este navegador'); chatRecStream.getTracks().forEach(t=>t.stop()); chatRecStream=null; return; }
+  chatMediaRecorder.ondataavailable = e => { if(e.data && e.data.size>0) chatMediaChunks.push(e.data); };
+  chatMediaRecorder.onstop = chatFinishRecording;
+  chatMediaRecorder.start();
+  chatRecStart = Date.now();
+  document.getElementById('ftf-chat-mic-btn').classList.add('rec','active');
+  document.getElementById('ftf-chat-input-row').style.display = 'none';
+  document.getElementById('ftf-chat-rec-indicator').style.display = 'flex';
+  clearInterval(chatRecTimer);
+  chatRecTimer = setInterval(()=>{
+    const s = Math.floor((Date.now()-chatRecStart)/1000);
+    document.getElementById('ftf-chat-rec-time').textContent = 'Grabando... '+s+'s';
+    if(s>=60) chatStopRecording(true);
+  }, 250);
+}
+function chatStopRecording(send){
+  if(!chatMediaRecorder) return;
+  chatMediaRecorder._send = send!==false;
+  if(chatMediaRecorder.state!=='inactive') chatMediaRecorder.stop();
+  clearInterval(chatRecTimer);
+  const micBtn = document.getElementById('ftf-chat-mic-btn'); if(micBtn) micBtn.classList.remove('rec','active');
+  const row = document.getElementById('ftf-chat-input-row'); if(row) row.style.display = 'flex';
+  const ind = document.getElementById('ftf-chat-rec-indicator'); if(ind) ind.style.display = 'none';
+}
+function chatFinishRecording(){
+  const dur = (Date.now()-chatRecStart)/1000;
+  const send = chatMediaRecorder._send !== false;
+  const mimeType = chatMediaRecorder.mimeType || 'audio/webm';
+  if(chatRecStream){ chatRecStream.getTracks().forEach(t=>t.stop()); chatRecStream = null; }
+  chatMediaRecorder = null;
+  if(!send || dur<0.6 || chatMediaChunks.length===0){
+    if(send && dur<0.6) toast('Grabación muy corta');
+    chatMediaChunks = []; return;
+  }
+  const blob = new Blob(chatMediaChunks, {type:mimeType});
+  chatMediaChunks = [];
+  const reader = new FileReader();
+  reader.onload = () => {
+    if(!chatEnabled()) return;
+    const msg = { type:'chat', id:uid(), kind:'audio', from:chatMyId(), fromName:chatMyName(), audio:reader.result, dur:Math.round(dur), ts:Date.now() };
+    addChatMessage(msg);
+    chatDispatch(msg);
+  };
+  reader.readAsDataURL(blob);
+}
+function initChatUI(){
+  const micBtn = document.getElementById('ftf-chat-mic-btn');
+  if(!chatRecSupported()){ micBtn.style.opacity = '.35'; micBtn.title = 'Audio no disponible en este navegador'; }
+  const start = e => { e.preventDefault(); chatStartRecording(); };
+  const stop = e => { e.preventDefault(); chatStopRecording(true); };
+  const cancel = e => { e.preventDefault(); chatStopRecording(false); };
+  micBtn.addEventListener('touchstart', start, {passive:false});
+  micBtn.addEventListener('touchend', stop);
+  micBtn.addEventListener('touchcancel', cancel);
+  micBtn.addEventListener('mousedown', start);
+  micBtn.addEventListener('mouseup', stop);
+  micBtn.addEventListener('mouseleave', ()=>{ if(chatMediaRecorder) chatStopRecording(false); });
+}
+
+/* ═══════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════ */
 function boot(){
@@ -1466,6 +1726,7 @@ function boot(){
     state.screen = 'onlineJoin';
   }
   render();
+  initChatUI();
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 }
 boot();
