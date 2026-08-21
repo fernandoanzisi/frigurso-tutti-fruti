@@ -198,6 +198,18 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   align-items:center;justify-content:center;font-size:24px;color:#fff;
   box-shadow:0 6px 0 #c21d63,0 10px 24px rgba(0,0,0,.35);border:none;cursor:pointer;transition:transform .12s ease}
 .chat-fab:active{transform:translateY(3px) scale(.96)}
+.video-fab{position:fixed;right:16px;bottom:calc(148px + env(safe-area-inset-bottom));z-index:960;
+  width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--accent3),var(--accent6));
+  align-items:center;justify-content:center;font-size:22px;color:#fff;
+  box-shadow:0 6px 0 #0a8a80,0 10px 24px rgba(0,0,0,.35);border:none;cursor:pointer;transition:transform .12s ease}
+.video-fab:active{transform:translateY(3px) scale(.96)}
+.video-strip{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;z-index:950;
+  display:none;gap:8px;padding:0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;pointer-events:none}
+.video-tile{position:relative;flex-shrink:0;width:92px;height:122px;border-radius:14px;overflow:hidden;
+  border:2px solid var(--border);background:#000;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.video-tile video{width:100%;height:100%;object-fit:cover;display:block}
+.video-name{position:absolute;left:0;right:0;bottom:0;padding:3px 6px;font-size:10px;font-weight:700;color:#fff;
+  background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chat-badge{position:absolute;top:-4px;right:-4px;background:var(--danger);color:#fff;font-size:11px;font-weight:800;
   min-width:20px;height:20px;border-radius:99px;align-items:center;justify-content:center;padding:0 5px;
   border:2px solid var(--bg)}
@@ -328,6 +340,12 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 </div>
 
 <div id="app"></div>
+
+<div class="video-strip" id="ftf-video-strip"></div>
+
+<button class="video-fab" id="ftf-video-fab" style="display:none" onclick="toggleMyVideo()" aria-label="Prender/apagar cámara">
+  <span id="ftf-video-fab-icon">📷</span>
+</button>
 
 <button class="chat-fab" id="ftf-chat-fab" style="display:none" onclick="openChatPanel()" aria-label="Chat de la sala">
   💬<span class="chat-badge" id="ftf-chat-badge" style="display:none">0</span>
@@ -1039,8 +1057,11 @@ function pregCategories(){ return [...new Set(allQuestions().map(q=>q.cat))].sor
    arcadeGameEnded(deltas), con deltas = {jugadorId: puntosGanados}.
    ═══════════════════════════════════════════════════════════════ */
 function arcadePickNext(enabled, played){
-  let pool = enabled.filter(id => !played.includes(id));
-  if(pool.length===0){ played.length = 0; pool = enabled.slice(); }
+  // excluye solo el último jugado (no todo el historial) para que nunca se repita
+  // el mismo juego dos veces seguidas — con 2 juegos habilitados esto da "uno y uno" siempre
+  const last = played[played.length-1];
+  let pool = enabled.filter(id => id !== last);
+  if(pool.length===0) pool = enabled.slice(); // solo 1 juego habilitado: no hay otra opción
   return pool[Math.floor(Math.random()*pool.length)];
 }
 function arcadeLocalNext(){
@@ -1139,6 +1160,7 @@ function arcadeFinish(){
   const record = { players: players.map(p=>({name:p.name, points: sb[p.id]?.total||0})), roundsCount: a ? a.played.length : 0, isArcade:true };
   if(isOnline){
     hostBroadcast({ type:'matchEnd', players: record.players, roundsCount: state.online.arcade.played.length, isArcade:true });
+    hideVideoStrip();
     try{ state.online.peer.destroy(); }catch(e){}
     state.online = null;
   } else {
@@ -1900,15 +1922,23 @@ function hostCreateRoom(){
       usedLetters: [], scores:{me:0}, myName:name, round:null, roundNum:0, history:[], awaitingAnswers:false,
       chatLog: [], chatOpen:false, chatUnread:0,
       arcade: { enabled:['tuttifruti','preguntados'], played:[], current:null, scoreboard:{} },
-      pregRound:null, pregAwaiting:false, myPregAnswers:null };
-    peer.on('open', ()=>{ nav('onlineLobbyHost'); showChatFab(); });
+      pregRound:null, pregAwaiting:false, myPregAnswers:null,
+      roster: [], myStream: null, videoConns: {}, remoteStreams: {} };
+    peer.on('open', ()=>{ nav('onlineLobbyHost'); showChatFab(); showVideoFab(); hostBroadcastRoster(); });
     peer.on('error', err => { console.error(err); toast('Error de conexión: '+err.type); });
+    peer.on('call', call => {
+      const stream = state.online && state.online.myStream;
+      call.answer(stream || undefined);
+      registerVideoCall(call.peer, call);
+    });
     peer.on('connection', conn => {
       conn.on('open', ()=>{});
       conn.on('data', data => handleHostMessage(conn, data));
       conn.on('close', ()=>{
         if(!state.online) return;
         delete state.online.conns[conn.peer]; delete state.online.guests[conn.peer];
+        closeVideoConn(conn.peer);
+        hostBroadcastRoster();
         maybeFinishRoundHost();
         maybeFinishPregRoundHost();
         if(state.screen==='onlineLobbyHost' || state.screen==='onlineWaiting' || state.screen==='onlinePregWaiting') render();
@@ -1942,6 +1972,7 @@ function handleHostMessage(conn, data){
   const o = state.online;
   if(data.type==='join'){
     o.guests[conn.peer] = { name: data.name || 'Jugador', answers:null };
+    hostBroadcastRoster();
     if(state.screen==='onlineLobbyHost') render();
   } else if(data.type==='answers'){
     if(o.awaitingAnswers && data.roundNum===o.roundNum && o.guests[conn.peer]){
@@ -2008,6 +2039,8 @@ function kickGuest(peerId){
   try{ if(conn) conn.close(); }catch(e){}
   delete o.guests[peerId];
   delete o.conns[peerId];
+  closeVideoConn(peerId);
+  hostBroadcastRoster();
   maybeFinishRoundHost();
   maybeFinishPregRoundHost();
   render();
@@ -2167,6 +2200,7 @@ function confirmOnlineRoundScore(){
 }
 function closeOnline(){
   hideChatFab();
+  hideVideoStrip();
   try{ state.online?.peer?.destroy(); }catch(e){}
   state.online = null; nav('home');
 }
@@ -2182,11 +2216,17 @@ function guestJoinRoom(codeOverride){
   loadPeerJS().then(()=>{
     const peer = new Peer();
     state.online = { role:'guest', peer, name, code, conn:null, myAnswers:null,
-      chatLog: [], chatOpen:false, chatUnread:0 };
+      chatLog: [], chatOpen:false, chatUnread:0,
+      roster: [], myStream: null, videoConns: {}, remoteStreams: {} };
+    peer.on('call', call => {
+      const stream = state.online && state.online.myStream;
+      call.answer(stream || undefined);
+      registerVideoCall(call.peer, call);
+    });
     peer.on('open', ()=>{
       const conn = peer.connect('ftf-host-'+code, { reliable:true });
       state.online.conn = conn;
-      conn.on('open', ()=>{ conn.send({type:'join', name}); nav('onlineLobbyGuest'); showChatFab(); });
+      conn.on('open', ()=>{ conn.send({type:'join', name}); nav('onlineLobbyGuest'); showChatFab(); showVideoFab(); });
       conn.on('data', data => handleGuestMessage(data));
       conn.on('error', ()=>toast('No se pudo conectar a la sala'));
       conn.on('close', ()=>guestLeaveRoom('Se cortó la conexión con el anfitrión.'));
@@ -2232,6 +2272,9 @@ function handleGuestMessage(data){
     state._arcadePlayers = data.playersList;
     state.screen = 'arcadeScoreboard'; render();
     confettiBurst(16);
+  } else if(data.type==='roster'){
+    o.roster = data.peers || [];
+    videoSyncCalls();
   } else if(data.type==='chat'){
     addChatMessage(data);
   }
@@ -2241,6 +2284,7 @@ function guestLeaveRoom(message){
   clearInterval(pregWaitingHeartbeat);
   clearInterval(pregOnlineTimer);
   hideChatFab();
+  hideVideoStrip();
   try{ state.online?.peer?.destroy(); }catch(e){}
   state.online = null;
   nav('home');
@@ -2559,6 +2603,95 @@ function hideChatFab(){
   document.getElementById('ftf-chat-fab').style.display = 'none';
   if(chatMediaRecorder) chatStopRecording(false);
   closeChatPanel();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CAMARITA — videollamada P2P opcional entre los jugadores de una
+   sala online. Cada uno prende su cámara cuando quiere (nadie se
+   la prende a otro); usa el mismo PeerJS que ya carga la sala, sin
+   servidor propio. Como no hay TURN (solo el broker+STUN público
+   gratuito), puede no conectar en algunas combinaciones de red —
+   riesgo aceptado explícitamente por Fernando. El anfitrión arma
+   y reparte la lista de "quién está en la sala" (roster) porque es
+   el único que conoce a todos; con esa lista, cada uno llama
+   directo a los demás (mesh), sin pasar el video por el anfitrión.
+   ═══════════════════════════════════════════════════════════════ */
+function hostRoster(){
+  const o = state.online;
+  return [{ id:o.peer.id, name:o.myName }].concat(Object.entries(o.guests).map(([id,g])=>({id, name:g.name})));
+}
+function hostBroadcastRoster(){
+  const o = state.online; if(!o || o.role!=='host' || !o.peer.id) return;
+  o.roster = hostRoster();
+  hostBroadcast({ type:'roster', peers:o.roster });
+  videoSyncCalls();
+}
+function registerVideoCall(peerId, call){
+  const o = state.online; if(!o) return;
+  o.videoConns = o.videoConns || {};
+  o.videoConns[peerId] = call;
+  call.on('stream', stream => { o.remoteStreams = o.remoteStreams || {}; o.remoteStreams[peerId] = stream; renderVideoStrip(); });
+  call.on('close', () => { closeVideoConn(peerId); });
+  call.on('error', () => {});
+}
+function closeVideoConn(peerId){
+  const o = state.online; if(!o) return;
+  if(o.videoConns && o.videoConns[peerId]){ try{ o.videoConns[peerId].close(); }catch(e){} delete o.videoConns[peerId]; }
+  if(o.remoteStreams && o.remoteStreams[peerId]){ delete o.remoteStreams[peerId]; }
+  renderVideoStrip();
+}
+function videoSyncCalls(){
+  const o = state.online; if(!o || !o.myStream || !o.roster || !o.peer.id) return;
+  o.videoConns = o.videoConns || {};
+  o.roster.forEach(p=>{
+    if(p.id===o.peer.id || o.videoConns[p.id]) return;
+    try{ registerVideoCall(p.id, o.peer.call(p.id, o.myStream)); }catch(e){}
+  });
+  renderVideoStrip();
+}
+async function toggleMyVideo(){
+  const o = state.online; if(!o) return;
+  if(o.myStream){
+    o.myStream.getTracks().forEach(t=>t.stop());
+    o.myStream = null;
+    Object.keys(o.videoConns||{}).forEach(closeVideoConn);
+    renderVideoStrip();
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+    o.myStream = stream;
+    renderVideoStrip();
+    videoSyncCalls();
+  }catch(e){
+    toast('No se pudo prender la cámara: '+(e.message||'permiso denegado'));
+  }
+}
+function showVideoFab(){ const b = document.getElementById('ftf-video-fab'); if(b) b.style.display = 'flex'; }
+function hideVideoStrip(){
+  const o = state.online;
+  if(o){
+    if(o.myStream){ o.myStream.getTracks().forEach(t=>t.stop()); o.myStream = null; }
+    Object.keys(o.videoConns||{}).forEach(id=>{ try{ o.videoConns[id].close(); }catch(e){} });
+    o.videoConns = {}; o.remoteStreams = {};
+  }
+  const fab = document.getElementById('ftf-video-fab'); if(fab) fab.style.display = 'none';
+  const strip = document.getElementById('ftf-video-strip'); if(strip){ strip.style.display = 'none'; strip.innerHTML = ''; }
+}
+function renderVideoStrip(){
+  const o = state.online; if(!o) return;
+  const icon = document.getElementById('ftf-video-fab-icon'); if(icon) icon.textContent = o.myStream ? '📹' : '📷';
+  const strip = document.getElementById('ftf-video-strip'); if(!strip) return;
+  const tiles = [];
+  if(o.myStream) tiles.push({ id:'me', name:(chatMyName()||'Vos')+' (vos)', stream:o.myStream, muted:true });
+  Object.entries(o.remoteStreams||{}).forEach(([id,stream])=>{
+    const p = (o.roster||[]).find(x=>x.id===id);
+    tiles.push({ id, name: p ? p.name : 'Jugador', stream, muted:false });
+  });
+  if(tiles.length===0){ strip.style.display = 'none'; strip.innerHTML = ''; return; }
+  strip.style.display = 'flex';
+  strip.innerHTML = tiles.map(t=>`<div class="video-tile"><video autoplay playsinline ${t.muted?'muted':''} id="vt-${esc(t.id)}"></video><span class="video-name">${esc(t.name)}</span></div>`).join('');
+  tiles.forEach(t=>{ const v = document.getElementById('vt-'+t.id); if(v) v.srcObject = t.stream; });
 }
 function openChatPanel(){
   if(!chatEnabled()) return;
