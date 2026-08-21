@@ -153,7 +153,6 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .trivia-opt{text-align:left;margin-bottom:0}
 .trivia-correct{background:rgba(107,203,61,.18)!important;border-color:var(--ok)!important;color:var(--ok)!important}
 .trivia-wrong{background:rgba(239,68,68,.15)!important;border-color:var(--danger)!important;color:var(--danger)!important}
-.trivia-picked{background:rgba(255,62,134,.16)!important;border-color:var(--accent)!important;color:var(--accent)!important}
 
 .score-list{display:flex;flex-direction:column;gap:8px}
 .score-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:10px 12px;animation:riseIn .35s ease both}
@@ -360,6 +359,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
   <button class="nav-btn active" id="nav-home" onclick="nav('home')"><span class="ni">🏠</span><span>Inicio</span></button>
   <button class="nav-btn" id="nav-jugadores" onclick="nav('jugadores')"><span class="ni">👥</span><span>Jugadores</span></button>
   <button class="nav-btn" id="nav-mazos" onclick="nav('mazos')"><span class="ni">🃏</span><span>Mazos</span></button>
+  <button class="nav-btn" id="nav-preguntas" onclick="nav('preguntas')"><span class="ni">❓</span><span>Preguntas</span></button>
   <button class="nav-btn" id="nav-historial" onclick="nav('historial')"><span class="ni">📊</span><span>Historial</span></button>
   <button class="nav-btn" id="nav-config" onclick="nav('config')"><span class="ni">⚙️</span><span>Ajustes</span></button>
 </nav>
@@ -401,6 +401,7 @@ const state = {
   online: null,
   pregMatch: null,
   arcadeLocal: null,
+  customQuestions: LS.get('ftf_preg_custom', []),
 };
 
 function saveAll(){
@@ -408,6 +409,7 @@ function saveAll(){
   LS.set('ftf_decks', state.decks);
   LS.set('ftf_settings', state.settings);
   LS.set('ftf_history', state.history);
+  LS.set('ftf_preg_custom', state.customQuestions);
 }
 function saveMatch(){ LS.set('ftf_match_inprogress', state.match); }
 function clearMatch(){ state.match = null; localStorage.removeItem('ftf_match_inprogress'); }
@@ -693,199 +695,325 @@ function animateScoreCounts(container){
    ═══════════════════════════════════════════════════════════════ */
 const PREGUNTADOS_BANK = [
   // Cultura General
-  {cat:'Cultura General', q:'¿Cuál es la capital de Canadá?', opts:['Toronto','Ottawa','Vancouver','Montreal'], a:1},
-  {cat:'Cultura General', q:'El símbolo químico del oro es Au.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Cultura General', q:'¿Cuántas cuerdas tiene una guitarra clásica?', opts:['4','6','7','5'], a:1},
-  {cat:'Cultura General', q:'La Torre Eiffel se construyó para la Exposición Universal de 1889.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Cultura General', q:'¿Cuál es el animal terrestre más rápido del mundo?', opts:['León','Guepardo','Ñu','Antílope'], a:1},
-  {cat:'Cultura General', q:'El agua hierve a 100°C a nivel del mar.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Cultura General', q:'¿Qué idioma tiene más hablantes nativos en el mundo?', opts:['Inglés','Español','Mandarín','Hindi'], a:2},
-  {cat:'Cultura General', q:'La bandera de Japón tiene un círculo verde en el centro.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Cultura General', q:'¿Cuál es el país más poblado del mundo hoy en día?', opts:['China','India','EE.UU.','Indonesia'], a:1},
-  {cat:'Cultura General', q:'Un año bisiesto tiene 365 días.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Cultura General', q:'¿Cuál es la moneda oficial de Brasil?', opts:['Peso','Real','Dólar','Sol'], a:1},
-  {cat:'Cultura General', q:'El Sahara es el desierto más grande del mundo.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Cultura General', q:'¿Cuántos colores tiene el arcoíris tradicionalmente?', opts:['5','6','7','8'], a:2},
-  {cat:'Cultura General', q:'La Coca-Cola se inventó en Alemania.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Cultura General', q:'¿Cuál es el continente más pequeño?', opts:['Europa','Oceanía','Antártida','América'], a:1},
-  {cat:'Cultura General', q:'El punto más profundo del océano es la Fosa de las Marianas.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Cultura General', q:'¿Qué país regaló la Estatua de la Libertad a Estados Unidos?', opts:['Inglaterra','Francia','España','Italia'], a:1},
-  {cat:'Cultura General', q:'La Gran Barrera de Coral está en Australia.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Cultura General', q:'¿Cuál es la capital de Canadá?', opts:['Toronto','Ottawa','Vancouver','Montreal'], a:1, exp:'Ottawa es la capital, aunque Toronto es la ciudad más grande y conocida del país.'},
+  {cat:'Cultura General', q:'El símbolo químico del oro es Au.', opts:['Verdadero','Falso'], a:0, exp:'Viene del latín "aurum". El símbolo Or no existe en la tabla periódica.'},
+  {cat:'Cultura General', q:'¿Cuántas cuerdas tiene una guitarra clásica?', opts:['4','6','7','5'], a:1, exp:'La guitarra clásica o española tiene 6 cuerdas; algunas eléctricas tienen 7 o más.'},
+  {cat:'Cultura General', q:'La Torre Eiffel se construyó para la Exposición Universal de 1889.', opts:['Verdadero','Falso'], a:0, exp:'Se construyó como entrada monumental de la Exposición Universal de París de 1889.'},
+  {cat:'Cultura General', q:'¿Cuál es el animal terrestre más rápido del mundo?', opts:['León','Guepardo','Ñu','Antílope'], a:1, exp:'El guepardo puede superar los 100 km/h en distancias cortas.'},
+  {cat:'Cultura General', q:'El agua hierve a 100°C a nivel del mar.', opts:['Verdadero','Falso'], a:0, exp:'A mayor altitud la presión atmosférica baja y el agua hierve a menor temperatura.'},
+  {cat:'Cultura General', q:'¿Qué idioma tiene más hablantes nativos en el mundo?', opts:['Inglés','Español','Mandarín','Hindi'], a:2, exp:'El mandarín tiene más hablantes nativos que el inglés o el español, aunque el inglés es el más hablado si se suman los que lo aprenden como segunda lengua.'},
+  {cat:'Cultura General', q:'La bandera de Japón tiene un círculo verde en el centro.', opts:['Verdadero','Falso'], a:1, exp:'El círculo de la bandera japonesa es rojo y representa al sol.'},
+  {cat:'Cultura General', q:'¿Cuál es el país más poblado del mundo hoy en día?', opts:['China','India','EE.UU.','Indonesia'], a:1, exp:'India superó a China en población total en los últimos años.'},
+  {cat:'Cultura General', q:'Un año bisiesto tiene 365 días.', opts:['Verdadero','Falso'], a:1, exp:'Un año bisiesto tiene 366 días, con el 29 de febrero agregado cada 4 años.'},
+  {cat:'Cultura General', q:'¿Cuál es la moneda oficial de Brasil?', opts:['Peso','Real','Dólar','Sol'], a:1, exp:'El real brasileño (BRL) es la moneda oficial de Brasil desde 1994.'},
+  {cat:'Cultura General', q:'El Sahara es el desierto más grande del mundo.', opts:['Verdadero','Falso'], a:1, exp:'Es el desierto cálido más grande, pero la Antártida (por su escasa precipitación) es el desierto más grande del planeta.'},
+  {cat:'Cultura General', q:'¿Cuántos colores tiene el arcoíris tradicionalmente?', opts:['5','6','7','8'], a:2, exp:'Isaac Newton definió 7: rojo, naranja, amarillo, verde, azul, añil y violeta.'},
+  {cat:'Cultura General', q:'La Coca-Cola se inventó en Alemania.', opts:['Verdadero','Falso'], a:1, exp:'La inventó el farmacéutico John Pemberton en Atlanta, Estados Unidos, en 1886.'},
+  {cat:'Cultura General', q:'¿Cuál es el continente más pequeño?', opts:['Europa','Oceanía','Antártida','América'], a:1, exp:'Oceanía es el continente más chico en superficie territorial.'},
+  {cat:'Cultura General', q:'El punto más profundo del océano es la Fosa de las Marianas.', opts:['Verdadero','Falso'], a:0, exp:'Su punto más profundo, el Abismo Challenger, supera los 10.900 metros.'},
+  {cat:'Cultura General', q:'¿Qué país regaló la Estatua de la Libertad a Estados Unidos?', opts:['Inglaterra','Francia','España','Italia'], a:1, exp:'Francia la regaló en 1886 como símbolo de amistad entre ambos países.'},
+  {cat:'Cultura General', q:'La Gran Barrera de Coral está en Australia.', opts:['Verdadero','Falso'], a:0, exp:'Se extiende frente a la costa noreste de Australia y es el arrecife de coral más grande del mundo.'},
   // Historia
-  {cat:'Historia', q:'¿En qué año llegó Cristóbal Colón a América?', opts:['1492','1500','1488','1510'], a:0},
-  {cat:'Historia', q:'La Segunda Guerra Mundial terminó en 1945.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Historia', q:'¿Quién fue el primer presidente de Estados Unidos?', opts:['Lincoln','Washington','Jefferson','Adams'], a:1},
-  {cat:'Historia', q:'La Revolución Francesa comenzó en 1789.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Historia', q:'¿En qué año se declaró la independencia argentina?', opts:['1810','1816','1820','1806'], a:1},
-  {cat:'Historia', q:'El Imperio Romano de Occidente cayó en el año 476 d.C.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Historia', q:'¿Qué general cruzó los Andes para liberar Chile y Perú?', opts:['San Martín','Bolívar','Belgrano','Güemes'], a:0},
-  {cat:'Historia', q:'El Muro de Berlín cayó en 1989.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Historia', q:'¿Qué civilización antigua inventó la escritura cuneiforme?', opts:['Egipcios','Sumerios','Griegos','Romanos'], a:1},
-  {cat:'Historia', q:'Napoleón Bonaparte nació en Córcega.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Historia', q:'¿En qué año llegó el hombre a la Luna?', opts:['1965','1969','1972','1971'], a:1},
-  {cat:'Historia', q:'La Guerra Civil española terminó en 1939.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Historia', q:'¿Qué faraón egipcio es famoso por su máscara de oro, descubierta en 1922?', opts:['Ramsés II','Tutankamón','Akenatón','Keops'], a:1},
-  {cat:'Historia', q:'El Titanic se hundió en 1912.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Historia', q:'¿Qué imperio construyó Machu Picchu?', opts:['Azteca','Inca','Maya','Mapuche'], a:1},
-  {cat:'Historia', q:'La Peste Negra ocurrió en el siglo XIV.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Historia', q:'¿Quién escribió el Manifiesto Comunista junto a Karl Marx?', opts:['Lenin','Engels','Trotsky','Stalin'], a:1},
-  {cat:'Historia', q:'La Argentina sancionó su primera Constitución Nacional en 1853.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿En qué año llegó Cristóbal Colón a América?', opts:['1492','1500','1488','1510'], a:0, exp:'Colón llegó a las Bahamas el 12 de octubre de 1492.'},
+  {cat:'Historia', q:'La Segunda Guerra Mundial terminó en 1945.', opts:['Verdadero','Falso'], a:0, exp:'Terminó en mayo de 1945 en Europa y en septiembre de 1945 con la rendición de Japón.'},
+  {cat:'Historia', q:'¿Quién fue el primer presidente de Estados Unidos?', opts:['Lincoln','Washington','Jefferson','Adams'], a:1, exp:'George Washington asumió en 1789 y gobernó dos mandatos.'},
+  {cat:'Historia', q:'La Revolución Francesa comenzó en 1789.', opts:['Verdadero','Falso'], a:0, exp:'Comenzó con la toma de la Bastilla el 14 de julio de 1789.'},
+  {cat:'Historia', q:'¿En qué año se declaró la independencia argentina?', opts:['1810','1816','1820','1806'], a:1, exp:'Se declaró el 9 de julio de 1816 en el Congreso de Tucumán.'},
+  {cat:'Historia', q:'El Imperio Romano de Occidente cayó en el año 476 d.C.', opts:['Verdadero','Falso'], a:0, exp:'Cayó cuando el último emperador, Rómulo Augústulo, fue depuesto en el 476 d.C.'},
+  {cat:'Historia', q:'¿Qué general cruzó los Andes para liberar Chile y Perú?', opts:['San Martín','Bolívar','Belgrano','Güemes'], a:0, exp:'José de San Martín cruzó la cordillera de los Andes en 1817 con el Ejército de los Andes.'},
+  {cat:'Historia', q:'El Muro de Berlín cayó en 1989.', opts:['Verdadero','Falso'], a:0, exp:'Cayó el 9 de noviembre de 1989, marcando el fin de la división de Alemania.'},
+  {cat:'Historia', q:'¿Qué civilización antigua inventó la escritura cuneiforme?', opts:['Egipcios','Sumerios','Griegos','Romanos'], a:1, exp:'Los sumerios, en Mesopotamia, crearon uno de los primeros sistemas de escritura.'},
+  {cat:'Historia', q:'Napoleón Bonaparte nació en Córcega.', opts:['Verdadero','Falso'], a:0, exp:'Nació en Ajaccio, Córcega, en 1769, poco después de que la isla pasara a manos francesas.'},
+  {cat:'Historia', q:'¿En qué año llegó el hombre a la Luna?', opts:['1965','1969','1972','1971'], a:1, exp:'El Apolo 11 alunizó el 20 de julio de 1969, con Neil Armstrong como primer hombre en pisarla.'},
+  {cat:'Historia', q:'La Guerra Civil española terminó en 1939.', opts:['Verdadero','Falso'], a:0, exp:'Terminó el 1 de abril de 1939 con la victoria de las tropas franquistas.'},
+  {cat:'Historia', q:'¿Qué faraón egipcio es famoso por su máscara de oro, descubierta en 1922?', opts:['Ramsés II','Tutankamón','Akenatón','Keops'], a:1, exp:'Howard Carter descubrió la tumba casi intacta de Tutankamón en el Valle de los Reyes.'},
+  {cat:'Historia', q:'El Titanic se hundió en 1912.', opts:['Verdadero','Falso'], a:0, exp:'Se hundió la madrugada del 15 de abril de 1912 tras chocar contra un iceberg.'},
+  {cat:'Historia', q:'¿Qué imperio construyó Machu Picchu?', opts:['Azteca','Inca','Maya','Mapuche'], a:1, exp:'Fue construido por el Imperio Inca en el siglo XV, en pleno auge del imperio.'},
+  {cat:'Historia', q:'La Peste Negra ocurrió en el siglo XIV.', opts:['Verdadero','Falso'], a:0, exp:'Azotó Europa entre 1347 y 1351, matando a un tercio de su población aproximadamente.'},
+  {cat:'Historia', q:'¿Quién escribió el Manifiesto Comunista junto a Karl Marx?', opts:['Lenin','Engels','Trotsky','Stalin'], a:1, exp:'Friedrich Engels coescribió el Manifiesto Comunista, publicado en 1848.'},
+  {cat:'Historia', q:'La Argentina sancionó su primera Constitución Nacional en 1853.', opts:['Verdadero','Falso'], a:0, exp:'Se sancionó en Santa Fe en 1853, tras la batalla de Caseros.'},
   // Geografía
-  {cat:'Geografía', q:'¿Cuál es el país más grande del mundo por superficie?', opts:['Canadá','China','EE.UU.','Rusia'], a:3},
-  {cat:'Geografía', q:'Chile es el país más largo del mundo de norte a sur.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Geografía', q:'¿Cuál es la montaña más alta del mundo?', opts:['K2','Everest','Aconcagua','Kilimanjaro'], a:1},
-  {cat:'Geografía', q:'El Aconcagua está en Argentina.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Geografía', q:'¿Cuántos países limitan con Argentina?', opts:['4','5','6','3'], a:1},
-  {cat:'Geografía', q:'El río Paraná desemboca en el Río de la Plata.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Geografía', q:'¿Cuál es el lago de agua dulce más grande del mundo por superficie?', opts:['Titicaca','Baikal','Lago Superior','Mar Caspio'], a:2},
-  {cat:'Geografía', q:'La Patagonia está compartida entre Argentina y Chile.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Geografía', q:'¿Cuál es el desierto más árido del mundo (sin contar la Antártida)?', opts:['Sahara','Atacama','Gobi','Kalahari'], a:1},
-  {cat:'Geografía', q:'El Estrecho de Magallanes conecta el Atlántico con el Pacífico.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Geografía', q:'¿Qué país tiene más husos horarios, gracias a sus territorios de ultramar?', opts:['EE.UU.','Rusia','Francia','China'], a:2},
-  {cat:'Geografía', q:'La línea del Ecuador pasa por Brasil.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Geografía', q:'¿Qué océano separa a América de Europa y África?', opts:['Pacífico','Atlántico','Índico','Ártico'], a:1},
-  {cat:'Geografía', q:'Groenlandia pertenece a Dinamarca.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Geografía', q:'¿Qué cordillera recorre gran parte de Sudamérica de norte a sur?', opts:['Andes','Alpes','Himalaya','Rocosas'], a:0},
-  {cat:'Geografía', q:'Uruguay tiene costa sobre el Océano Pacífico.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Geografía', q:'¿Cuál es el país más pequeño del mundo?', opts:['Mónaco','Vaticano','San Marino','Liechtenstein'], a:1},
-  {cat:'Geografía', q:'El río Amazonas atraviesa Brasil, Perú y Colombia, entre otros países.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Geografía', q:'¿Cuál es el país más grande del mundo por superficie?', opts:['Canadá','China','EE.UU.','Rusia'], a:3, exp:'Rusia tiene más de 17 millones de km², abarcando 11 husos horarios.'},
+  {cat:'Geografía', q:'Chile es el país más largo del mundo de norte a sur.', opts:['Verdadero','Falso'], a:0, exp:'Chile mide más de 4.300 km de largo con un ancho promedio de solo 180 km.'},
+  {cat:'Geografía', q:'¿Cuál es la montaña más alta del mundo?', opts:['K2','Everest','Aconcagua','Kilimanjaro'], a:1, exp:'El Everest, en el Himalaya, mide 8.849 metros sobre el nivel del mar.'},
+  {cat:'Geografía', q:'El Aconcagua está en Argentina.', opts:['Verdadero','Falso'], a:0, exp:'Está en la provincia de Mendoza y es el pico más alto de América.'},
+  {cat:'Geografía', q:'¿Cuántos países limitan con Argentina?', opts:['4','5','6','3'], a:1, exp:'Limita con Chile, Bolivia, Paraguay, Brasil y Uruguay: 5 países.'},
+  {cat:'Geografía', q:'El río Paraná desemboca en el Río de la Plata.', opts:['Verdadero','Falso'], a:0, exp:'El Paraná es uno de los ríos más largos de Sudamérica y desemboca en el Río de la Plata.'},
+  {cat:'Geografía', q:'¿Cuál es el lago de agua dulce más grande del mundo por superficie?', opts:['Titicaca','Baikal','Lago Superior','Mar Caspio'], a:2, exp:'El Lago Superior, entre EE.UU. y Canadá, es el más grande por superficie.'},
+  {cat:'Geografía', q:'La Patagonia está compartida entre Argentina y Chile.', opts:['Verdadero','Falso'], a:0, exp:'La cordillera de los Andes divide la región patagónica entre ambos países.'},
+  {cat:'Geografía', q:'¿Cuál es el desierto más árido del mundo (sin contar la Antártida)?', opts:['Sahara','Atacama','Gobi','Kalahari'], a:1, exp:'El desierto de Atacama, en Chile, tiene zonas donde casi nunca llueve.'},
+  {cat:'Geografía', q:'El Estrecho de Magallanes conecta el Atlántico con el Pacífico.', opts:['Verdadero','Falso'], a:0, exp:'Fernando de Magallanes lo cruzó en 1520 durante la primera circunnavegación del globo.'},
+  {cat:'Geografía', q:'¿Qué país tiene más husos horarios, gracias a sus territorios de ultramar?', opts:['EE.UU.','Rusia','Francia','China'], a:2, exp:'Francia tiene 12 husos horarios por sus territorios de ultramar, más que ningún otro país.'},
+  {cat:'Geografía', q:'La línea del Ecuador pasa por Brasil.', opts:['Verdadero','Falso'], a:0, exp:'Pasa por el norte de Brasil, además de otros países como Colombia y Kenia.'},
+  {cat:'Geografía', q:'¿Qué océano separa a América de Europa y África?', opts:['Pacífico','Atlántico','Índico','Ártico'], a:1, exp:'El Océano Atlántico separa el continente americano de Europa y África.'},
+  {cat:'Geografía', q:'Groenlandia pertenece a Dinamarca.', opts:['Verdadero','Falso'], a:0, exp:'Es un territorio autónomo dentro del Reino de Dinamarca.'},
+  {cat:'Geografía', q:'¿Qué cordillera recorre gran parte de Sudamérica de norte a sur?', opts:['Andes','Alpes','Himalaya','Rocosas'], a:0, exp:'La cordillera de los Andes es la más larga del mundo, con unos 7.000 km.'},
+  {cat:'Geografía', q:'Uruguay tiene costa sobre el Océano Pacífico.', opts:['Verdadero','Falso'], a:1, exp:'Uruguay tiene costa sobre el Río de la Plata y el Océano Atlántico, no el Pacífico.'},
+  {cat:'Geografía', q:'¿Cuál es el país más pequeño del mundo?', opts:['Mónaco','Vaticano','San Marino','Liechtenstein'], a:1, exp:'La Ciudad del Vaticano tiene apenas 0,49 km², dentro de la ciudad de Roma.'},
+  {cat:'Geografía', q:'El río Amazonas atraviesa Brasil, Perú y Colombia, entre otros países.', opts:['Verdadero','Falso'], a:0, exp:'Nace en Perú y atraviesa varios países hasta desembocar en Brasil.'},
   // Ciencia y Naturaleza
-  {cat:'Ciencia', q:'¿Cuál es el planeta más cercano al Sol?', opts:['Venus','Mercurio','Tierra','Marte'], a:1},
-  {cat:'Ciencia', q:'El agua se congela a 0°C a nivel del mar.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ciencia', q:'¿Cuántos huesos tiene el cuerpo humano adulto?', opts:['206','186','256','126'], a:0},
-  {cat:'Ciencia', q:'Los seres humanos comparten más del 90% de su ADN con los chimpancés.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ciencia', q:'¿Cuál es el gas más abundante en la atmósfera terrestre?', opts:['Oxígeno','Nitrógeno','CO2','Hidrógeno'], a:1},
-  {cat:'Ciencia', q:'La luz viaja más rápido que el sonido.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ciencia', q:'¿Qué órgano del cuerpo humano produce la insulina?', opts:['Hígado','Páncreas','Riñón','Bazo'], a:1},
-  {cat:'Ciencia', q:'Los pulpos tienen tres corazones.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ciencia', q:'¿Cuál es la unidad básica de la herencia genética?', opts:['Célula','Cromosoma','Gen','Proteína'], a:2},
-  {cat:'Ciencia', q:'El sonido no se propaga en el vacío.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ciencia', q:'¿Cuál es el metal más abundante en la corteza terrestre?', opts:['Hierro','Aluminio','Cobre','Calcio'], a:1},
-  {cat:'Ciencia', q:'Las plantas usan dióxido de carbono y liberan oxígeno durante la fotosíntesis.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ciencia', q:'¿Cuántos pares de cromosomas tiene una célula humana normal?', opts:['23','22','24','46'], a:0},
-  {cat:'Ciencia', q:'El Sol es una estrella de tamaño mediano.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ciencia', q:'¿Qué científico formuló la teoría de la relatividad?', opts:['Newton','Einstein','Bohr','Hawking'], a:1},
-  {cat:'Ciencia', q:'La velocidad de la luz es de aproximadamente 300.000 km/s.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ciencia', q:'¿Cuál es el elemento químico más liviano de la tabla periódica?', opts:['Helio','Hidrógeno','Litio','Oxígeno'], a:1},
-  {cat:'Ciencia', q:'Las abejas se comunican entre sí mediante una especie de "danza".', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Cuál es el planeta más cercano al Sol?', opts:['Venus','Mercurio','Tierra','Marte'], a:1, exp:'Mercurio es el planeta más cercano y también el más pequeño del sistema solar.'},
+  {cat:'Ciencia', q:'El agua se congela a 0°C a nivel del mar.', opts:['Verdadero','Falso'], a:0, exp:'A esa temperatura y presión atmosférica normal, el agua pasa de líquido a sólido.'},
+  {cat:'Ciencia', q:'¿Cuántos huesos tiene el cuerpo humano adulto?', opts:['206','186','256','126'], a:0, exp:'Los bebés nacen con más huesos (unos 270) que se fusionan hasta llegar a 206 de adultos.'},
+  {cat:'Ciencia', q:'Los seres humanos comparten más del 90% de su ADN con los chimpancés.', opts:['Verdadero','Falso'], a:0, exp:'Comparten entre 98% y 99% del ADN según cómo se mida la comparación.'},
+  {cat:'Ciencia', q:'¿Cuál es el gas más abundante en la atmósfera terrestre?', opts:['Oxígeno','Nitrógeno','CO2','Hidrógeno'], a:1, exp:'El nitrógeno compone cerca del 78% de la atmósfera, más que el oxígeno (21%).'},
+  {cat:'Ciencia', q:'La luz viaja más rápido que el sonido.', opts:['Verdadero','Falso'], a:0, exp:'La luz viaja a ~300.000 km/s, mientras que el sonido viaja a ~343 m/s en el aire.'},
+  {cat:'Ciencia', q:'¿Qué órgano del cuerpo humano produce la insulina?', opts:['Hígado','Páncreas','Riñón','Bazo'], a:1, exp:'El páncreas produce insulina para regular el nivel de azúcar en sangre.'},
+  {cat:'Ciencia', q:'Los pulpos tienen tres corazones.', opts:['Verdadero','Falso'], a:0, exp:'Dos bombean sangre a las branquias y uno al resto del cuerpo.'},
+  {cat:'Ciencia', q:'¿Cuál es la unidad básica de la herencia genética?', opts:['Célula','Cromosoma','Gen','Proteína'], a:2, exp:'El gen es el segmento de ADN que contiene la información hereditaria.'},
+  {cat:'Ciencia', q:'El sonido no se propaga en el vacío.', opts:['Verdadero','Falso'], a:0, exp:'El sonido necesita un medio (aire, agua, sólidos) para propagarse; en el vacío no hay partículas que lo transmitan.'},
+  {cat:'Ciencia', q:'¿Cuál es el metal más abundante en la corteza terrestre?', opts:['Hierro','Aluminio','Cobre','Calcio'], a:1, exp:'El aluminio es el metal más abundante, aunque el hierro es el más usado industrialmente.'},
+  {cat:'Ciencia', q:'Las plantas usan dióxido de carbono y liberan oxígeno durante la fotosíntesis.', opts:['Verdadero','Falso'], a:0, exp:'Usan CO2 y agua para producir glucosa, liberando oxígeno como subproducto.'},
+  {cat:'Ciencia', q:'¿Cuántos pares de cromosomas tiene una célula humana normal?', opts:['23','22','24','46'], a:0, exp:'Son 23 pares (46 cromosomas en total): 22 pares autosómicos y 1 par sexual.'},
+  {cat:'Ciencia', q:'El Sol es una estrella de tamaño mediano.', opts:['Verdadero','Falso'], a:0, exp:'Es una estrella enana amarilla de tipo G, ni de las más grandes ni de las más chicas.'},
+  {cat:'Ciencia', q:'¿Qué científico formuló la teoría de la relatividad?', opts:['Newton','Einstein','Bohr','Hawking'], a:1, exp:'Albert Einstein publicó la relatividad especial en 1905 y la general en 1915.'},
+  {cat:'Ciencia', q:'La velocidad de la luz es de aproximadamente 300.000 km/s.', opts:['Verdadero','Falso'], a:0, exp:'Exactamente son 299.792 km/s en el vacío, una constante física fundamental.'},
+  {cat:'Ciencia', q:'¿Cuál es el elemento químico más liviano de la tabla periódica?', opts:['Helio','Hidrógeno','Litio','Oxígeno'], a:1, exp:'El hidrógeno tiene número atómico 1 y es el elemento más liviano y abundante del universo.'},
+  {cat:'Ciencia', q:'Las abejas se comunican entre sí mediante una especie de "danza".', opts:['Verdadero','Falso'], a:0, exp:'La "danza de la abeja" indica a otras abejas dónde encontrar comida.'},
   // Deportes
-  {cat:'Deportes', q:'¿Cada cuántos años se celebran los Juegos Olímpicos de verano?', opts:['2','4','3','5'], a:1},
-  {cat:'Deportes', q:'Argentina ganó el Mundial de fútbol de 2022 en Qatar.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Deportes', q:'¿Cuántos jugadores tiene un equipo de fútbol en cancha?', opts:['10','11','12','9'], a:1},
-  {cat:'Deportes', q:'El básquet fue inventado por un profesor canadiense, James Naismith.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Deportes', q:'¿En qué deporte se usa el término "ace" para un saque directo?', opts:['Fútbol','Tenis','Básquet','Rugby'], a:1},
-  {cat:'Deportes', q:'Un partido de rugby se juega con un balón ovalado.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Deportes', q:'¿Cuántos sets como máximo se juegan en un partido de tenis masculino de Grand Slam?', opts:['3','5','7','4'], a:1},
-  {cat:'Deportes', q:'Messi es el jugador que más veces ganó el Balón de Oro.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Deportes', q:'¿Qué país ganó más Mundiales de fútbol?', opts:['Argentina','Alemania','Italia','Brasil'], a:3},
-  {cat:'Deportes', q:'El maratón olímpico mide 42,195 km.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Deportes', q:'¿En qué ciudad se disputó el primer Mundial de fútbol, en 1930?', opts:['Roma','Montevideo','Buenos Aires','Río de Janeiro'], a:1},
-  {cat:'Deportes', q:'El boxeo divide a los competidores en categorías por peso.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Deportes', q:'¿Cuántos puntos vale un try en el rugby?', opts:['3','5','7','4'], a:1},
-  {cat:'Deportes', q:'La Vuelta a Francia de ciclismo recorre siempre y únicamente territorio francés.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Deportes', q:'¿Qué país organizó los Juegos Olímpicos de 2016?', opts:['China','Brasil','Reino Unido','Japón'], a:1},
-  {cat:'Deportes', q:'El vóley se juega con 6 jugadores por equipo en cancha.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Deportes', q:'¿En qué deporte se destacó Diego Maradona?', opts:['Básquet','Fútbol','Rugby','Tenis'], a:1},
-  {cat:'Deportes', q:'El handball (balonmano) se juega con las manos, no con los pies.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Deportes', q:'¿Cada cuántos años se celebran los Juegos Olímpicos de verano?', opts:['2','4','3','5'], a:1, exp:'Se celebran cada 4 años, alternando con los Juegos de Invierno.'},
+  {cat:'Deportes', q:'Argentina ganó el Mundial de fútbol de 2022 en Qatar.', opts:['Verdadero','Falso'], a:0, exp:'Argentina venció a Francia por penales en la final, su tercera estrella.'},
+  {cat:'Deportes', q:'¿Cuántos jugadores tiene un equipo de fútbol en cancha?', opts:['10','11','12','9'], a:1, exp:'Son 11 jugadores por equipo, incluyendo al arquero.'},
+  {cat:'Deportes', q:'El básquet fue inventado por un profesor canadiense, James Naismith.', opts:['Verdadero','Falso'], a:0, exp:'Lo inventó en 1891 en Massachusetts, EE.UU., como actividad de invierno.'},
+  {cat:'Deportes', q:'¿En qué deporte se usa el término "ace" para un saque directo?', opts:['Fútbol','Tenis','Básquet','Rugby'], a:1, exp:'En tenis, un "ace" es un saque que el rival no logra tocar.'},
+  {cat:'Deportes', q:'Un partido de rugby se juega con un balón ovalado.', opts:['Verdadero','Falso'], a:0, exp:'El balón ovalado es característico del rugby y del fútbol americano.'},
+  {cat:'Deportes', q:'¿Cuántos sets como máximo se juegan en un partido de tenis masculino de Grand Slam?', opts:['3','5','7','4'], a:1, exp:'Los partidos masculinos de Grand Slam se juegan al mejor de 5 sets.'},
+  {cat:'Deportes', q:'Messi es el jugador que más veces ganó el Balón de Oro.', opts:['Verdadero','Falso'], a:0, exp:'Lionel Messi ganó 8 Balones de Oro, más que cualquier otro jugador.'},
+  {cat:'Deportes', q:'¿Qué país ganó más Mundiales de fútbol?', opts:['Argentina','Alemania','Italia','Brasil'], a:3, exp:'Brasil ganó 5 Mundiales, más que cualquier otra selección.'},
+  {cat:'Deportes', q:'El maratón olímpico mide 42,195 km.', opts:['Verdadero','Falso'], a:0, exp:'Esa distancia se fijó oficialmente en los Juegos de Londres 1908.'},
+  {cat:'Deportes', q:'¿En qué ciudad se disputó el primer Mundial de fútbol, en 1930?', opts:['Roma','Montevideo','Buenos Aires','Río de Janeiro'], a:1, exp:'Se jugó en Montevideo, Uruguay, que también fue el campeón.'},
+  {cat:'Deportes', q:'El boxeo divide a los competidores en categorías por peso.', opts:['Verdadero','Falso'], a:0, exp:'Las categorías de peso buscan que los competidores tengan condiciones físicas similares.'},
+  {cat:'Deportes', q:'¿Cuántos puntos vale un try en el rugby?', opts:['3','5','7','4'], a:1, exp:'Un try vale 5 puntos, más la posibilidad de convertir 2 adicionales.'},
+  {cat:'Deportes', q:'La Vuelta a Francia de ciclismo recorre siempre y únicamente territorio francés.', opts:['Verdadero','Falso'], a:1, exp:'El "Grand Départ" a veces arranca en otros países antes de entrar a Francia.'},
+  {cat:'Deportes', q:'¿Qué país organizó los Juegos Olímpicos de 2016?', opts:['China','Brasil','Reino Unido','Japón'], a:1, exp:'Río de Janeiro, Brasil, fue sede en 2016, la primera vez en Sudamérica.'},
+  {cat:'Deportes', q:'El vóley se juega con 6 jugadores por equipo en cancha.', opts:['Verdadero','Falso'], a:0, exp:'Son 6 jugadores por lado en la modalidad de cancha (el vóley playa se juega de a 2).'},
+  {cat:'Deportes', q:'¿En qué deporte se destacó Diego Maradona?', opts:['Básquet','Fútbol','Rugby','Tenis'], a:1, exp:'Maradona es considerado uno de los mejores futbolistas de la historia.'},
+  {cat:'Deportes', q:'El handball (balonmano) se juega con las manos, no con los pies.', opts:['Verdadero','Falso'], a:0, exp:'Se juega con las manos, lanzando la pelota hacia el arco rival.'},
   // Arte y Espectáculos
-  {cat:'Arte y Espectáculos', q:'¿Quién pintó la Mona Lisa?', opts:['Miguel Ángel','Da Vinci','Rafael','Donatello'], a:1},
-  {cat:'Arte y Espectáculos', q:'Pablo Picasso fue uno de los creadores del cubismo.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Arte y Espectáculos', q:'¿Cuántas cuerdas tiene un violín?', opts:['4','5','6','3'], a:0},
-  {cat:'Arte y Espectáculos', q:'La película "Titanic" ganó el Óscar a Mejor Película en 1998.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Arte y Espectáculos', q:'¿Quién compuso "Las Cuatro Estaciones"?', opts:['Mozart','Beethoven','Vivaldi','Bach'], a:2},
-  {cat:'Arte y Espectáculos', q:'Frida Kahlo era mexicana.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Arte y Espectáculos', q:'¿Qué banda británica lanzó el álbum "Abbey Road"?', opts:['Rolling Stones','The Beatles','Queen','Pink Floyd'], a:1},
-  {cat:'Arte y Espectáculos', q:'El Museo del Louvre está en París.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Arte y Espectáculos', q:'¿Quién dirigió la trilogía de "El Señor de los Anillos"?', opts:['Spielberg','Peter Jackson','Nolan','Cameron'], a:1},
-  {cat:'Arte y Espectáculos', q:'Miguel Ángel pintó el techo de la Capilla Sixtina.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Arte y Espectáculos', q:'¿Cuál es el instrumento musical que tiene 88 teclas?', opts:['Acordeón','Piano','Órgano','Xilofón'], a:1},
-  {cat:'Arte y Espectáculos', q:'Carlos Gardel es una figura clave del tango argentino.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Arte y Espectáculos', q:'¿Qué artista pintó "La noche estrellada"?', opts:['Monet','Van Gogh','Dalí','Renoir'], a:1},
-  {cat:'Arte y Espectáculos', q:'El festival de cine de Cannes se realiza en Francia.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Arte y Espectáculos', q:'¿Cuál de estos NO es un género musical?', opts:['Reggaetón','Cumbia','Softlex','Jazz'], a:2},
-  {cat:'Arte y Espectáculos', q:'Salvador Dalí fue un pintor surrealista español.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Arte y Espectáculos', q:'¿Qué escritor argentino escribió "Rayuela"?', opts:['Borges','Cortázar','Sabato','Puig'], a:1},
-  {cat:'Arte y Espectáculos', q:'El ballet "El lago de los cisnes" fue compuesto por Tchaikovsky.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Quién pintó la Mona Lisa?', opts:['Miguel Ángel','Da Vinci','Rafael','Donatello'], a:1, exp:'Leonardo da Vinci la pintó a comienzos del siglo XVI; hoy está en el Louvre.'},
+  {cat:'Arte y Espectáculos', q:'Pablo Picasso fue uno de los creadores del cubismo.', opts:['Verdadero','Falso'], a:0, exp:'Picasso, junto a Georges Braque, desarrolló el cubismo a principios del siglo XX.'},
+  {cat:'Arte y Espectáculos', q:'¿Cuántas cuerdas tiene un violín?', opts:['4','5','6','3'], a:0, exp:'El violín tiene 4 cuerdas, afinadas en sol, re, la y mi.'},
+  {cat:'Arte y Espectáculos', q:'La película "Titanic" ganó el Óscar a Mejor Película en 1998.', opts:['Verdadero','Falso'], a:0, exp:'Ganó 11 premios Óscar en la ceremonia de 1998, incluyendo Mejor Película.'},
+  {cat:'Arte y Espectáculos', q:'¿Quién compuso "Las Cuatro Estaciones"?', opts:['Mozart','Beethoven','Vivaldi','Bach'], a:2, exp:'Antonio Vivaldi compuso esta obra de violín en el siglo XVIII.'},
+  {cat:'Arte y Espectáculos', q:'Frida Kahlo era mexicana.', opts:['Verdadero','Falso'], a:0, exp:'Nació en Coyoacán, Ciudad de México, en 1907.'},
+  {cat:'Arte y Espectáculos', q:'¿Qué banda británica lanzó el álbum "Abbey Road"?', opts:['Rolling Stones','The Beatles','Queen','Pink Floyd'], a:1, exp:'The Beatles lo lanzó en 1969, con la famosa foto de la banda cruzando la calle.'},
+  {cat:'Arte y Espectáculos', q:'El Museo del Louvre está en París.', opts:['Verdadero','Falso'], a:0, exp:'Es uno de los museos más visitados del mundo y alberga la Mona Lisa.'},
+  {cat:'Arte y Espectáculos', q:'¿Quién dirigió la trilogía de "El Señor de los Anillos"?', opts:['Spielberg','Peter Jackson','Nolan','Cameron'], a:1, exp:'Peter Jackson dirigió la trilogía filmada en Nueva Zelanda.'},
+  {cat:'Arte y Espectáculos', q:'Miguel Ángel pintó el techo de la Capilla Sixtina.', opts:['Verdadero','Falso'], a:0, exp:'Lo pintó entre 1508 y 1512 por encargo del Papa Julio II.'},
+  {cat:'Arte y Espectáculos', q:'¿Cuál es el instrumento musical que tiene 88 teclas?', opts:['Acordeón','Piano','Órgano','Xilofón'], a:1, exp:'El piano estándar tiene 88 teclas: 52 blancas y 36 negras.'},
+  {cat:'Arte y Espectáculos', q:'Carlos Gardel es una figura clave del tango argentino.', opts:['Verdadero','Falso'], a:0, exp:'Es considerado el máximo referente del tango como cantante y compositor.'},
+  {cat:'Arte y Espectáculos', q:'¿Qué artista pintó "La noche estrellada"?', opts:['Monet','Van Gogh','Dalí','Renoir'], a:1, exp:'Vincent van Gogh la pintó en 1889 durante su estadía en un sanatorio.'},
+  {cat:'Arte y Espectáculos', q:'El festival de cine de Cannes se realiza en Francia.', opts:['Verdadero','Falso'], a:0, exp:'Se realiza todos los años en la ciudad de Cannes, en la Costa Azul francesa.'},
+  {cat:'Arte y Espectáculos', q:'¿Cuál de estos NO es un género musical?', opts:['Reggaetón','Cumbia','Softlex','Jazz'], a:2, exp:'"Softlex" no es un género musical real, a diferencia de reggaetón, cumbia y jazz.'},
+  {cat:'Arte y Espectáculos', q:'Salvador Dalí fue un pintor surrealista español.', opts:['Verdadero','Falso'], a:0, exp:'Nació en Cataluña y es uno de los máximos exponentes del surrealismo.'},
+  {cat:'Arte y Espectáculos', q:'¿Qué escritor argentino escribió "Rayuela"?', opts:['Borges','Cortázar','Sabato','Puig'], a:1, exp:'Julio Cortázar publicó esta novela experimental en 1963.'},
+  {cat:'Arte y Espectáculos', q:'El ballet "El lago de los cisnes" fue compuesto por Tchaikovsky.', opts:['Verdadero','Falso'], a:0, exp:'El compositor ruso lo estrenó en 1877 en Moscú.'},
   // Tecnología
-  {cat:'Tecnología', q:'¿Qué significa la sigla "CPU"?', opts:['Central Process Unit','Central Processing Unit','Computer Processing Unit','Central Program Unit'], a:1},
-  {cat:'Tecnología', q:'Internet y la World Wide Web son exactamente lo mismo.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Tecnología', q:'¿Quién fundó Microsoft junto a Paul Allen?', opts:['Steve Jobs','Bill Gates','Elon Musk','Mark Zuckerberg'], a:1},
-  {cat:'Tecnología', q:'El primer iPhone se lanzó en 2007.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Tecnología', q:'¿Qué significa "HTML"?', opts:['HyperText Markup Language','High Tech Modern Language','Home Tool Markup Language','HyperTransfer Markup Language'], a:0},
-  {cat:'Tecnología', q:'Un byte equivale a 8 bits.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Tecnología', q:'¿Qué empresa creó el sistema operativo Android?', opts:['Apple','Google','Microsoft','Amazon'], a:1},
-  {cat:'Tecnología', q:'El WiFi transmite datos usando cables físicos.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Tecnología', q:'¿Qué lenguaje de programación es conocido por tener el símbolo de una serpiente?', opts:['Java','Python','Ruby','C++'], a:1},
-  {cat:'Tecnología', q:'Un "bug" en programación es un error en el código.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Tecnología', q:'¿Qué red social fundó Mark Zuckerberg en 2004?', opts:['Twitter','Instagram','Facebook','LinkedIn'], a:2},
-  {cat:'Tecnología', q:'La inteligencia artificial busca imitar procesos del razonamiento humano.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Tecnología', q:'¿Cuál de estos es un sistema operativo?', opts:['Chrome','Linux','Word','Excel'], a:1},
-  {cat:'Tecnología', q:'El término "algoritmo" proviene del nombre de un matemático persa, Al-Juarismi.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Tecnología', q:'¿Qué empresa creó el motor de búsqueda más usado del mundo?', opts:['Yahoo','Bing','Google','DuckDuckGo'], a:2},
-  {cat:'Tecnología', q:'"Código abierto" (open source) significa que el código fuente es público y modificable.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Tecnología', q:'¿Cuál de estos es un lenguaje de marcado, no de programación?', opts:['Java','HTML','Python','C'], a:1},
-  {cat:'Tecnología', q:'La "nube" (cloud) almacena datos en servidores remotos accesibles por internet.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Tecnología', q:'¿Qué significa la sigla "CPU"?', opts:['Central Process Unit','Central Processing Unit','Computer Processing Unit','Central Program Unit'], a:1, exp:'Significa "Central Processing Unit", la unidad central de procesamiento de una computadora.'},
+  {cat:'Tecnología', q:'Internet y la World Wide Web son exactamente lo mismo.', opts:['Verdadero','Falso'], a:1, exp:'Internet es la red física; la Web es un servicio (páginas y enlaces) que corre sobre esa red.'},
+  {cat:'Tecnología', q:'¿Quién fundó Microsoft junto a Paul Allen?', opts:['Steve Jobs','Bill Gates','Elon Musk','Mark Zuckerberg'], a:1, exp:'Bill Gates cofundó Microsoft junto a Paul Allen en 1975.'},
+  {cat:'Tecnología', q:'El primer iPhone se lanzó en 2007.', opts:['Verdadero','Falso'], a:0, exp:'Apple lo presentó en enero de 2007 y salió a la venta en junio de ese año.'},
+  {cat:'Tecnología', q:'¿Qué significa "HTML"?', opts:['HyperText Markup Language','High Tech Modern Language','Home Tool Markup Language','HyperTransfer Markup Language'], a:0, exp:'Significa "HyperText Markup Language", el lenguaje base para estructurar páginas web.'},
+  {cat:'Tecnología', q:'Un byte equivale a 8 bits.', opts:['Verdadero','Falso'], a:0, exp:'Un bit es la unidad mínima de información; 8 bits forman 1 byte.'},
+  {cat:'Tecnología', q:'¿Qué empresa creó el sistema operativo Android?', opts:['Apple','Google','Microsoft','Amazon'], a:1, exp:'Google desarrolla y mantiene Android, el sistema operativo móvil más usado del mundo.'},
+  {cat:'Tecnología', q:'El WiFi transmite datos usando cables físicos.', opts:['Verdadero','Falso'], a:1, exp:'El WiFi es justamente inalámbrico: transmite datos por ondas de radio.'},
+  {cat:'Tecnología', q:'¿Qué lenguaje de programación es conocido por tener el símbolo de una serpiente?', opts:['Java','Python','Ruby','C++'], a:1, exp:'Python usa una serpiente pitón como logo e inspiración de su nombre.'},
+  {cat:'Tecnología', q:'Un "bug" en programación es un error en el código.', opts:['Verdadero','Falso'], a:0, exp:'El término se popularizó tras encontrarse literalmente un insecto en una computadora en 1947.'},
+  {cat:'Tecnología', q:'¿Qué red social fundó Mark Zuckerberg en 2004?', opts:['Twitter','Instagram','Facebook','LinkedIn'], a:2, exp:'Facebook nació en 2004 en la Universidad de Harvard.'},
+  {cat:'Tecnología', q:'La inteligencia artificial busca imitar procesos del razonamiento humano.', opts:['Verdadero','Falso'], a:0, exp:'Busca que las máquinas resuelvan tareas que normalmente requieren inteligencia humana.'},
+  {cat:'Tecnología', q:'¿Cuál de estos es un sistema operativo?', opts:['Chrome','Linux','Word','Excel'], a:1, exp:'Linux es un sistema operativo; Chrome, Word y Excel son aplicaciones.'},
+  {cat:'Tecnología', q:'El término "algoritmo" proviene del nombre de un matemático persa, Al-Juarismi.', opts:['Verdadero','Falso'], a:0, exp:'Al-Juarismi vivió en el siglo IX y su nombre latinizado dio origen a la palabra "algoritmo".'},
+  {cat:'Tecnología', q:'¿Qué empresa creó el motor de búsqueda más usado del mundo?', opts:['Yahoo','Bing','Google','DuckDuckGo'], a:2, exp:'Google domina el mercado de motores de búsqueda a nivel mundial.'},
+  {cat:'Tecnología', q:'"Código abierto" (open source) significa que el código fuente es público y modificable.', opts:['Verdadero','Falso'], a:0, exp:'Cualquiera puede ver, usar y modificar el código bajo la licencia correspondiente.'},
+  {cat:'Tecnología', q:'¿Cuál de estos es un lenguaje de marcado, no de programación?', opts:['Java','HTML','Python','C'], a:1, exp:'HTML estructura contenido pero no tiene lógica de programación como Java, Python o C.'},
+  {cat:'Tecnología', q:'La "nube" (cloud) almacena datos en servidores remotos accesibles por internet.', opts:['Verdadero','Falso'], a:0, exp:'Los datos viven en centros de datos remotos, accesibles desde cualquier dispositivo conectado.'},
   // Matemática
-  {cat:'Matemática', q:'¿Cuánto es 7 x 8?', opts:['54','56','64','48'], a:1},
-  {cat:'Matemática', q:'El número Pi (π) es un número racional.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Matemática', q:'¿Cuánto suman los ángulos internos de un triángulo?', opts:['90°','180°','270°','360°'], a:1},
-  {cat:'Matemática', q:'La raíz cuadrada de 144 es 12.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Matemática', q:'¿Cómo se llama un polígono de 5 lados?', opts:['Hexágono','Pentágono','Heptágono','Octágono'], a:1},
-  {cat:'Matemática', q:'Un número primo solo es divisible por 1 y por sí mismo.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Matemática', q:'¿Cuánto es 2 elevado a la 10?', opts:['512','1024','2048','256'], a:1},
-  {cat:'Matemática', q:'El cero es un número par.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Matemática', q:'¿Cómo se llama el teorema que relaciona los catetos con la hipotenusa?', opts:['Tales','Pitágoras','Euclides','Fermat'], a:1},
-  {cat:'Matemática', q:'La suma de los ángulos internos de un cuadrilátero es 360°.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Matemática', q:'¿Cuánto es el 15% de 200?', opts:['20','30','25','35'], a:1},
-  {cat:'Matemática', q:'Todo número divisible por 2 es par.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Matemática', q:'¿Qué letra griega representa la relación entre la circunferencia y el diámetro?', opts:['Alfa','Pi','Sigma','Delta'], a:1},
-  {cat:'Matemática', q:'El conjunto de los números naturales incluye a los negativos.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Matemática', q:'¿Cuál es el resultado de derivar una constante?', opts:['1','Infinito','Cero','La misma constante'], a:2},
-  {cat:'Matemática', q:'Un triángulo equilátero tiene sus tres lados iguales.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Matemática', q:'¿Cómo se llama el sistema de coordenadas con eje X e Y?', opts:['Polar','Cartesiano','Cíclico','Binario'], a:1},
-  {cat:'Matemática', q:'El logaritmo de 1 en cualquier base es 0.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Matemática', q:'¿Cuánto es 7 x 8?', opts:['54','56','64','48'], a:1, exp:'7 multiplicado por 8 da 56.'},
+  {cat:'Matemática', q:'El número Pi (π) es un número racional.', opts:['Verdadero','Falso'], a:1, exp:'Pi es irracional: tiene infinitos decimales no periódicos y no se puede expresar como fracción exacta.'},
+  {cat:'Matemática', q:'¿Cuánto suman los ángulos internos de un triángulo?', opts:['90°','180°','270°','360°'], a:1, exp:'Los tres ángulos internos de cualquier triángulo suman siempre 180°.'},
+  {cat:'Matemática', q:'La raíz cuadrada de 144 es 12.', opts:['Verdadero','Falso'], a:0, exp:'12 x 12 = 144, así que su raíz cuadrada es 12.'},
+  {cat:'Matemática', q:'¿Cómo se llama un polígono de 5 lados?', opts:['Hexágono','Pentágono','Heptágono','Octágono'], a:1, exp:'Un pentágono es una figura geométrica de 5 lados y 5 ángulos.'},
+  {cat:'Matemática', q:'Un número primo solo es divisible por 1 y por sí mismo.', opts:['Verdadero','Falso'], a:0, exp:'Esa es justamente la definición de número primo, como 2, 3, 5, 7, 11...'},
+  {cat:'Matemática', q:'¿Cuánto es 2 elevado a la 10?', opts:['512','1024','2048','256'], a:1, exp:'2^10 = 1024, un número muy usado en informática (1 KB = 1024 bytes).'},
+  {cat:'Matemática', q:'El cero es un número par.', opts:['Verdadero','Falso'], a:0, exp:'El cero es divisible por 2 sin resto, por lo tanto se clasifica como número par.'},
+  {cat:'Matemática', q:'¿Cómo se llama el teorema que relaciona los catetos con la hipotenusa?', opts:['Tales','Pitágoras','Euclides','Fermat'], a:1, exp:'El Teorema de Pitágoras dice que a² + b² = c² en un triángulo rectángulo.'},
+  {cat:'Matemática', q:'La suma de los ángulos internos de un cuadrilátero es 360°.', opts:['Verdadero','Falso'], a:0, exp:'Se puede dividir cualquier cuadrilátero en dos triángulos de 180° cada uno.'},
+  {cat:'Matemática', q:'¿Cuánto es el 15% de 200?', opts:['20','30','25','35'], a:1, exp:'15% de 200 es 30 (200 x 0,15 = 30).'},
+  {cat:'Matemática', q:'Todo número divisible por 2 es par.', opts:['Verdadero','Falso'], a:0, exp:'Esa es la definición de número par: divisible exactamente por 2.'},
+  {cat:'Matemática', q:'¿Qué letra griega representa la relación entre la circunferencia y el diámetro?', opts:['Alfa','Pi','Sigma','Delta'], a:1, exp:'Pi (π) es esa constante, aproximadamente 3,14159.'},
+  {cat:'Matemática', q:'El conjunto de los números naturales incluye a los negativos.', opts:['Verdadero','Falso'], a:1, exp:'Los naturales son 0, 1, 2, 3... (o 1, 2, 3... según la convención); los negativos son enteros, no naturales.'},
+  {cat:'Matemática', q:'¿Cuál es el resultado de derivar una constante?', opts:['1','Infinito','Cero','La misma constante'], a:2, exp:'La derivada de cualquier constante es siempre cero, porque no cambia.'},
+  {cat:'Matemática', q:'Un triángulo equilátero tiene sus tres lados iguales.', opts:['Verdadero','Falso'], a:0, exp:'Además, sus tres ángulos internos miden 60° cada uno.'},
+  {cat:'Matemática', q:'¿Cómo se llama el sistema de coordenadas con eje X e Y?', opts:['Polar','Cartesiano','Cíclico','Binario'], a:1, exp:'El sistema cartesiano, creado por Descartes, ubica puntos con pares (x,y).'},
+  {cat:'Matemática', q:'El logaritmo de 1 en cualquier base es 0.', opts:['Verdadero','Falso'], a:0, exp:'Porque cualquier número elevado a la potencia 0 da como resultado 1.'},
   // Ingeniería Química
-  {cat:'Ingeniería Química', q:'¿Qué ley describe la relación entre presión y volumen de un gas a temperatura constante?', opts:['Ley de Charles','Ley de Boyle','Ley de Gay-Lussac','Ley de Avogadro'], a:1},
-  {cat:'Ingeniería Química', q:'La destilación separa componentes de una mezcla según su punto de ebullición.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería Química', q:'¿Qué representa la molaridad de una solución?', opts:['Moles de soluto por litro de solución','Gramos de soluto por litro','Moles por kilogramo de solvente','Porcentaje en peso'], a:0},
-  {cat:'Ingeniería Química', q:'Un catalizador se consume completamente durante la reacción química que acelera.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Ingeniería Química', q:'¿Qué equipo separa mezclas líquidas por diferencia de densidad e insolubilidad?', opts:['Reactor','Decantador','Compresor','Intercambiador de calor'], a:1},
-  {cat:'Ingeniería Química', q:'La Primera Ley de la Termodinámica dice que la energía no se crea ni se destruye, solo se transforma.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería Química', q:'¿Cómo se llama la transferencia de calor entre dos fluidos a distinta temperatura sin que se mezclen?', opts:['Extracción','Intercambio de calor','Absorción','Filtración'], a:1},
-  {cat:'Ingeniería Química', q:'El número de Reynolds permite predecir si un flujo es laminar o turbulento.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería Química', q:'¿Qué proceso industrial produce amoníaco a partir de nitrógeno e hidrógeno?', opts:['Proceso Haber-Bosch','Proceso Solvay','Proceso Contact','Craqueo catalítico'], a:0},
-  {cat:'Ingeniería Química', q:'Según la Segunda Ley de la Termodinámica, la entropía de un sistema aislado tiende a aumentar con el tiempo.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería Química', q:'¿Qué operación unitaria separa sólidos de un líquido con un medio poroso?', opts:['Filtración','Destilación','Absorción','Sedimentación'], a:0},
-  {cat:'Ingeniería Química', q:'En un fluido newtoniano, la viscosidad cambia según la velocidad de deformación aplicada.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Ingeniería Química', q:'¿Cómo se llama el equipo donde ocurre la reacción química principal de un proceso industrial?', opts:['Reactor','Rectificador','Ciclón','Sedimentador'], a:0},
-  {cat:'Ingeniería Química', q:'El balance de materia se basa en el principio de conservación de la masa.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería Química', q:'¿Qué proceso aumenta la concentración de una solución quitándole solvente por calor?', opts:['Cristalización','Evaporación','Absorción','Extracción'], a:1},
-  {cat:'Ingeniería Química', q:'Un proceso isotérmico ocurre a temperatura constante.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería Química', q:'¿Qué mide el número de Reynolds en mecánica de fluidos?', opts:['La relación entre fuerzas inerciales y viscosas','La presión del fluido','La temperatura del sistema','La densidad del fluido'], a:0},
-  {cat:'Ingeniería Química', q:'La ley de Fick describe la difusión de materia.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería Química', q:'¿Cuál de estos NO es un tipo de reactor químico industrial?', opts:['Reactor batch','Reactor de flujo pistón (PFR)','Reactor de tanque agitado (CSTR)','Reactor de rayos X'], a:3},
-  {cat:'Ingeniería Química', q:'En el punto crítico de una sustancia desaparece la distinción entre fase líquida y gaseosa.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería Química', q:'¿Qué ley describe la relación entre presión y volumen de un gas a temperatura constante?', opts:['Ley de Charles','Ley de Boyle','Ley de Gay-Lussac','Ley de Avogadro'], a:1, exp:'La Ley de Boyle dice que a temperatura constante, presión y volumen son inversamente proporcionales.'},
+  {cat:'Ingeniería Química', q:'La destilación separa componentes de una mezcla según su punto de ebullición.', opts:['Verdadero','Falso'], a:0, exp:'El componente más volátil se evapora primero y se condensa por separado.'},
+  {cat:'Ingeniería Química', q:'¿Qué representa la molaridad de una solución?', opts:['Moles de soluto por litro de solución','Gramos de soluto por litro','Moles por kilogramo de solvente','Porcentaje en peso'], a:0, exp:'La molaridad (mol/L) mide la concentración en moles de soluto por litro de solución.'},
+  {cat:'Ingeniería Química', q:'Un catalizador se consume completamente durante la reacción química que acelera.', opts:['Verdadero','Falso'], a:1, exp:'Un catalizador acelera la reacción sin consumirse, participa pero se regenera al final.'},
+  {cat:'Ingeniería Química', q:'¿Qué equipo separa mezclas líquidas por diferencia de densidad e insolubilidad?', opts:['Reactor','Decantador','Compresor','Intercambiador de calor'], a:1, exp:'Un decantador separa líquidos inmiscibles aprovechando su diferencia de densidad.'},
+  {cat:'Ingeniería Química', q:'La Primera Ley de la Termodinámica dice que la energía no se crea ni se destruye, solo se transforma.', opts:['Verdadero','Falso'], a:0, exp:'Es el principio de conservación de la energía aplicado a sistemas termodinámicos.'},
+  {cat:'Ingeniería Química', q:'¿Cómo se llama la transferencia de calor entre dos fluidos a distinta temperatura sin que se mezclen?', opts:['Extracción','Intercambio de calor','Absorción','Filtración'], a:1, exp:'Un intercambiador de calor transfiere energía térmica sin que los fluidos se mezclen.'},
+  {cat:'Ingeniería Química', q:'El número de Reynolds permite predecir si un flujo es laminar o turbulento.', opts:['Verdadero','Falso'], a:0, exp:'Compara fuerzas inerciales y viscosas para clasificar el tipo de flujo.'},
+  {cat:'Ingeniería Química', q:'¿Qué proceso industrial produce amoníaco a partir de nitrógeno e hidrógeno?', opts:['Proceso Haber-Bosch','Proceso Solvay','Proceso Contact','Craqueo catalítico'], a:0, exp:'El proceso Haber-Bosch, desarrollado a comienzos del siglo XX, es clave para fabricar fertilizantes.'},
+  {cat:'Ingeniería Química', q:'Según la Segunda Ley de la Termodinámica, la entropía de un sistema aislado tiende a aumentar con el tiempo.', opts:['Verdadero','Falso'], a:0, exp:'Los procesos naturales tienden hacia el desorden (mayor entropía) en un sistema aislado.'},
+  {cat:'Ingeniería Química', q:'¿Qué operación unitaria separa sólidos de un líquido con un medio poroso?', opts:['Filtración','Destilación','Absorción','Sedimentación'], a:0, exp:'La filtración hace pasar la mezcla por un medio poroso que retiene los sólidos.'},
+  {cat:'Ingeniería Química', q:'En un fluido newtoniano, la viscosidad cambia según la velocidad de deformación aplicada.', opts:['Verdadero','Falso'], a:1, exp:'En un fluido newtoniano la viscosidad es constante; eso es justamente lo que lo define.'},
+  {cat:'Ingeniería Química', q:'¿Cómo se llama el equipo donde ocurre la reacción química principal de un proceso industrial?', opts:['Reactor','Rectificador','Ciclón','Sedimentador'], a:0, exp:'El reactor es el equipo central donde ocurre la transformación química.'},
+  {cat:'Ingeniería Química', q:'El balance de materia se basa en el principio de conservación de la masa.', opts:['Verdadero','Falso'], a:0, exp:'Lo que entra a un sistema debe salir o acumularse, sin crearse ni destruirse masa.'},
+  {cat:'Ingeniería Química', q:'¿Qué proceso aumenta la concentración de una solución quitándole solvente por calor?', opts:['Cristalización','Evaporación','Absorción','Extracción'], a:1, exp:'La evaporación elimina solvente por calor, concentrando la solución restante.'},
+  {cat:'Ingeniería Química', q:'Un proceso isotérmico ocurre a temperatura constante.', opts:['Verdadero','Falso'], a:0, exp:'El prefijo "iso" significa "igual", y "térmico" se refiere a la temperatura.'},
+  {cat:'Ingeniería Química', q:'¿Qué mide el número de Reynolds en mecánica de fluidos?', opts:['La relación entre fuerzas inerciales y viscosas','La presión del fluido','La temperatura del sistema','La densidad del fluido'], a:0, exp:'Es la relación entre fuerzas inerciales y viscosas, adimensional.'},
+  {cat:'Ingeniería Química', q:'La ley de Fick describe la difusión de materia.', opts:['Verdadero','Falso'], a:0, exp:'Describe cómo las partículas se mueven desde zonas de mayor a menor concentración.'},
+  {cat:'Ingeniería Química', q:'¿Cuál de estos NO es un tipo de reactor químico industrial?', opts:['Reactor batch','Reactor de flujo pistón (PFR)','Reactor de tanque agitado (CSTR)','Reactor de rayos X'], a:3, exp:'"Reactor de rayos X" no existe como tipo de reactor químico industrial.'},
+  {cat:'Ingeniería Química', q:'En el punto crítico de una sustancia desaparece la distinción entre fase líquida y gaseosa.', opts:['Verdadero','Falso'], a:0, exp:'Más allá del punto crítico la sustancia se comporta como un fluido supercrítico.'},
   // Ingeniería en Sistemas
-  {cat:'Ingeniería en Sistemas', q:'¿Qué estructura de datos sigue el principio "el último en entrar es el primero en salir" (LIFO)?', opts:['Cola','Pila','Árbol','Lista enlazada'], a:1},
-  {cat:'Ingeniería en Sistemas', q:'La complejidad O(n) significa que el tiempo de ejecución es constante.', opts:['Verdadero','Falso'], a:1},
-  {cat:'Ingeniería en Sistemas', q:'¿Qué lenguaje se usa típicamente para consultar bases de datos relacionales?', opts:['SQL','HTML','CSS','XML'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'Un algoritmo de búsqueda binaria requiere que la lista esté ordenada.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'¿Cómo se llama convertir código fuente en lenguaje máquina antes de ejecutarlo?', opts:['Interpretación','Compilación','Depuración','Ensamblado'], a:1},
-  {cat:'Ingeniería en Sistemas', q:'Una base de datos relacional organiza la información en tablas con filas y columnas.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'¿Qué significa la sigla "API"?', opts:['Application Programming Interface','Advanced Programming Interface','Application Process Integration','Automated Program Interface'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'El modelo OSI tiene 7 capas para describir las comunicaciones de red.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'¿Cuál de estos es un sistema de control de versiones?', opts:['Docker','Git','Kubernetes','Jenkins'], a:1},
-  {cat:'Ingeniería en Sistemas', q:'La recursividad es cuando una función se llama a sí misma.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'¿Qué estructura de datos sigue el principio "el primero en entrar es el primero en salir" (FIFO)?', opts:['Pila','Cola','Árbol binario','Grafo'], a:1},
-  {cat:'Ingeniería en Sistemas', q:'Un número binario solo usa los dígitos 0 y 1.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'¿Qué metodología ágil organiza el trabajo en sprints cortos?', opts:['Cascada','Scrum','Kanban puro','RUP'], a:1},
-  {cat:'Ingeniería en Sistemas', q:'El protocolo HTTPS agrega una capa de cifrado sobre HTTP.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'¿Qué tipo de memoria de la computadora se borra al apagar el equipo?', opts:['ROM','RAM','Disco rígido','SSD'], a:1},
-  {cat:'Ingeniería en Sistemas', q:'Una red de área local se llama LAN.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'¿Cuál de estos NO es un paradigma de programación?', opts:['Orientado a objetos','Funcional','Procedural','Circular'], a:3},
-  {cat:'Ingeniería en Sistemas', q:'La notación "Big O" describe la complejidad temporal o espacial de un algoritmo.', opts:['Verdadero','Falso'], a:0},
-  {cat:'Ingeniería en Sistemas', q:'¿Qué componente de la computadora se considera su "cerebro" de procesamiento?', opts:['RAM','CPU','Disco duro','Placa de video'], a:1},
-  {cat:'Ingeniería en Sistemas', q:'Una dirección IP identifica de forma única a un dispositivo dentro de una red.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué estructura de datos sigue el principio "el último en entrar es el primero en salir" (LIFO)?', opts:['Cola','Pila','Árbol','Lista enlazada'], a:1, exp:'Una pila (stack) sigue el orden LIFO, como una torre de platos.'},
+  {cat:'Ingeniería en Sistemas', q:'La complejidad O(n) significa que el tiempo de ejecución es constante.', opts:['Verdadero','Falso'], a:1, exp:'O(n) es complejidad lineal: el tiempo crece proporcional al tamaño de entrada; O(1) es la constante.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué lenguaje se usa típicamente para consultar bases de datos relacionales?', opts:['SQL','HTML','CSS','XML'], a:0, exp:'SQL (Structured Query Language) es el estándar para consultar bases de datos relacionales.'},
+  {cat:'Ingeniería en Sistemas', q:'Un algoritmo de búsqueda binaria requiere que la lista esté ordenada.', opts:['Verdadero','Falso'], a:0, exp:'Divide la lista a la mitad en cada paso, lo cual solo funciona si está ordenada.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Cómo se llama convertir código fuente en lenguaje máquina antes de ejecutarlo?', opts:['Interpretación','Compilación','Depuración','Ensamblado'], a:1, exp:'La compilación traduce todo el código a lenguaje máquina antes de correrlo.'},
+  {cat:'Ingeniería en Sistemas', q:'Una base de datos relacional organiza la información en tablas con filas y columnas.', opts:['Verdadero','Falso'], a:0, exp:'Cada tabla representa una entidad, y las relaciones se dan por claves entre tablas.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué significa la sigla "API"?', opts:['Application Programming Interface','Advanced Programming Interface','Application Process Integration','Automated Program Interface'], a:0, exp:'Significa "Application Programming Interface", una interfaz para que programas se comuniquen entre sí.'},
+  {cat:'Ingeniería en Sistemas', q:'El modelo OSI tiene 7 capas para describir las comunicaciones de red.', opts:['Verdadero','Falso'], a:0, exp:'Va desde la capa física hasta la capa de aplicación, pasando por red y transporte.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Cuál de estos es un sistema de control de versiones?', opts:['Docker','Git','Kubernetes','Jenkins'], a:1, exp:'Git permite llevar el historial de cambios de un proyecto de código.'},
+  {cat:'Ingeniería en Sistemas', q:'La recursividad es cuando una función se llama a sí misma.', opts:['Verdadero','Falso'], a:0, exp:'Necesita un caso base para no llamarse infinitamente.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué estructura de datos sigue el principio "el primero en entrar es el primero en salir" (FIFO)?', opts:['Pila','Cola','Árbol binario','Grafo'], a:1, exp:'Una cola (queue) sigue el orden FIFO, como una fila de personas esperando.'},
+  {cat:'Ingeniería en Sistemas', q:'Un número binario solo usa los dígitos 0 y 1.', opts:['Verdadero','Falso'], a:0, exp:'El sistema binario es la base del funcionamiento interno de las computadoras.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué metodología ágil organiza el trabajo en sprints cortos?', opts:['Cascada','Scrum','Kanban puro','RUP'], a:1, exp:'Scrum organiza el trabajo en sprints, ciclos cortos con entregas incrementales.'},
+  {cat:'Ingeniería en Sistemas', q:'El protocolo HTTPS agrega una capa de cifrado sobre HTTP.', opts:['Verdadero','Falso'], a:0, exp:'Usa TLS/SSL para cifrar la comunicación entre el navegador y el servidor.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué tipo de memoria de la computadora se borra al apagar el equipo?', opts:['ROM','RAM','Disco rígido','SSD'], a:1, exp:'La RAM es volátil: pierde su contenido al cortar la energía.'},
+  {cat:'Ingeniería en Sistemas', q:'Una red de área local se llama LAN.', opts:['Verdadero','Falso'], a:0, exp:'LAN significa "Local Area Network", como la red de una casa u oficina.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Cuál de estos NO es un paradigma de programación?', opts:['Orientado a objetos','Funcional','Procedural','Circular'], a:3, exp:'"Circular" no es un paradigma de programación reconocido, a diferencia de orientado a objetos, funcional y procedural.'},
+  {cat:'Ingeniería en Sistemas', q:'La notación "Big O" describe la complejidad temporal o espacial de un algoritmo.', opts:['Verdadero','Falso'], a:0, exp:'Permite comparar qué tan rápido crece el tiempo o memoria que necesita un algoritmo.'},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué componente de la computadora se considera su "cerebro" de procesamiento?', opts:['RAM','CPU','Disco duro','Placa de video'], a:1, exp:'La CPU ejecuta las instrucciones y procesa los datos del sistema.'},
+  {cat:'Ingeniería en Sistemas', q:'Una dirección IP identifica de forma única a un dispositivo dentro de una red.', opts:['Verdadero','Falso'], a:0, exp:'Funciona como una "dirección postal" digital para que los datos lleguen al dispositivo correcto.'},
+  // Inteligencia Artificial
+  {cat:'Inteligencia Artificial', q:'¿Qué significa la sigla "IA"?', opts:['Inteligencia Artificial','Interfaz Automática','Información Analítica','Integración Algorítmica'], a:0, exp:'La Inteligencia Artificial busca que las máquinas realicen tareas que normalmente requieren razonamiento humano.'},
+  {cat:'Inteligencia Artificial', q:'Una red neuronal artificial está inspirada en el funcionamiento del cerebro humano.', opts:['Verdadero','Falso'], a:0, exp:'Sus "neuronas" artificiales imitan, de forma simplificada, cómo se conectan las neuronas biológicas.'},
+  {cat:'Inteligencia Artificial', q:'¿Qué término describe a un modelo que "aprende" patrones a partir de datos, sin ser programado explícitamente para cada tarea?', opts:['Machine Learning','Hardcoding','Debugging','Compilación'], a:0, exp:'El aprendizaje automático (Machine Learning) ajusta su comportamiento a partir de ejemplos, no de reglas fijas.'},
+  {cat:'Inteligencia Artificial', q:'ChatGPT es un ejemplo de modelo de lenguaje grande (LLM).', opts:['Verdadero','Falso'], a:0, exp:'Los LLM (Large Language Models) se entrenan con enormes cantidades de texto para generar lenguaje natural.'},
+  {cat:'Inteligencia Artificial', q:'¿Qué empresa creó el modelo de IA llamado Claude?', opts:['OpenAI','Google','Anthropic','Meta'], a:2, exp:'Anthropic es la empresa que desarrolla los modelos Claude.'},
+  {cat:'Inteligencia Artificial', q:'El "entrenamiento" de un modelo de IA consiste en ajustar sus parámetros usando datos de ejemplo.', opts:['Verdadero','Falso'], a:0, exp:'Durante el entrenamiento el modelo ajusta millones (o miles de millones) de parámetros internos.'},
+  {cat:'Inteligencia Artificial', q:'¿Cómo se llama la técnica de IA que usa muchas capas de neuronas artificiales?', opts:['Deep Learning','Cloud Computing','Blockchain','Scripting'], a:0, exp:'El aprendizaje profundo (Deep Learning) usa redes neuronales con muchas capas para detectar patrones complejos.'},
+  {cat:'Inteligencia Artificial', q:'Un modelo de IA nunca puede cometer errores ni "alucinar" datos falsos.', opts:['Verdadero','Falso'], a:1, exp:'Los modelos de IA pueden generar información incorrecta con total confianza, un fenómeno conocido como "alucinación".'},
+  {cat:'Inteligencia Artificial', q:'¿Qué término se usa cuando una IA genera información incorrecta pero la presenta como cierta?', opts:['Alucinación','Compilación','Renderizado','Streaming'], a:0, exp:'Se llama "alucinación" cuando el modelo inventa datos que suenan plausibles pero son falsos.'},
+  {cat:'Inteligencia Artificial', q:'El aprendizaje supervisado usa datos etiquetados para entrenar un modelo.', opts:['Verdadero','Falso'], a:0, exp:'En el aprendizaje supervisado, cada dato de entrenamiento viene con la respuesta correcta ya indicada.'},
+  {cat:'Inteligencia Artificial', q:'¿Qué tipo de IA se especializa en generar imágenes a partir de texto?', opts:['IA generativa de imágenes','Sistema operativo','Firewall','Antivirus'], a:0, exp:'Modelos como DALL-E o Midjourney generan imágenes a partir de una descripción escrita.'},
+  {cat:'Inteligencia Artificial', q:'Los chatbots basados en IA generativa pueden mantener una conversación en lenguaje natural.', opts:['Verdadero','Falso'], a:0, exp:'Están entrenados para entender el contexto de una conversación y responder de forma coherente.'},
+  {cat:'Inteligencia Artificial', q:'¿Cómo se llama el campo de la IA dedicado a que las computadoras "entiendan" el lenguaje humano?', opts:['Procesamiento de Lenguaje Natural (NLP)','Visión por Computadora','Robótica','Criptografía'], a:0, exp:'El NLP (Natural Language Processing) permite analizar, interpretar y generar texto en lenguaje humano.'},
+  {cat:'Inteligencia Artificial', q:'El aprendizaje por refuerzo entrena modelos mediante recompensas y castigos según sus acciones.', opts:['Verdadero','Falso'], a:0, exp:'El modelo aprende a base de prueba y error, maximizando una "recompensa" definida de antemano.'},
+  {cat:'Inteligencia Artificial', q:'¿Qué término describe el conjunto de datos usado para entrenar un modelo de IA?', opts:['Dataset','Firewall','Kernel','Bytecode'], a:0, exp:'Un "dataset" es la colección de ejemplos con la que se entrena y evalúa un modelo.'},
+  {cat:'Inteligencia Artificial', q:'Una IA puede tener sesgos (bias) si los datos con los que fue entrenada también los tienen.', opts:['Verdadero','Falso'], a:0, exp:'Si los datos de entrenamiento reflejan prejuicios o desequilibrios, el modelo puede reproducirlos.'},
+  {cat:'Inteligencia Artificial', q:'¿Qué tecnología de IA se usa en los autos con conducción autónoma?', opts:['Visión por computadora y sensores','Solo GPS','Solo radio','Bluetooth'], a:0, exp:'Combinan cámaras, radares y sensores con IA para interpretar el entorno en tiempo real.'},
+  {cat:'Inteligencia Artificial', q:'El término "prompt" se refiere a la instrucción o pregunta que un usuario le da a un modelo de IA generativa.', opts:['Verdadero','Falso'], a:0, exp:'El "prompt" es el texto de entrada que guía la respuesta del modelo.'},
+  {cat:'Inteligencia Artificial', q:'¿Cuál de estos NO es un modelo de IA generativa conocido?', opts:['GPT','Gemini','Claude','Excel'], a:3, exp:'Excel es una planilla de cálculo, no un modelo de IA generativa.'},
+  {cat:'Inteligencia Artificial', q:'La IA generativa puede crear texto, imágenes, audio y video, no solo responder preguntas.', opts:['Verdadero','Falso'], a:0, exp:'Existen modelos generativos especializados en cada uno de esos formatos.'},
+  // Contabilidad
+  {cat:'Contabilidad', q:'¿Qué ecuación fundamental relaciona activo, pasivo y patrimonio neto?', opts:['Activo = Pasivo + Patrimonio Neto','Activo = Pasivo - Patrimonio Neto','Pasivo = Activo x Patrimonio Neto','Activo = Ingresos - Egresos'], a:0, exp:'Es la ecuación contable básica: todo lo que tiene la empresa se financia con deuda (pasivo) o capital propio (patrimonio neto).'},
+  {cat:'Contabilidad', q:'El balance general muestra la situación patrimonial de una empresa en un momento determinado.', opts:['Verdadero','Falso'], a:0, exp:'Es una "foto" de activos, pasivos y patrimonio neto en una fecha específica.'},
+  {cat:'Contabilidad', q:'¿Cómo se llama el documento que resume los ingresos y gastos de una empresa en un período?', opts:['Estado de Resultados','Libro Mayor','Manual de Procedimientos','Acta de Directorio'], a:0, exp:'El Estado de Resultados muestra si la empresa tuvo ganancia o pérdida en un período.'},
+  {cat:'Contabilidad', q:'La depreciación reduce el valor contable de un bien a lo largo del tiempo.', opts:['Verdadero','Falso'], a:0, exp:'Refleja el desgaste o pérdida de valor de un bien de uso, como maquinaria o vehículos, con el paso del tiempo.'},
+  {cat:'Contabilidad', q:'¿Qué representa el "activo" en contabilidad?', opts:['Los bienes y derechos de la empresa','Las deudas de la empresa','Los gastos del período','Los impuestos a pagar'], a:0, exp:'El activo incluye todo lo que la empresa posee o tiene derecho a cobrar.'},
+  {cat:'Contabilidad', q:'En la partida doble, todo asiento contable debe tener el mismo total en el debe y en el haber.', opts:['Verdadero','Falso'], a:0, exp:'Es el principio base de la contabilidad: cada movimiento se registra en dos cuentas, y ambas columnas deben equilibrarse.'},
+  {cat:'Contabilidad', q:'¿Cómo se llama la ganancia que queda después de restar todos los costos y gastos a los ingresos?', opts:['Utilidad neta','Activo corriente','Pasivo no corriente','Capital social'], a:0, exp:'La utilidad neta es lo que realmente "gana" la empresa después de todos los descuentos.'},
+  {cat:'Contabilidad', q:'El IVA (Impuesto al Valor Agregado) es un impuesto indirecto que se traslada al consumidor final.', opts:['Verdadero','Falso'], a:0, exp:'Se cobra en cada etapa de la cadena de venta, pero quien lo termina pagando es el consumidor final.'},
+  {cat:'Contabilidad', q:'¿Qué término describe las deudas y obligaciones de una empresa?', opts:['Pasivo','Activo','Patrimonio neto','Ingreso'], a:0, exp:'El pasivo representa lo que la empresa debe a terceros, como proveedores o bancos.'},
+  {cat:'Contabilidad', q:'Amortizar un préstamo significa ir devolviendo el capital más los intereses en cuotas.', opts:['Verdadero','Falso'], a:0, exp:'Cada cuota de amortización incluye una parte de capital y una parte de interés.'},
+  {cat:'Contabilidad', q:'¿Cómo se llama el libro contable donde se registran todas las transacciones en orden cronológico?', opts:['Libro Diario','Libro de Actas','Libro de Sueldos','Libro de Quejas'], a:0, exp:'El Libro Diario registra cada operación económica en el orden en que ocurre.'},
+  {cat:'Contabilidad', q:'El patrimonio neto de una empresa es igual al activo menos el pasivo.', opts:['Verdadero','Falso'], a:0, exp:'Es lo que le queda a los dueños después de descontar todas las deudas del total de bienes.'},
+  {cat:'Contabilidad', q:'¿Qué nombre recibe el conjunto de normas contables que buscan uniformar los estados financieros a nivel internacional?', opts:['NIIF/IFRS','HTML','SQL','PBI'], a:0, exp:'Las NIIF (o IFRS en inglés) buscan que los balances de distintos países sean comparables entre sí.'},
+  {cat:'Contabilidad', q:'Un activo corriente es aquel que se espera convertir en efectivo dentro de un año.', opts:['Verdadero','Falso'], a:0, exp:'Ejemplos típicos son el efectivo, las cuentas por cobrar y las mercaderías.'},
+  {cat:'Contabilidad', q:'¿Cómo se llama el proceso de verificar que los registros contables sean correctos y confiables?', opts:['Auditoría','Facturación','Presupuestación','Cotización'], a:0, exp:'Una auditoría revisa que los estados contables reflejen la realidad de la empresa.'},
+  {cat:'Contabilidad', q:'El costo fijo de una empresa no varía según el nivel de producción o ventas.', opts:['Verdadero','Falso'], a:0, exp:'Como el alquiler, se paga igual aunque la empresa produzca más o menos.'},
+  {cat:'Contabilidad', q:'¿Qué documento respalda una venta o compra y es exigido por la autoridad fiscal?', opts:['Factura','Currículum','Contrato de alquiler','Acta de nacimiento'], a:0, exp:'La factura es el comprobante fiscal de una operación comercial.'},
+  {cat:'Contabilidad', q:'El punto de equilibrio es el nivel de ventas donde los ingresos igualan a los costos totales.', opts:['Verdadero','Falso'], a:0, exp:'En ese punto la empresa no gana ni pierde dinero.'},
+  {cat:'Contabilidad', q:'¿Cómo se llama la diferencia entre el precio de venta y el costo de un producto?', opts:['Margen o utilidad bruta','Pasivo corriente','Activo fijo','Amortización'], a:0, exp:'El margen bruto mide cuánto gana la empresa por cada venta antes de otros gastos.'},
+  {cat:'Contabilidad', q:'Un balance contable siempre debe estar "cuadrado": el activo debe ser igual al pasivo más el patrimonio neto.', opts:['Verdadero','Falso'], a:0, exp:'Si no cuadra, hay un error de registro en algún lado.'},
+  // Análisis de Datos
+  {cat:'Análisis de Datos', q:'¿Qué mide la "media" (promedio) de un conjunto de datos?', opts:['El valor central resultante de sumar todos los datos y dividir por la cantidad','El valor que más se repite','El valor máximo','La diferencia entre el mayor y el menor'], a:0, exp:'La media se calcula sumando todos los valores y dividiendo por la cantidad de datos.'},
+  {cat:'Análisis de Datos', q:'La "mediana" de un conjunto de datos es el valor que queda justo en el medio al ordenarlos.', opts:['Verdadero','Falso'], a:0, exp:'A diferencia de la media, la mediana no se ve tan afectada por valores extremos.'},
+  {cat:'Análisis de Datos', q:'¿Cómo se llama el valor que más se repite en un conjunto de datos?', opts:['Moda','Media','Varianza','Percentil'], a:0, exp:'La moda es simplemente el dato (o los datos) que aparece con más frecuencia.'},
+  {cat:'Análisis de Datos', q:'La desviación estándar mide qué tan dispersos están los datos respecto a la media.', opts:['Verdadero','Falso'], a:0, exp:'Cuanto mayor es la desviación estándar, más "esparcidos" están los datos.'},
+  {cat:'Análisis de Datos', q:'¿Qué tipo de gráfico es más adecuado para mostrar la evolución de una variable en el tiempo?', opts:['Gráfico de líneas','Gráfico de torta','Diagrama de dispersión','Ninguno de estos'], a:0, exp:'El gráfico de líneas conecta puntos a lo largo del tiempo, ideal para ver tendencias.'},
+  {cat:'Análisis de Datos', q:'Un "outlier" (valor atípico) es un dato que se aleja mucho del resto del conjunto.', opts:['Verdadero','Falso'], a:0, exp:'Puede deberse a un error de medición o a un caso realmente excepcional, y conviene revisarlo.'},
+  {cat:'Análisis de Datos', q:'¿Qué herramienta se usa comúnmente para analizar datos en tablas con fórmulas y filtros?', opts:['Hoja de cálculo (Excel/Sheets)','Editor de texto','Reproductor de video','Sistema operativo'], a:0, exp:'Excel y Google Sheets son de las herramientas más usadas para análisis básico de datos.'},
+  {cat:'Análisis de Datos', q:'La correlación entre dos variables implica necesariamente que una causa la otra.', opts:['Verdadero','Falso'], a:1, exp:'"Correlación no implica causalidad": dos variables pueden moverse juntas sin que una cause la otra.'},
+  {cat:'Análisis de Datos', q:'¿Qué lenguaje de programación es muy usado en ciencia de datos por sus librerías como pandas y NumPy?', opts:['Python','HTML','CSS','SQL'], a:0, exp:'Python es uno de los lenguajes más populares para análisis de datos y machine learning.'},
+  {cat:'Análisis de Datos', q:'Un dashboard (tablero) permite visualizar indicadores clave de un negocio de forma resumida.', opts:['Verdadero','Falso'], a:0, exp:'Reúne gráficos y métricas importantes en una sola pantalla para tomar decisiones rápido.'},
+  {cat:'Análisis de Datos', q:'¿Cómo se llama el proceso de limpiar y preparar datos antes de analizarlos?', opts:['Limpieza de datos (data cleaning)','Compilación','Renderizado','Streaming'], a:0, exp:'Incluye corregir errores, quitar duplicados y completar datos faltantes.'},
+  {cat:'Análisis de Datos', q:'Una muestra representativa permite sacar conclusiones sobre una población sin encuestarla por completo.', opts:['Verdadero','Falso'], a:0, exp:'Es la base de la estadística inferencial: analizar una parte para inferir sobre el total.'},
+  {cat:'Análisis de Datos', q:'¿Qué tipo de gráfico usa barras para comparar categorías entre sí?', opts:['Gráfico de barras','Diagrama de Gantt','Mapa de calor','Histograma de frecuencias'], a:0, exp:'El gráfico de barras es ideal para comparar valores entre distintas categorías.'},
+  {cat:'Análisis de Datos', q:'Un histograma muestra la distribución de frecuencia de una variable numérica.', opts:['Verdadero','Falso'], a:0, exp:'Agrupa los datos en intervalos (bins) y muestra cuántos caen en cada uno.'},
+  {cat:'Análisis de Datos', q:'¿Qué sigla se usa para el proceso de extraer, transformar y cargar datos entre sistemas?', opts:['ETL','API','CPU','RAM'], a:0, exp:'ETL significa "Extract, Transform, Load", un proceso clave en el manejo de datos.'},
+  {cat:'Análisis de Datos', q:'El "Big Data" se refiere a conjuntos de datos tan grandes o complejos que requieren herramientas especiales para procesarlos.', opts:['Verdadero','Falso'], a:0, exp:'Superan la capacidad de las herramientas tradicionales por su volumen, velocidad o variedad.'},
+  {cat:'Análisis de Datos', q:'¿Qué mide un percentil en estadística?', opts:['La posición relativa de un valor dentro de un conjunto ordenado','El promedio de los datos','La cantidad total de datos','El valor máximo del conjunto'], a:0, exp:'Por ejemplo, estar en el percentil 90 significa superar al 90% de los valores del conjunto.'},
+  {cat:'Análisis de Datos', q:'El machine learning se usa en análisis de datos para predecir tendencias futuras a partir de datos históricos.', opts:['Verdadero','Falso'], a:0, exp:'Los modelos aprenden patrones del pasado para proyectar comportamientos futuros.'},
+  {cat:'Análisis de Datos', q:'¿Qué nombre recibe una tabla dinámica que resume y cruza datos de forma interactiva?', opts:['Tabla pivot (pivot table)','Tabla hash','Tabla de verdad','Tabla periódica'], a:0, exp:'Las tablas pivot permiten reorganizar y resumir grandes cantidades de datos fácilmente.'},
+  {cat:'Análisis de Datos', q:'Visualizar datos con gráficos ayuda a detectar patrones que son difíciles de ver solo en una tabla de números.', opts:['Verdadero','Falso'], a:0, exp:'El ojo humano detecta tendencias y anomalías mucho más rápido en un gráfico que en una tabla.'},
+  // Lengua y Gramática
+  {cat:'Lengua y Gramática', q:'¿Cómo se llama la palabra que indica una acción, proceso o estado?', opts:['Verbo','Sustantivo','Adjetivo','Adverbio'], a:0, exp:'El verbo es el núcleo del predicado y expresa lo que hace o le pasa al sujeto.'},
+  {cat:'Lengua y Gramática', q:'Un sustantivo propio siempre se escribe con mayúscula inicial.', opts:['Verdadero','Falso'], a:0, exp:'Nombres de personas, lugares o marcas (como "Ana" o "Argentina") se escriben con mayúscula.'},
+  {cat:'Lengua y Gramática', q:'¿Qué parte de la oración modifica o describe a un sustantivo?', opts:['Adjetivo','Verbo','Preposición','Conjunción'], a:0, exp:'El adjetivo aporta cualidades o características al sustantivo, como "casa grande".'},
+  {cat:'Lengua y Gramática', q:'La sílaba tónica es la que se pronuncia con mayor intensidad dentro de una palabra.', opts:['Verdadero','Falso'], a:0, exp:'Es clave para saber si una palabra lleva tilde o no, según las reglas de acentuación.'},
+  {cat:'Lengua y Gramática', q:'¿Cómo se llama una palabra que se escribe igual pero tiene distinto significado según el contexto?', opts:['Palabra polisémica','Sinónimo','Antónimo','Prefijo'], a:0, exp:'Por ejemplo, "banco" puede ser una entidad financiera o un asiento.'},
+  {cat:'Lengua y Gramática', q:'Los diptongos son la unión de dos vocales que se pronuncian en una misma sílaba.', opts:['Verdadero','Falso'], a:0, exp:'Por ejemplo, en "cielo" las vocales "ie" forman un diptongo.'},
+  {cat:'Lengua y Gramática', q:'¿Qué signo de puntuación se usa para separar elementos de una enumeración?', opts:['Coma','Punto y aparte','Guion','Paréntesis'], a:0, exp:'La coma separa elementos de una lista, como "manzana, pera y banana".'},
+  {cat:'Lengua y Gramática', q:'Una oración sin verbo conjugado no puede considerarse una oración bimembre típica.', opts:['Verdadero','Falso'], a:0, exp:'Una oración bimembre necesita sujeto y predicado, y el predicado requiere un verbo conjugado.'},
+  {cat:'Lengua y Gramática', q:'¿Cómo se llama la parte de la gramática que estudia la estructura y combinación de las palabras en la oración?', opts:['Sintaxis','Fonética','Ortografía','Semántica'], a:0, exp:'La sintaxis analiza cómo se organizan las palabras para formar oraciones correctas.'},
+  {cat:'Lengua y Gramática', q:'Los sinónimos son palabras que tienen significados opuestos.', opts:['Verdadero','Falso'], a:1, exp:'Los sinónimos tienen significados similares; los que tienen significados opuestos son antónimos.'},
+  {cat:'Lengua y Gramática', q:'¿Qué palabra se usa para unir dos oraciones o ideas, como "y", "pero" o "porque"?', opts:['Conjunción','Sustantivo','Artículo','Pronombre'], a:0, exp:'Las conjunciones enlazan palabras, frases u oraciones entre sí.'},
+  {cat:'Lengua y Gramática', q:'Las palabras agudas llevan tilde cuando terminan en n, s o vocal.', opts:['Verdadero','Falso'], a:0, exp:'Por ejemplo "camión" o "café" llevan tilde por esta regla.'},
+  {cat:'Lengua y Gramática', q:'¿Cómo se llama el conjunto de reglas que regula la escritura correcta de las palabras?', opts:['Ortografía','Sintaxis','Morfología','Retórica'], a:0, exp:'La ortografía indica cómo se escriben correctamente las palabras, incluyendo tildes y puntuación.'},
+  {cat:'Lengua y Gramática', q:'Un pronombre reemplaza a un sustantivo para evitar repetirlo.', opts:['Verdadero','Falso'], a:0, exp:'Por ejemplo, "él" o "ella" reemplazan el nombre de una persona ya mencionada.'},
+  {cat:'Lengua y Gramática', q:'¿Qué figura literaria compara dos elementos usando "como"?', opts:['Símil o comparación','Metáfora','Hipérbole','Personificación'], a:0, exp:'Por ejemplo: "sus ojos brillan como estrellas" es un símil.'},
+  {cat:'Lengua y Gramática', q:'Las palabras esdrújulas siempre llevan tilde.', opts:['Verdadero','Falso'], a:0, exp:'Todas las esdrújulas (acentuadas en la antepenúltima sílaba) llevan tilde, sin excepción.'},
+  {cat:'Lengua y Gramática', q:'¿Cómo se llama el texto que narra hechos, reales o ficticios, con un narrador?', opts:['Narración','Descripción','Argumentación','Diálogo'], a:0, exp:'La narración cuenta una sucesión de hechos a través de un narrador.'},
+  {cat:'Lengua y Gramática', q:'El sujeto de una oración es quien realiza o recibe la acción del verbo.', opts:['Verdadero','Falso'], a:0, exp:'El sujeto puede ser agente (realiza la acción) o paciente (la recibe, en voz pasiva).'},
+  {cat:'Lengua y Gramática', q:'¿Qué tipo de palabra indica cantidad, tiempo o modo, y modifica a un verbo, adjetivo u otro adverbio?', opts:['Adverbio','Preposición','Artículo','Interjección'], a:0, exp:'Por ejemplo, "rápidamente", "hoy" o "muy" son adverbios.'},
+  {cat:'Lengua y Gramática', q:'Un párrafo bien estructurado desarrolla una sola idea principal.', opts:['Verdadero','Falso'], a:0, exp:'Esto ayuda a que el texto sea claro y fácil de seguir para el lector.'},
+  // Idiomas
+  {cat:'Idiomas', q:'¿Cómo se dice "gracias" en inglés?', opts:['Thanks','Please','Sorry','Hello'], a:0, exp:'"Thanks" (o "thank you") es la forma de agradecer en inglés.'},
+  {cat:'Idiomas', q:'La palabra francesa "bonjour" significa "buenos días" o "hola".', opts:['Verdadero','Falso'], a:0, exp:'Es el saludo más común en francés durante el día.'},
+  {cat:'Idiomas', q:'¿Cómo se dice "casa" en italiano?', opts:['Casa','Maison','Haus','House'], a:0, exp:'En italiano "casa" se escribe y se pronuncia casi igual que en español.'},
+  {cat:'Idiomas', q:'En portugués, "obrigado" significa "gracias".', opts:['Verdadero','Falso'], a:0, exp:'Los hombres dicen "obrigado" y las mujeres "obrigada" para agradecer en portugués.'},
+  {cat:'Idiomas', q:'¿Qué idioma se habla oficialmente en Brasil?', opts:['Portugués','Español','Inglés','Francés'], a:0, exp:'Brasil es el único país de Sudamérica donde el idioma oficial es el portugués.'},
+  {cat:'Idiomas', q:'La palabra alemana "Danke" significa "gracias".', opts:['Verdadero','Falso'], a:0, exp:'"Danke" es la forma más común de agradecer en alemán.'},
+  {cat:'Idiomas', q:'¿Cómo se dice "amigo" en inglés?', opts:['Friend','Enemy','Family','Neighbor'], a:0, exp:'"Friend" es la traducción de "amigo" en inglés.'},
+  {cat:'Idiomas', q:'En francés, "au revoir" se usa para despedirse.', opts:['Verdadero','Falso'], a:0, exp:'Literalmente significa "hasta la vista" o "hasta pronto".'},
+  {cat:'Idiomas', q:'¿Cuál de estas palabras significa "agua" en inglés?', opts:['Water','Fire','Earth','Air'], a:0, exp:'"Water" es "agua" en inglés.'},
+  {cat:'Idiomas', q:'El español y el portugués son ambas lenguas romances derivadas del latín.', opts:['Verdadero','Falso'], a:0, exp:'Junto con el italiano, francés y rumano, forman la familia de lenguas romances.'},
+  {cat:'Idiomas', q:'¿Cómo se dice "por favor" en inglés?', opts:['Please','Thanks','Sorry','Excuse me'], a:0, exp:'"Please" se usa para pedir algo con cortesía en inglés.'},
+  {cat:'Idiomas', q:'La palabra italiana "ciao" se usa tanto para saludar como para despedirse.', opts:['Verdadero','Falso'], a:0, exp:'Es una de las palabras italianas más conocidas y usadas en varios idiomas.'},
+  {cat:'Idiomas', q:'¿Qué significa "hello" en español?', opts:['Hola','Adiós','Gracias','Por favor'], a:0, exp:'"Hello" es el saludo más común en inglés.'},
+  {cat:'Idiomas', q:'El mandarín es un idioma tonal, donde el tono de una palabra puede cambiar su significado.', opts:['Verdadero','Falso'], a:0, exp:'La misma sílaba pronunciada con distinto tono puede tener significados completamente diferentes.'},
+  {cat:'Idiomas', q:'¿Cómo se dice "libro" en inglés?', opts:['Book','Look','Cook','Hook'], a:0, exp:'"Book" es "libro" en inglés.'},
+  {cat:'Idiomas', q:'En alemán, todos los sustantivos se escriben con mayúscula inicial.', opts:['Verdadero','Falso'], a:0, exp:'Es una particularidad del alemán: cualquier sustantivo, común o propio, lleva mayúscula.'},
+  {cat:'Idiomas', q:'¿Cuál de estas es una lengua germánica?', opts:['Inglés','Español','Italiano','Francés'], a:0, exp:'El inglés pertenece a la familia de lenguas germánicas, junto con el alemán y el neerlandés.'},
+  {cat:'Idiomas', q:'La palabra "sushi" proviene del idioma japonés.', opts:['Verdadero','Falso'], a:0, exp:'"Sushi" hace referencia originalmente al arroz avinagrado, no solo al pescado crudo.'},
+  {cat:'Idiomas', q:'¿Cómo se dice "buenos días" en inglés?', opts:['Good morning','Good night','Good evening','Goodbye'], a:0, exp:'"Good morning" se usa para saludar durante la mañana.'},
+  {cat:'Idiomas', q:'El árabe se escribe de derecha a izquierda.', opts:['Verdadero','Falso'], a:0, exp:'A diferencia del español, el árabe (como el hebreo) se lee y escribe de derecha a izquierda.'},
+  // Medicina
+  {cat:'Medicina', q:'¿Cuántas cámaras tiene el corazón humano?', opts:['2','4','3','6'], a:1, exp:'Tiene 4 cámaras: dos aurículas y dos ventrículos.'},
+  {cat:'Medicina', q:'La aspirina es un medicamento antiinflamatorio y analgésico.', opts:['Verdadero','Falso'], a:0, exp:'Se usa comúnmente para bajar la fiebre, calmar el dolor y reducir la inflamación.'},
+  {cat:'Medicina', q:'¿Qué órgano filtra la sangre y produce la orina?', opts:['Riñón','Hígado','Pulmón','Bazo'], a:0, exp:'Los riñones filtran desechos de la sangre y regulan el equilibrio de líquidos del cuerpo.'},
+  {cat:'Medicina', q:'La presión arterial normal en un adulto sano ronda los 120/80 mmHg.', opts:['Verdadero','Falso'], a:0, exp:'Ese valor se considera un rango de referencia saludable para un adulto en reposo.'},
+  {cat:'Medicina', q:'¿Qué vitamina se obtiene principalmente por exposición al sol?', opts:['Vitamina D','Vitamina C','Vitamina B12','Vitamina K'], a:0, exp:'La piel sintetiza vitamina D cuando se expone a la luz solar.'},
+  {cat:'Medicina', q:'Los glóbulos rojos transportan oxígeno por el cuerpo.', opts:['Verdadero','Falso'], a:0, exp:'Gracias a la hemoglobina, los glóbulos rojos llevan oxígeno desde los pulmones a todo el cuerpo.'},
+  {cat:'Medicina', q:'¿Cómo se llama el médico especialista en el corazón?', opts:['Cardiólogo','Dermatólogo','Neurólogo','Pediatra'], a:0, exp:'El cardiólogo se especializa en el diagnóstico y tratamiento de enfermedades del corazón.'},
+  {cat:'Medicina', q:'La diabetes tipo 1 y tipo 2 tienen exactamente la misma causa.', opts:['Verdadero','Falso'], a:1, exp:'La tipo 1 es autoinmune (el cuerpo no produce insulina); la tipo 2 se relaciona con resistencia a la insulina.'},
+  {cat:'Medicina', q:'¿Qué órgano produce la bilis, necesaria para digerir grasas?', opts:['Hígado','Páncreas','Bazo','Estómago'], a:0, exp:'El hígado produce la bilis, que se almacena en la vesícula biliar.'},
+  {cat:'Medicina', q:'Una vacuna estimula el sistema inmunológico para defenderse de un patógeno específico.', opts:['Verdadero','Falso'], a:0, exp:'Entrena las defensas del cuerpo para reconocer y combatir un virus o bacteria antes de una infección real.'},
+  {cat:'Medicina', q:'¿Cuál es el grupo sanguíneo considerado "donante universal"?', opts:['O negativo','AB positivo','A positivo','B negativo'], a:0, exp:'El grupo O negativo puede donarse a personas de cualquier grupo sanguíneo.'},
+  {cat:'Medicina', q:'El sistema nervioso central está formado por el cerebro y la médula espinal.', opts:['Verdadero','Falso'], a:0, exp:'El resto de los nervios del cuerpo forman el sistema nervioso periférico.'},
+  {cat:'Medicina', q:'¿Cómo se llama la inflamación del apéndice, que suele requerir cirugía urgente?', opts:['Apendicitis','Gastritis','Faringitis','Bronquitis'], a:0, exp:'Es una de las causas más comunes de cirugía abdominal de urgencia.'},
+  {cat:'Medicina', q:'Los antibióticos son efectivos contra infecciones virales como la gripe común.', opts:['Verdadero','Falso'], a:1, exp:'Los antibióticos combaten bacterias, no virus; por eso no sirven contra la gripe o el resfrío.'},
+  {cat:'Medicina', q:'¿Qué hueso protege el cerebro?', opts:['Cráneo','Fémur','Húmero','Esternón'], a:0, exp:'El cráneo forma una caja ósea que protege al cerebro de golpes.'},
+  {cat:'Medicina', q:'La hipertensión arterial es un factor de riesgo para sufrir un accidente cerebrovascular (ACV).', opts:['Verdadero','Falso'], a:0, exp:'La presión alta sostenida daña los vasos sanguíneos y aumenta el riesgo de ACV.'},
+  {cat:'Medicina', q:'¿Cómo se llama el proceso por el cual los pulmones intercambian oxígeno y dióxido de carbono?', opts:['Respiración','Digestión','Circulación','Excreción'], a:0, exp:'En los alvéolos pulmonares se intercambia oxígeno por dióxido de carbono con la sangre.'},
+  {cat:'Medicina', q:'El colesterol alto sin control es un factor de riesgo cardiovascular.', opts:['Verdadero','Falso'], a:0, exp:'El exceso de colesterol puede acumularse en las arterias y aumentar el riesgo de infarto.'},
+  {cat:'Medicina', q:'¿Qué especialista se ocupa de la salud de los niños?', opts:['Pediatra','Geriatra','Cardiólogo','Traumatólogo'], a:0, exp:'El pediatra atiende la salud de bebés, niños y adolescentes.'},
+  {cat:'Medicina', q:'Dormir bien es importante para la recuperación física y la salud mental.', opts:['Verdadero','Falso'], a:0, exp:'Durante el sueño el cuerpo repara tejidos y el cerebro consolida la memoria.'},
 ];
 const GAMES_META = {
   tuttifruti: { id:'tuttifruti', name:'Tutti Fruti', icon:'🍉' },
@@ -898,7 +1026,9 @@ function shuffleArr(arr){
   for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; }
   return a;
 }
-function pregDrawQuestions(n){ return shuffleArr(PREGUNTADOS_BANK).slice(0, n); }
+function allQuestions(){ return PREGUNTADOS_BANK.concat(state.customQuestions); }
+function pregDrawQuestions(n){ return shuffleArr(allQuestions()).slice(0, n); }
+function pregCategories(){ return [...new Set(allQuestions().map(q=>q.cat))].sort(); }
 
 /* ═══════════════════════════════════════════════════════════════
    ARCADE — orquestador de "varios juegos, mismos jugadores". Vive
@@ -1033,6 +1163,7 @@ function render(){
   const app = document.getElementById('app');
   const fns = {
     home: renderHome, jugadores: renderJugadores, mazos: renderMazos,
+    preguntas: renderPreguntas, pregQEditor: renderPregQEditor,
     historial: renderHistorial, config: renderConfig,
     setupLocal: renderSetupLocal, turnLocal: renderTurnLocal,
     correctionLocal: renderCorrectionLocal, roundScoreboard: renderRoundScoreboard,
@@ -1185,6 +1316,103 @@ function dkSave(){
 function deleteDeck(name){
   if(!confirm(`¿Borrar el mazo "${name}"?`)) return;
   delete state.decks[name]; saveAll(); render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PREGUNTAS — editor de preguntas propias para Preguntados. Las
+   190+ preguntas de fábrica (PREGUNTADOS_BANK) son de solo lectura;
+   las que carga cada uno quedan en state.customQuestions (ftf_preg_custom)
+   y se mezclan con el banco de fábrica en cada partida (allQuestions()).
+   ═══════════════════════════════════════════════════════════════ */
+function renderPreguntas(app){
+  const byCat = {};
+  PREGUNTADOS_BANK.forEach(q => { byCat[q.cat] = (byCat[q.cat]||0)+1; });
+  const customByCat = {};
+  state.customQuestions.forEach(q => { (customByCat[q.cat] = customByCat[q.cat]||[]).push(q); });
+  const allCats = [...new Set([...Object.keys(byCat), ...Object.keys(customByCat)])].sort();
+  app.innerHTML = `
+    ${topbar('Preguntas de Preguntados', (PREGUNTADOS_BANK.length+state.customQuestions.length)+' preguntas en total')}
+    <div class="screen">
+      <button class="btn btn-primary btn-lg btn-block" onclick="editQuestion(null)">+ Agregar pregunta propia</button>
+      ${allCats.map(cat => `
+        <div class="card" style="margin-top:12px">
+          <h3>${esc(cat)} <span class="n">(${(byCat[cat]||0) + (customByCat[cat]||[]).length})</span></h3>
+          ${byCat[cat] ? `<div class="sub">${byCat[cat]} de fábrica</div>` : ''}
+          ${(customByCat[cat]||[]).map(q => `<div class="lobby-player" style="margin-top:8px">
+            <span class="grow" style="font-size:13px">${esc(q.q)}</span>
+            <button class="btn btn-sm" onclick="editQuestion('${q.id}')">Editar</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteQuestion('${q.id}')">Borrar</button>
+          </div>`).join('')}
+        </div>`).join('')}
+    </div>`;
+}
+let pregQEditState = null;
+function editQuestion(id){
+  const existing = id ? state.customQuestions.find(q=>q.id===id) : null;
+  pregQEditState = existing
+    ? { id: existing.id, cat: existing.cat, q: existing.q, opts: [...existing.opts], a: existing.a, exp: existing.exp||'' }
+    : { id: null, cat: '', q: '', opts: ['',''], a: 0, exp: '' };
+  nav('pregQEditor');
+}
+function renderPregQEditor(app){
+  const s = pregQEditState;
+  document.getElementById('bottomnav').style.display = 'none';
+  app.innerHTML = `
+    ${topbar(s.id ? 'Editar pregunta' : 'Nueva pregunta')}
+    <div class="screen">
+      <div class="field"><label>Categoría</label>
+        <input id="pq-cat" list="pq-cats" value="${esc(s.cat)}" placeholder="Ej: Historia, Idiomas..." oninput="pregQEditState.cat=this.value">
+        <datalist id="pq-cats">${pregCategories().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+      </div>
+      <div class="field"><label>Pregunta</label>
+        <input id="pq-q" value="${esc(s.q)}" placeholder="Escribí la pregunta..." oninput="pregQEditState.q=this.value"></div>
+      <div class="card">
+        <h3>Opciones <span class="n">(tocá ✓ para marcar la correcta)</span></h3>
+        <div id="pq-opts">${s.opts.map((o,i)=>`<div class="row" style="margin-bottom:8px;align-items:center">
+          <button class="btn btn-sm ${s.a===i?'btn-primary':''}" onclick="pqSetCorrect(${i})">${s.a===i?'✓':'○'}</button>
+          <input class="grow" value="${esc(o)}" placeholder="Opción ${i+1}" oninput="pregQEditState.opts[${i}]=this.value">
+          ${s.opts.length>2?`<button class="btn btn-sm btn-danger" onclick="pqRemoveOpt(${i})">✕</button>`:''}
+        </div>`).join('')}</div>
+        ${s.opts.length<4?`<button class="btn btn-sm" onclick="pqAddOpt()">+ Agregar opción</button>`:''}
+      </div>
+      <div class="field"><label>Explicación (aparece después de contestar)</label>
+        <input id="pq-exp" value="${esc(s.exp)}" placeholder="Por qué es correcta/incorrecta..." oninput="pregQEditState.exp=this.value"></div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn btn-ghost grow" onclick="pregQEditState=null;nav('preguntas')">Cancelar</button>
+        <button class="btn btn-primary grow" onclick="pqSave()">Guardar pregunta</button>
+      </div>
+      ${s.id?`<button class="btn btn-danger btn-block" style="margin-top:10px" onclick="deleteQuestion('${s.id}')">Borrar esta pregunta</button>`:''}
+    </div>`;
+}
+function pqSetCorrect(i){ pregQEditState.a = i; render(); }
+function pqAddOpt(){ if(pregQEditState.opts.length<4){ pregQEditState.opts.push(''); render(); } }
+function pqRemoveOpt(i){
+  if(pregQEditState.opts.length<=2) return;
+  pregQEditState.opts.splice(i,1);
+  if(pregQEditState.a>=pregQEditState.opts.length) pregQEditState.a = 0;
+  else if(pregQEditState.a>i) pregQEditState.a--;
+  render();
+}
+function pqSave(){
+  const s = pregQEditState;
+  const cat = s.cat.trim(); const q = s.q.trim(); const opts = s.opts.map(o=>o.trim());
+  if(!cat){ toast('Ponele una categoría'); return; }
+  if(!q){ toast('Falta el texto de la pregunta'); return; }
+  if(opts.some(o=>!o)){ toast('Completá todas las opciones'); return; }
+  const entry = { id: s.id || uid(), cat, q, opts, a: s.a, exp: s.exp.trim() };
+  const i = state.customQuestions.findIndex(x=>x.id===entry.id);
+  if(i>=0) state.customQuestions[i] = entry; else state.customQuestions.push(entry);
+  saveAll(); pregQEditState = null;
+  document.getElementById('bottomnav').style.display = 'flex';
+  nav('preguntas');
+  toast('Pregunta guardada');
+}
+function deleteQuestion(id){
+  if(!confirm('¿Borrar esta pregunta?')) return;
+  state.customQuestions = state.customQuestions.filter(q=>q.id!==id);
+  saveAll(); pregQEditState = null;
+  document.getElementById('bottomnav').style.display = 'flex';
+  nav('preguntas');
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1559,6 +1787,7 @@ function renderPregTurnLocal(app){
           <div style="display:flex;flex-direction:column;gap:8px">
             ${q.opts.map((opt,oi)=>`<button class="btn trivia-opt" id="preg-opt-${i}-${oi}" onclick="pregChoose(${i},${oi})">${esc(opt)}</button>`).join('')}
           </div>
+          <div class="ans-desc" id="preg-exp-${i}" style="display:none;margin-top:8px;padding-left:0"></div>
         </div>`).join('')}
       </div>
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitPregTurn()">✅ Terminé</button>
@@ -1566,11 +1795,19 @@ function renderPregTurnLocal(app){
 }
 let pregTurnAnswers = {}; let pregTurnSubmitted = false; let pregTurnTimer = null;
 function pregChoose(qi, oi){
-  if(pregTurnSubmitted) return;
+  if(pregTurnSubmitted || pregTurnAnswers[qi]!=null) return;
   pregTurnAnswers[qi] = oi;
   const q = state.pregMatch.questions[qi];
-  q.opts.forEach((_,x)=>{ const b = document.getElementById('preg-opt-'+qi+'-'+x); if(b) b.classList.remove('trivia-picked'); });
-  const chosen = document.getElementById('preg-opt-'+qi+'-'+oi); if(chosen) chosen.classList.add('trivia-picked');
+  const correct = oi === q.a;
+  q.opts.forEach((_,x)=>{
+    const b = document.getElementById('preg-opt-'+qi+'-'+x); if(!b) return;
+    b.disabled = true;
+    if(x===q.a) b.classList.add('trivia-correct');
+    else if(x===oi) b.classList.add('trivia-wrong');
+  });
+  const expEl = document.getElementById('preg-exp-'+qi);
+  if(expEl && q.exp){ expEl.textContent = (correct?'✅ ':'💡 ')+q.exp; expEl.style.display = 'block'; }
+  beep(correct?880:220, correct?0.12:0.18, 0);
 }
 function beginPregTurnTimer(){
   const secs = state.settings.seconds || 90;
@@ -1838,7 +2075,9 @@ function hostStartPreguntados(){
   o.pregAwaiting = true;
   const secs = state.settings.seconds || 90;
   o.pregRound = { questions, seconds: secs, roundNum: o.roundNum, localEndsAt: Date.now() + 1000 + secs*1000 };
-  const guestQuestions = questions.map(q => ({ q:q.q, opts:q.opts, cat:q.cat })); // sin 'a' — el invitado no ve la respuesta correcta
+  // se manda 'a' y 'exp' también: el objetivo de Preguntados es aprender, así que cada uno
+  // ve la respuesta correcta y la explicación apenas contesta su propia pregunta
+  const guestQuestions = questions.map(q => ({ q:q.q, opts:q.opts, cat:q.cat, a:q.a, exp:q.exp }));
   hostBroadcast({ type:'pregStart', questions:guestQuestions, seconds:secs, roundNum:o.roundNum });
   state.screen = 'onlinePregPlaying'; render();
 }
@@ -2162,6 +2401,7 @@ function renderOnlinePregPlaying(app){
           <div style="display:flex;flex-direction:column;gap:8px">
             ${q.opts.map((opt,oi)=>`<button class="btn trivia-opt" id="preg-o-opt-${i}-${oi}" onclick="pregOnlineChoose(${i},${oi})">${esc(opt)}</button>`).join('')}
           </div>
+          <div class="ans-desc" id="preg-o-exp-${i}" style="display:none;margin-top:8px;padding-left:0"></div>
         </div>`).join('')}
       </div>
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitPregOnlineAnswers(true)">✅ Listo</button>
@@ -2180,11 +2420,19 @@ function renderOnlinePregPlaying(app){
   pregOnlineTimer = setInterval(tick, 250); tick();
 }
 function pregOnlineChoose(qi, oi){
-  if(pregOnlineSubmitted) return;
+  if(pregOnlineSubmitted || pregOnlineAnswers[qi]!=null) return;
   pregOnlineAnswers[qi] = oi;
   const q = state.online.pregRound.questions[qi];
-  q.opts.forEach((_,x)=>{ const b = document.getElementById('preg-o-opt-'+qi+'-'+x); if(b) b.classList.remove('trivia-picked'); });
-  const chosen = document.getElementById('preg-o-opt-'+qi+'-'+oi); if(chosen) chosen.classList.add('trivia-picked');
+  const correct = oi === q.a;
+  q.opts.forEach((_,x)=>{
+    const b = document.getElementById('preg-o-opt-'+qi+'-'+x); if(!b) return;
+    b.disabled = true;
+    if(x===q.a) b.classList.add('trivia-correct');
+    else if(x===oi) b.classList.add('trivia-wrong');
+  });
+  const expEl = document.getElementById('preg-o-exp-'+qi);
+  if(expEl && q.exp){ expEl.textContent = (correct?'✅ ':'💡 ')+q.exp; expEl.style.display = 'block'; }
+  beep(correct?880:220, correct?0.12:0.18, 0);
 }
 function submitPregOnlineAnswers(manual){
   if(!state.online.pregRound || pregOnlineSubmitted) return;
