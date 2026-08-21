@@ -1241,6 +1241,24 @@ function hostCreateRoom(){
 function hostBroadcast(obj){
   Object.values(state.online.conns).forEach(c => { try{ c.send(obj); }catch(e){} });
 }
+let hostResendTimer = null;
+function hostBroadcastPersistent(obj){
+  const o = state.online;
+  if(!o) return;
+  o.lastCriticalBroadcast = obj;
+  hostBroadcast(obj);
+  clearInterval(hostResendTimer);
+  const startedAt = Date.now();
+  hostResendTimer = setInterval(()=>{
+    const oo = state.online;
+    if(!oo || oo.role!=='host' || oo.lastCriticalBroadcast!==obj || Date.now()-startedAt>30000){ clearInterval(hostResendTimer); return; }
+    hostBroadcast(obj);
+  }, 3000);
+}
+function hostCancelPersistentBroadcast(){
+  if(state.online) state.online.lastCriticalBroadcast = null;
+  clearInterval(hostResendTimer);
+}
 function handleHostMessage(conn, data){
   const o = state.online;
   if(data.type==='join'){
@@ -1305,6 +1323,7 @@ function shareRoomCode(){
 }
 function hostStartRound(){
   const o = state.online;
+  hostCancelPersistentBroadcast();
   let pool = ALL_LETTERS.filter(l => state.settings.letters[l] && !o.usedLetters.includes(l));
   if(pool.length===0){ o.usedLetters=[]; pool = ALL_LETTERS.filter(l=>state.settings.letters[l]); }
   const letter = pool[Math.floor(Math.random()*pool.length)];
@@ -1411,7 +1430,7 @@ function confirmOnlineRoundScore(){
   players.forEach(p => { o.scores[p.id] = (o.scores[p.id]||0) + Object.values(results[p.id]||{}).reduce((s,r)=>s+r.points,0); });
   o.lastResults = results;
   o.history.push({ letter:o.round.letter, results });
-  hostBroadcast({ type:'scoreboard', results, players: players.map(p=>({id:p.id,name:p.name})), scores:o.scores });
+  hostBroadcastPersistent({ type:'scoreboard', results, players: players.map(p=>({id:p.id,name:p.name})), scores:o.scores });
   o.round = null; o.reviewResults = null;
   state.screen = 'onlineScoreboard'; render();
   confettiBurst(16);
@@ -1452,9 +1471,10 @@ function handleGuestMessage(data){
     o.myAnswers = null;
     state.screen = 'onlinePlaying'; render();
   } else if(data.type==='scoreboard'){
+    const firstTime = state.screen !== 'onlineScoreboard';
     o.lastScoreboard = data; o.round = null;
     state.screen = 'onlineScoreboard'; render();
-    confettiBurst(16);
+    if(firstTime) confettiBurst(16);
   } else if(data.type==='matchEnd'){
     o.round = null;
     state._lastRecord = { rounds: [], roundsCount: data.roundsCount, players: data.players };
@@ -1655,6 +1675,7 @@ function renderOnlineScoreboard(app){
 }
 function endOnlineMatch(){
   const o = state.online;
+  hostCancelPersistentBroadcast();
   const record = { id: uid(), date: Date.now(), mode:'online', rounds: o.history,
     players: [{name:o.myName, points:o.scores.me||0}].concat(Object.entries(o.guests).map(([pid,g])=>({name:g.name, points:o.scores[pid]||0}))) };
   state.history.push(record); saveAll();
