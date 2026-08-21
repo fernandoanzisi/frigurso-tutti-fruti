@@ -150,6 +150,10 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .ans-desc{font-size:11px;color:var(--text3);margin:-2px 0 8px;padding-left:84px;line-height:1.4}
 .pts{width:34px;text-align:right;flex-shrink:0;font-size:12px;font-weight:800;color:var(--text3)}
 
+.trivia-opt{text-align:left;margin-bottom:0}
+.trivia-correct{background:rgba(107,203,61,.18)!important;border-color:var(--ok)!important;color:var(--ok)!important}
+.trivia-wrong{background:rgba(239,68,68,.15)!important;border-color:var(--danger)!important;color:var(--danger)!important}
+
 .score-list{display:flex;flex-direction:column;gap:8px}
 .score-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:10px 12px;animation:riseIn .35s ease both}
 .score-item .pos{width:20px;font-size:12px;color:var(--text3);font-weight:800}
@@ -583,6 +587,87 @@ function confettiBurst(n){
   }
   document.body.appendChild(wrap);
   setTimeout(()=>wrap.remove(), 2700);
+}
+/* ═══════════════════════════════════════════════════════════════
+   TRIVIA — mini-juego para entretener a los invitados mientras
+   esperan (al resto de contestar, o al anfitrión corrigiendo).
+   100% local por dispositivo, no usa PeerJS, no suma puntaje
+   al Tutti Fruti — puro pasatiempo.
+   ═══════════════════════════════════════════════════════════════ */
+const TRIVIA_BANK = [
+  {q:'¿Cuál es el río más largo del mundo?', opts:['Amazonas','Nilo','Mississippi','Yangtsé'], a:0},
+  {q:'La Torre Eiffel está en Berlín.', opts:['Verdadero','Falso'], a:1},
+  {q:'¿Cuántos huesos tiene el cuerpo humano adulto?', opts:['206','186','256','126'], a:0},
+  {q:'El chocolate es tóxico para los perros.', opts:['Verdadero','Falso'], a:0},
+  {q:'¿Cuál es el planeta más grande del sistema solar?', opts:['Saturno','Júpiter','Neptuno','Urano'], a:1},
+  {q:'La Gran Muralla China se ve a simple vista desde el espacio.', opts:['Verdadero','Falso'], a:1},
+  {q:'¿Qué país tiene forma de bota?', opts:['España','Grecia','Italia','Portugal'], a:2},
+  {q:'Los pulpos tienen tres corazones.', opts:['Verdadero','Falso'], a:0},
+  {q:'¿Cuál es el metal líquido a temperatura ambiente?', opts:['Plomo','Mercurio','Zinc','Estaño'], a:1},
+  {q:'La miel nunca se echa a perder.', opts:['Verdadero','Falso'], a:0},
+  {q:'¿En qué continente está Egipto?', opts:['Asia','África','Europa','Oceanía'], a:1},
+  {q:'El corazón humano tiene 4 cámaras.', opts:['Verdadero','Falso'], a:0},
+  {q:'¿Cuál es la moneda de Japón?', opts:['Yuan','Won','Yen','Rupia'], a:2},
+  {q:'Venus es el planeta más cercano al Sol.', opts:['Verdadero','Falso'], a:1},
+  {q:'¿Quién pintó la Mona Lisa?', opts:['Miguel Ángel','Da Vinci','Rafael','Donatello'], a:1},
+  {q:'Un año en Marte dura menos que uno en la Tierra.', opts:['Verdadero','Falso'], a:1},
+  {q:'¿Cuál es el hueso más largo del cuerpo humano?', opts:['Húmero','Tibia','Fémur','Radio'], a:2},
+  {q:'Las cebras son blancas con rayas negras.', opts:['Verdadero','Falso'], a:1},
+  {q:'¿Cuál es el océano más grande del mundo?', opts:['Atlántico','Índico','Ártico','Pacífico'], a:3},
+  {q:'El sonido viaja más rápido en el agua que en el aire.', opts:['Verdadero','Falso'], a:0},
+  {q:'¿Cuántos jugadores tiene un equipo de fútbol en cancha?', opts:['10','11','12','9'], a:1},
+  {q:'La Antártida es el continente más frío del planeta.', opts:['Verdadero','Falso'], a:0},
+  {q:'¿Cuál es el idioma más hablado del mundo como lengua materna?', opts:['Inglés','Español','Mandarín','Hindi'], a:2},
+  {q:'Los flamencos nacen rosados.', opts:['Verdadero','Falso'], a:1},
+  {q:'¿Cuál es la capital de Australia?', opts:['Sídney','Canberra','Melbourne','Perth'], a:1},
+  {q:'El Everest es la montaña más alta medida desde el nivel del mar.', opts:['Verdadero','Falso'], a:0},
+  {q:'¿Qué instrumento tiene 88 teclas?', opts:['Acordeón','Piano','Órgano','Xilofón'], a:1},
+  {q:'La Luna tiene luz propia.', opts:['Verdadero','Falso'], a:1},
+  {q:'¿Cuál de estos NO es un mamífero?', opts:['Delfín','Murciélago','Tiburón','Ornitorrinco'], a:2},
+  {q:'El café tiene más cafeína que el té, taza por taza.', opts:['Verdadero','Falso'], a:0},
+];
+function triviaPickQuestion(excludeQ){
+  let q = excludeQ;
+  if(TRIVIA_BANK.length>1) while(q===excludeQ) q = TRIVIA_BANK[Math.floor(Math.random()*TRIVIA_BANK.length)];
+  else q = TRIVIA_BANK[0];
+  return q;
+}
+function triviaState(){
+  if(!state._trivia) state._trivia = { current: triviaPickQuestion(null), answered: null, streak: 0 };
+  return state._trivia;
+}
+function triviaAnswer(i){
+  const t = triviaState();
+  if(t.answered!=null) return;
+  t.answered = i;
+  if(i===t.current.a){ t.streak++; beep(880,0.12,0); } else { t.streak = 0; beep(220,0.18,0); }
+  render();
+}
+function triviaNext(){
+  const t = triviaState();
+  t.current = triviaPickQuestion(t.current);
+  t.answered = null;
+  render();
+}
+function renderTriviaWidget(){
+  const t = triviaState();
+  const q = t.current;
+  return `<div class="card" style="margin-top:18px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:20px">🎮</span>
+      <b style="font-family:var(--f-display)">Mientras esperás...</b>
+      <span class="chip" style="margin-left:auto">🔥 Racha: ${t.streak}</span>
+    </div>
+    <div class="sub" style="margin-bottom:12px;font-weight:700;color:var(--text)">${esc(q.q)}</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${q.opts.map((opt,i)=>{
+        let cls = 'btn trivia-opt';
+        if(t.answered!=null){ if(i===q.a) cls+=' trivia-correct'; else if(i===t.answered) cls+=' trivia-wrong'; }
+        return `<button class="${cls}" ${t.answered!=null?'disabled':''} onclick="triviaAnswer(${i})">${esc(opt)}</button>`;
+      }).join('')}
+    </div>
+    ${t.answered!=null ? `<button class="btn btn-primary btn-block" style="margin-top:12px" onclick="triviaNext()">Siguiente pregunta →</button>` : ''}
+  </div>`;
 }
 function animateScoreCounts(container){
   (container||document).querySelectorAll('.pt[data-val]').forEach(el => {
@@ -1295,7 +1380,8 @@ function renderOnlineReviewWatch(app){
   const w = o.reviewWatch;
   if(!w || !w.results){
     app.innerHTML = `${topbar('Corrigiendo respuestas', '🔴 En vivo — el anfitrión está revisando cada palabra...')}
-      <div class="screen center" style="padding-top:60px"><div style="font-size:40px">📖</div></div>`;
+      <div class="screen center" style="padding-top:30px"><div style="font-size:40px">📖</div></div>
+      <div class="screen" style="padding-top:0">${renderTriviaWidget()}</div>`;
     return;
   }
   const results = w.results; const players = w.players; const deck = w.deck;
@@ -1316,6 +1402,7 @@ function renderOnlineReviewWatch(app){
           }).join('')}
         </div>`).join('')}
       <div class="sub center" style="margin-top:16px">Esperando que el anfitrión confirme el puntaje...</div>
+      ${renderTriviaWidget()}
     </div>`;
 }
 function confirmOnlineRoundScore(){
@@ -1342,6 +1429,7 @@ function guestJoinRoom(codeOverride){
   if(!code){ toast('Falta el código de sala'); return; }
   if(!name){ toast('Falta tu nombre'); return; }
   toast('Conectando...');
+  state._trivia = null;
   loadPeerJS().then(()=>{
     const peer = new Peer();
     state.online = { role:'guest', peer, name, code, conn:null, myAnswers:null,
@@ -1502,7 +1590,10 @@ function renderOnlineWaiting(app){
       <div class="screen center" style="padding-top:50px">
         <div style="font-size:44px;margin-bottom:12px">✅</div>
         <div class="sub">Ya mandaste tus respuestas. Esperando que terminen los demás...</div>
-        <button class="btn btn-ghost" style="margin-top:24px" onclick="if(confirm('¿Salir de la sala? Vas a volver al inicio.'))guestLeaveRoom()">Salir de la sala</button>
+      </div>
+      <div class="screen" style="padding-top:0">
+        ${renderTriviaWidget()}
+        <button class="btn btn-ghost btn-block" style="margin-top:14px" onclick="if(confirm('¿Salir de la sala? Vas a volver al inicio.'))guestLeaveRoom()">Salir de la sala</button>
       </div>`;
     clearInterval(waitingHeartbeat);
     waitingHeartbeat = setInterval(()=>{
