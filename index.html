@@ -167,6 +167,22 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .letter-tog{aspect-ratio:1;border-radius:10px;background:var(--card2);border:2px solid var(--border);font-weight:800;font-size:13px;color:var(--text3);transition:transform .1s ease}
 .letter-tog:active{transform:scale(.9)}
 .letter-tog.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.letter-tog:disabled{opacity:.55}
+
+.ahorcado-word{font-family:var(--f-display);font-size:32px;font-weight:800;letter-spacing:6px;text-align:center;margin:14px 0 10px;word-break:break-all}
+.ahorcado-lives{text-align:center;font-size:20px;letter-spacing:2px;margin-bottom:18px}
+
+.dice-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.die{width:56px;height:56px;border-radius:14px;background:var(--card2);border:2px solid var(--border);font-size:34px;
+  display:flex;align-items:center;justify-content:center;transition:transform .1s ease}
+.die:active{transform:scale(.92)}
+.die.held{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,62,134,.25)}
+.generala-cats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.gen-cat{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:12px;
+  background:var(--card2);border:2px solid var(--border);font-weight:700;font-size:13px}
+.gen-cat .pt{color:var(--accent);font-weight:800}
+.gen-cat.used{opacity:.5}
+.gen-cat:disabled{opacity:.4}
 
 .room-code{font-size:40px;font-weight:700;font-family:var(--f-display);letter-spacing:.14em;text-align:center;color:var(--accent);
   background:var(--card2);border:2px dashed var(--accent);border-radius:16px;padding:16px;margin:14px 0}
@@ -1036,7 +1052,13 @@ const PREGUNTADOS_BANK = [
 const GAMES_META = {
   tuttifruti: { id:'tuttifruti', name:'Tutti Fruti', icon:'🍉' },
   preguntados: { id:'preguntados', name:'Preguntados', icon:'❓' },
+  ahorcado: { id:'ahorcado', name:'Ahorcado', icon:'🔤' },
+  mimica: { id:'mimica', name:'Mímica', icon:'🎭' },
+  generala: { id:'generala', name:'Generala', icon:'🎲' },
 };
+// online todavía solo soporta estos dos — los otros 3 son nuevos y por ahora son solo local
+// (ver [[project_frigurso_tutti_fruti]]: se decidió local primero, online queda para otra vuelta)
+const GAMES_ONLINE_READY = ['tuttifruti','preguntados'];
 const PREG_QUESTIONS_PER_MATCH = 10;
 const PREG_POINTS_PER_CORRECT = 100;
 function shuffleArr(arr){
@@ -1047,6 +1069,83 @@ function shuffleArr(arr){
 function allQuestions(){ return PREGUNTADOS_BANK.concat(state.customQuestions); }
 function pregDrawQuestions(n){ return shuffleArr(allQuestions()).slice(0, n); }
 function pregCategories(){ return [...new Set(allQuestions().map(q=>q.cat))].sort(); }
+
+/* ═══════════════════════════════════════════════════════════════
+   AHORCADO — banco de palabras (sin tildes ni Ñ para que adivinar
+   letra por letra sea simple y sin ambigüedad con normalize())
+   ═══════════════════════════════════════════════════════════════ */
+const AHORCADO_BANK = [
+  {cat:'Animales', word:'ELEFANTE'},{cat:'Animales', word:'JIRAFA'},{cat:'Animales', word:'COCODRILO'},
+  {cat:'Animales', word:'PINGUINO'},{cat:'Animales', word:'MURCIELAGO'},{cat:'Animales', word:'CANGREJO'},
+  {cat:'Animales', word:'ARDILLA'},{cat:'Animales', word:'DELFIN'},
+  {cat:'Países', word:'ARGENTINA'},{cat:'Países', word:'BRASIL'},{cat:'Países', word:'URUGUAY'},
+  {cat:'Países', word:'PARAGUAY'},{cat:'Países', word:'COLOMBIA'},{cat:'Países', word:'MEXICO'},
+  {cat:'Países', word:'CHILE'},{cat:'Países', word:'ITALIA'},
+  {cat:'Comida', word:'MILANESA'},{cat:'Comida', word:'EMPANADA'},{cat:'Comida', word:'ASADO'},
+  {cat:'Comida', word:'PIZZA'},{cat:'Comida', word:'HELADO'},{cat:'Comida', word:'CHOCOLATE'},
+  {cat:'Comida', word:'SANDIA'},{cat:'Comida', word:'BANANA'},
+  {cat:'Objetos', word:'TELEFONO'},{cat:'Objetos', word:'PARAGUAS'},{cat:'Objetos', word:'MOCHILA'},
+  {cat:'Objetos', word:'BICICLETA'},{cat:'Objetos', word:'ESPEJO'},{cat:'Objetos', word:'LINTERNA'},
+  {cat:'Objetos', word:'TIJERA'},{cat:'Objetos', word:'MARTILLO'},
+  {cat:'Profesiones', word:'MEDICO'},{cat:'Profesiones', word:'MAESTRO'},{cat:'Profesiones', word:'BOMBERO'},
+  {cat:'Profesiones', word:'COCINERO'},{cat:'Profesiones', word:'PINTOR'},{cat:'Profesiones', word:'ABOGADO'},
+  {cat:'Profesiones', word:'PERIODISTA'},{cat:'Profesiones', word:'ELECTRICISTA'},
+  {cat:'Deportes', word:'FUTBOL'},{cat:'Deportes', word:'TENIS'},{cat:'Deportes', word:'NATACION'},
+  {cat:'Deportes', word:'BASQUET'},{cat:'Deportes', word:'BOXEO'},{cat:'Deportes', word:'CICLISMO'},
+  {cat:'Deportes', word:'ATLETISMO'},{cat:'Deportes', word:'VOLEIBOL'},
+  {cat:'Cuerpo humano', word:'CORAZON'},{cat:'Cuerpo humano', word:'PULMON'},{cat:'Cuerpo humano', word:'CEREBRO'},
+  {cat:'Cuerpo humano', word:'ESTOMAGO'},{cat:'Cuerpo humano', word:'RODILLA'},{cat:'Cuerpo humano', word:'HOMBRO'},
+  {cat:'Cuerpo humano', word:'TOBILLO'},{cat:'Cuerpo humano', word:'PARPADO'},
+  {cat:'Naturaleza', word:'VOLCAN'},{cat:'Naturaleza', word:'RIO'},{cat:'Naturaleza', word:'OCEANO'},
+  {cat:'Naturaleza', word:'DESIERTO'},{cat:'Naturaleza', word:'BOSQUE'},{cat:'Naturaleza', word:'CASCADA'},
+  {cat:'Naturaleza', word:'GLACIAR'},{cat:'Naturaleza', word:'ARCOIRIS'},
+];
+const AHORCADO_LIVES = 6;
+
+/* ═══════════════════════════════════════════════════════════════
+   MÍMICA — banco de consignas para actuar sin hablar (con algún
+   guiño a la época sin tecnología: teléfono a disco, tocadiscos...)
+   ═══════════════════════════════════════════════════════════════ */
+const MIMICA_BANK = [
+  {cat:'Acción', text:'Dormir'},{cat:'Acción', text:'Nadar'},{cat:'Acción', text:'Bailar tango'},
+  {cat:'Acción', text:'Manejar un auto'},{cat:'Acción', text:'Cocinar'},{cat:'Acción', text:'Leer un libro'},
+  {cat:'Acción', text:'Pescar'},{cat:'Acción', text:'Andar en bicicleta'},{cat:'Acción', text:'Tocar la guitarra'},
+  {cat:'Acción', text:'Lavar los platos'},{cat:'Acción', text:'Planchar'},{cat:'Acción', text:'Barrer'},
+  {cat:'Acción', text:'Escalar una montaña'},{cat:'Acción', text:'Tomar mate'},{cat:'Acción', text:'Jugar al fútbol'},
+  {cat:'Acción', text:'Sacar una foto'},{cat:'Acción', text:'Peinarse'},{cat:'Acción', text:'Cepillarse los dientes'},
+  {cat:'Acción', text:'Hacer ejercicio'},{cat:'Acción', text:'Llorar de risa'},
+  {cat:'Animal', text:'Elefante'},{cat:'Animal', text:'Mono'},{cat:'Animal', text:'Serpiente'},
+  {cat:'Animal', text:'Canguro'},{cat:'Animal', text:'Pingüino'},{cat:'Animal', text:'León'},
+  {cat:'Animal', text:'Jirafa'},{cat:'Animal', text:'Tortuga'},{cat:'Animal', text:'Murciélago'},{cat:'Animal', text:'Cangrejo'},
+  {cat:'Profesión', text:'Médico'},{cat:'Profesión', text:'Bombero'},{cat:'Profesión', text:'Policía'},
+  {cat:'Profesión', text:'Maestro'},{cat:'Profesión', text:'Cocinero'},{cat:'Profesión', text:'Peluquero'},
+  {cat:'Profesión', text:'Pintor'},{cat:'Profesión', text:'Cantante'},{cat:'Profesión', text:'Payaso'},{cat:'Profesión', text:'Astronauta'},
+  {cat:'De otra época', text:'Un teléfono a disco'},{cat:'De otra época', text:'Una máquina de escribir'},
+  {cat:'De otra época', text:'Un tocadiscos'},{cat:'De otra época', text:'Una radio a pilas'},
+  {cat:'De otra época', text:'Sintonizar la tele con la antena'},{cat:'De otra época', text:'Enrollar un cassette con una lapicera'},
+  {cat:'Personaje', text:'Un robot'},{cat:'Personaje', text:'Un fantasma'},{cat:'Personaje', text:'Un mago'},
+  {cat:'Personaje', text:'Un espantapájaros'},{cat:'Personaje', text:'Un superhéroe volando'},
+  {cat:'Personaje', text:'Un vampiro'},{cat:'Personaje', text:'Un pirata'},{cat:'Personaje', text:'Un boxeador'},
+];
+const MIMICA_POINTS_PER_CORRECT = 100;
+
+/* ═══════════════════════════════════════════════════════════════
+   GENERALA — categorías clásicas (versión simple, sin generala doble)
+   ═══════════════════════════════════════════════════════════════ */
+const DICE_FACES = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
+const GENERALA_CATS = [
+  {id:'unos', label:'Unos', calc:d=>d.filter(x=>x===1).length*1},
+  {id:'doses', label:'Doses', calc:d=>d.filter(x=>x===2).length*2},
+  {id:'treses', label:'Treses', calc:d=>d.filter(x=>x===3).length*3},
+  {id:'cuatros', label:'Cuatros', calc:d=>d.filter(x=>x===4).length*4},
+  {id:'cincos', label:'Cincos', calc:d=>d.filter(x=>x===5).length*5},
+  {id:'seises', label:'Seises', calc:d=>d.filter(x=>x===6).length*6},
+  {id:'escalera', label:'Escalera', calc:d=>{ const s=[...d].sort().join(''); return (s==='12345'||s==='23456')?20:0; }},
+  {id:'full', label:'Full', calc:d=>{ const c={}; d.forEach(x=>c[x]=(c[x]||0)+1); const v=Object.values(c).sort(); return (v.length===2&&v[0]===2&&v[1]===3)?30:0; }},
+  {id:'poker', label:'Póker', calc:d=>{ const c={}; d.forEach(x=>c[x]=(c[x]||0)+1); return Object.values(c).some(n=>n>=4)?40:0; }},
+  {id:'generala', label:'Generala', calc:d=>{ const c={}; d.forEach(x=>c[x]=(c[x]||0)+1); return Object.values(c).some(n=>n===5)?50:0; }},
+];
+function rollDie(){ return 1 + Math.floor(Math.random()*6); }
 
 /* ═══════════════════════════════════════════════════════════════
    ARCADE — orquestador de "varios juegos, mismos jugadores". Vive
@@ -1069,6 +1168,9 @@ function arcadeLocalNext(){
   const id = arcadePickNext(a.enabled, a.played);
   a.played.push(id); a.current = id;
   if(id==='preguntados') arcadeMountPreguntadosLocal(a);
+  else if(id==='ahorcado') arcadeMountAhorcadoLocal(a);
+  else if(id==='mimica') arcadeMountMimicaLocal(a);
+  else if(id==='generala') arcadeMountGeneralaLocal(a);
   else arcadeMountTuttiFrutiLocal(a);
 }
 function arcadeMountTuttiFrutiLocal(a){
@@ -1088,6 +1190,317 @@ function arcadeMountPreguntadosLocal(a){
   };
   state.screen = 'pregTurnLocal'; render(); document.getElementById('bottomnav').style.display='none';
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   AHORCADO — local. Cada jugador tiene su propia palabra (así nadie
+   ve la de los demás mirando la pantalla anterior). Se puntúa apenas
+   termina el turno de cada uno, igual que Preguntados.
+   ═══════════════════════════════════════════════════════════════ */
+function arcadeMountAhorcadoLocal(a){
+  const words = shuffleArr(AHORCADO_BANK).slice(0, a.players.length);
+  state.ahorcadoMatch = {
+    mode:'local', players:a.players, words, turnIndex:0,
+    scores: Object.fromEntries(a.players.map(p=>[p.id,0])), rounds:[],
+    guessed:[], wrong:0, _done:false,
+  };
+  state.screen = 'ahorcadoTurnLocal'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function ahorcadoWordDisplay(){
+  const m = state.ahorcadoMatch; const w = m.words[m.turnIndex];
+  return w.word.split('').map(ch => m.guessed.includes(ch) ? ch : '_').join(' ');
+}
+function ahorcadoLivesDisplay(){
+  const m = state.ahorcadoMatch;
+  return '❤️'.repeat(AHORCADO_LIVES - m.wrong) + '🖤'.repeat(m.wrong);
+}
+function renderAhorcadoTurnLocal(app){
+  const m = state.ahorcadoMatch; const player = m.players[m.turnIndex]; const w = m.words[m.turnIndex];
+  document.getElementById('bottomnav').style.display='none';
+  app.innerHTML = `
+    <div class="handoff" id="handoff-overlay">
+      <span class="ic">🔤</span>
+      <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
+      <div class="sub" style="margin-bottom:24px">Que nadie más mire la pantalla</div>
+      <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove()">Listo, soy ${esc(player.name)}</button>
+    </div>
+    <div class="screen" style="padding-top:20px">
+      <div class="sub" style="text-align:center;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">${esc(w.cat)}</div>
+      <div class="ahorcado-word" id="ah-word">${ahorcadoWordDisplay()}</div>
+      <div class="ahorcado-lives" id="ah-lives">${ahorcadoLivesDisplay()}</div>
+      <div class="letters-grid" id="ah-keyboard">
+        ${ALL_LETTERS.map(l=>`<button class="letter-tog" id="ah-key-${l}" onclick="ahorcadoGuess('${l}')">${l}</button>`).join('')}
+      </div>
+      <div id="ah-result" style="display:none;margin-top:16px;text-align:center"></div>
+    </div>`;
+}
+function ahorcadoGuess(letter){
+  const m = state.ahorcadoMatch; if(!m || m._done) return;
+  const w = m.words[m.turnIndex];
+  const key = document.getElementById('ah-key-'+letter);
+  if(!key || key.disabled) return;
+  key.disabled = true;
+  if(w.word.includes(letter)){
+    m.guessed.push(letter);
+    key.classList.add('trivia-correct');
+    beep(880,0.12,0);
+  } else {
+    m.wrong++;
+    key.classList.add('trivia-wrong');
+    beep(220,0.18,0);
+  }
+  document.getElementById('ah-word').textContent = ahorcadoWordDisplay();
+  document.getElementById('ah-lives').textContent = ahorcadoLivesDisplay();
+  const won = w.word.split('').every(ch => m.guessed.includes(ch));
+  const lost = m.wrong >= AHORCADO_LIVES;
+  if(won || lost) ahorcadoFinishTurn(won);
+}
+function ahorcadoFinishTurn(won){
+  const m = state.ahorcadoMatch; const player = m.players[m.turnIndex]; const w = m.words[m.turnIndex];
+  m._done = true;
+  document.querySelectorAll('#ah-keyboard button').forEach(b=>b.disabled=true);
+  const points = won ? Math.max(20, 100 - m.wrong*15) : 0;
+  m.scores[player.id] = (m.scores[player.id]||0) + points;
+  m.rounds.push({ playerId: player.id, word: w.word, won, wrong:m.wrong, points });
+  const resEl = document.getElementById('ah-result');
+  resEl.style.display = 'block';
+  resEl.innerHTML = `<div style="font-size:32px">${won?'🎉':'😵'}</div>
+    <div style="font-weight:700;margin:6px 0">${won?'¡'+esc(player.name)+' acertó!':'Se acabaron las vidas'}</div>
+    <div class="sub" style="margin-bottom:14px">La palabra era: <b>${esc(w.word)}</b> · +${points} pts</div>
+    <button class="btn btn-primary btn-lg btn-block" onclick="ahorcadoNextTurn()">${m.turnIndex < m.players.length-1 ? 'Siguiente jugador' : 'Ver resultado'}</button>`;
+  if(won) confettiBurst(16); else soundEnd();
+}
+function ahorcadoNextTurn(){
+  const m = state.ahorcadoMatch;
+  m.turnIndex++;
+  if(m.turnIndex < m.players.length){
+    m.guessed = []; m.wrong = 0; m._done = false;
+    state.screen = 'ahorcadoTurnLocal'; render();
+  } else {
+    endAhorcadoLocalMatch();
+  }
+}
+function endAhorcadoLocalMatch(){
+  const m = state.ahorcadoMatch;
+  const record = { id: uid(), date: Date.now(), mode:'local', game:'ahorcado', rounds: m.rounds,
+    players: m.players.map(p=>({name:p.name, points:m.scores[p.id]})) };
+  state.history.push(record);
+  m.players.forEach(pm => { const p = state.players.find(x=>x.id===pm.id); if(!p) return; p.games++; p.points += m.scores[pm.id]; });
+  saveAll();
+  state.ahorcadoMatch = null;
+  if(state.arcadeLocal) arcadeGameEnded(m.scores);
+  else { state.screen='matchEnd'; state._lastRecord=record; render(); confettiBurst(40); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MÍMICA — local. Un jugador a la vez "actúa" contra el reloj; los
+   demás adivinan en voz alta (no hace falta que miren el celular) y
+   el que actúa toca "Acertaron"/"Paso" para avanzar a la siguiente
+   consigna. Se puntúa apenas termina el turno de cada uno.
+   ═══════════════════════════════════════════════════════════════ */
+let mimicaQueue = []; let mimicaIdx = 0; let mimicaCorrect = 0; let mimicaTimer = null; let mimicaEnded = false;
+function arcadeMountMimicaLocal(a){
+  state.mimicaMatch = {
+    mode:'local', players:a.players, turnIndex:0,
+    scores: Object.fromEntries(a.players.map(p=>[p.id,0])), rounds:[],
+  };
+  state.screen = 'mimicaTurnLocal'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function renderMimicaTurnLocal(app){
+  const m = state.mimicaMatch; const player = m.players[m.turnIndex];
+  document.getElementById('bottomnav').style.display='none';
+  mimicaQueue = shuffleArr(MIMICA_BANK); mimicaIdx = 0; mimicaCorrect = 0; mimicaEnded = false;
+  const secs = state.settings.seconds || 60;
+  app.innerHTML = `
+    <div class="handoff" id="handoff-overlay">
+      <span class="ic">🎭</span>
+      <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
+      <div class="sub" style="margin-bottom:24px">Vos actuás sin hablar, los demás adivinan en voz alta. Nadie más mire la pantalla.</div>
+      <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove();beginMimicaTimer()">Listo, soy ${esc(player.name)}</button>
+    </div>
+    <div class="screen" style="padding-top:20px">
+      <div class="timer" id="mim-timer-display">${secs}</div>
+      <div class="timerbar"><i id="mim-timer-bar" style="width:100%"></i></div>
+      <div class="card" style="text-align:center;padding:32px 16px;margin-top:12px">
+        <div class="sub" id="mim-cat" style="text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px"></div>
+        <div id="mim-word" style="font-size:26px;font-weight:800;font-family:var(--f-display)"></div>
+      </div>
+      <div class="sub center" style="margin:10px 0">Acertados: <b id="mim-correct">0</b></div>
+      <div class="row">
+        <button class="btn btn-ghost grow" onclick="mimicaAction(false)">⏭️ Paso</button>
+        <button class="btn btn-primary grow" onclick="mimicaAction(true)">✅ Acertaron</button>
+      </div>
+    </div>`;
+  mimicaShowCurrent();
+}
+function mimicaShowCurrent(){
+  if(mimicaIdx >= mimicaQueue.length) mimicaQueue = mimicaQueue.concat(shuffleArr(MIMICA_BANK));
+  const item = mimicaQueue[mimicaIdx];
+  const catEl = document.getElementById('mim-cat'); const wordEl = document.getElementById('mim-word');
+  if(catEl) catEl.textContent = item.cat;
+  if(wordEl) wordEl.textContent = item.text;
+}
+function mimicaAction(correct){
+  if(mimicaEnded) return;
+  if(correct){
+    mimicaCorrect++; beep(880,0.1,0);
+    const el = document.getElementById('mim-correct'); if(el) el.textContent = mimicaCorrect;
+  } else beep(320,0.12,0);
+  mimicaIdx++;
+  mimicaShowCurrent();
+}
+function beginMimicaTimer(){
+  const secs = state.settings.seconds || 60;
+  const endsAt = Date.now() + secs*1000;
+  clearInterval(mimicaTimer);
+  const tick = ()=>{
+    const disp = document.getElementById('mim-timer-display'); const bar = document.getElementById('mim-timer-bar');
+    if(!disp){ clearInterval(mimicaTimer); return; }
+    const remaining = Math.max(0, Math.ceil((endsAt-Date.now())/1000));
+    disp.textContent = remaining; bar.style.width = (remaining/secs*100)+'%'; disp.classList.toggle('low', remaining<=10);
+    if(remaining===3) soundCountdown();
+    if(remaining<=0){ clearInterval(mimicaTimer); soundEnd(); mimicaFinishTurn(); }
+  };
+  mimicaTimer = setInterval(tick, 250); tick();
+}
+function mimicaFinishTurn(){
+  if(mimicaEnded) return; mimicaEnded = true;
+  clearInterval(mimicaTimer);
+  const m = state.mimicaMatch; const player = m.players[m.turnIndex];
+  const points = mimicaCorrect * MIMICA_POINTS_PER_CORRECT;
+  m.scores[player.id] = (m.scores[player.id]||0) + points;
+  m.rounds.push({ playerId: player.id, correct: mimicaCorrect, points });
+  state._mimicaResult = { name: player.name, correct: mimicaCorrect, points, isLast: m.turnIndex >= m.players.length-1 };
+  state.screen = 'mimicaResult'; render();
+  confettiBurst(16);
+}
+function renderMimicaResult(app){
+  const r = state._mimicaResult;
+  app.innerHTML = `
+    ${topbar('¡Se acabó el tiempo!')}
+    <div class="screen center" style="padding-top:40px;text-align:center">
+      ${mascotSVG('cheer',72)}
+      <h2 style="margin:12px 0 4px">${esc(r.name)} acertó ${r.correct}</h2>
+      <div class="sub" style="margin-bottom:20px">+${r.points} pts</div>
+      <button class="btn btn-primary btn-lg btn-block" onclick="mimicaNextTurn()">${r.isLast ? 'Ver resultado' : 'Siguiente jugador'}</button>
+    </div>`;
+}
+function mimicaNextTurn(){
+  const m = state.mimicaMatch;
+  m.turnIndex++;
+  if(m.turnIndex < m.players.length){ state.screen = 'mimicaTurnLocal'; render(); }
+  else endMimicaLocalMatch();
+}
+function endMimicaLocalMatch(){
+  const m = state.mimicaMatch;
+  const record = { id: uid(), date: Date.now(), mode:'local', game:'mimica', rounds: m.rounds,
+    players: m.players.map(p=>({name:p.name, points:m.scores[p.id]})) };
+  state.history.push(record);
+  m.players.forEach(pm => { const p = state.players.find(x=>x.id===pm.id); if(!p) return; p.games++; p.points += m.scores[pm.id]; });
+  saveAll();
+  state.mimicaMatch = null;
+  if(state.arcadeLocal) arcadeGameEnded(m.scores);
+  else { state.screen='matchEnd'; state._lastRecord=record; render(); confettiBurst(40); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GENERALA — local. Ronda clásica completa: cada jugador va tirando
+   por turnos (hasta 3 tiradas, guardando los dados que quiera) y
+   anota en una categoría libre, hasta que todos completaron las 10.
+   ═══════════════════════════════════════════════════════════════ */
+function arcadeMountGeneralaLocal(a){
+  state.generalaMatch = {
+    mode:'local', players:a.players, turnIndex:0,
+    used: Object.fromEntries(a.players.map(p=>[p.id,{}])),
+    dice:[0,0,0,0,0], held:[false,false,false,false,false], rollsLeft:3,
+  };
+  generalaGotoNextTurn(true);
+}
+function generalaPlayerDone(m, playerId){ return Object.keys(m.used[playerId]).length >= GENERALA_CATS.length; }
+function generalaGotoNextTurn(isFirst){
+  const m = state.generalaMatch;
+  if(!isFirst) m.turnIndex = (m.turnIndex+1) % m.players.length;
+  let tries = 0;
+  while(generalaPlayerDone(m, m.players[m.turnIndex].id) && tries < m.players.length){
+    m.turnIndex = (m.turnIndex+1) % m.players.length; tries++;
+  }
+  if(tries >= m.players.length){ endGeneralaLocalMatch(); return; }
+  m.dice = [0,0,0,0,0]; m.held = [false,false,false,false,false]; m.rollsLeft = 3; m._handoffDone = false;
+  state.screen = 'generalaTurnLocal'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function generalaDismissHandoff(){
+  state.generalaMatch._handoffDone = true;
+  const el = document.getElementById('handoff-overlay'); if(el) el.remove();
+}
+function renderGeneralaTurnLocal(app){
+  const m = state.generalaMatch; const player = m.players[m.turnIndex];
+  document.getElementById('bottomnav').style.display='none';
+  const usedCats = m.used[player.id];
+  app.innerHTML = `
+    ${m._handoffDone ? '' : `<div class="handoff" id="handoff-overlay">
+      <span class="ic">🎲</span>
+      <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
+      <div class="sub" style="margin-bottom:24px">Que nadie más mire la pantalla</div>
+      <button class="btn btn-primary btn-lg" onclick="generalaDismissHandoff()">Listo, soy ${esc(player.name)}</button>
+    </div>`}
+    <div class="screen" style="padding-top:20px">
+      <div class="sub center" style="margin-bottom:8px">Tiradas restantes: <b>${m.rollsLeft}</b></div>
+      <div class="dice-row">
+        ${m.dice.map((v,i)=>`<button class="die ${m.held[i]?'held':''}" onclick="generalaToggleHold(${i})">${v?DICE_FACES[v]:'?'}</button>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:14px" onclick="generalaRoll()" ${m.rollsLeft<=0?'disabled':''}>🎲 Tirar</button>
+      <div class="sub center" style="margin:12px 0 6px">Tocá un dado para guardarlo antes de volver a tirar</div>
+      <h3 style="margin-top:10px">Anotar en...</h3>
+      <div class="generala-cats">
+        ${GENERALA_CATS.map(c=>{
+          const already = usedCats[c.id];
+          const preview = m.dice.some(v=>v>0) ? c.calc(m.dice) : null;
+          const disabled = already!=null || m.rollsLeft===3;
+          return `<button class="gen-cat ${already!=null?'used':''}" ${disabled?'disabled':''} onclick="generalaScore('${c.id}')">
+            <span class="nm">${c.label}</span><span class="pt">${already!=null?already:(preview!=null?preview:'—')}</span>
+          </button>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+function generalaToggleHold(i){
+  const m = state.generalaMatch;
+  if(m.dice[i]===0) return;
+  m.held[i] = !m.held[i];
+  render();
+}
+function generalaRoll(){
+  const m = state.generalaMatch;
+  if(m.rollsLeft<=0) return;
+  m.dice = m.dice.map((v,i)=> m.held[i] ? v : rollDie());
+  m.rollsLeft--;
+  beep(440,0.08,0); beep(660,0.08,0.08);
+  render();
+}
+function generalaScore(catId){
+  const m = state.generalaMatch; const player = m.players[m.turnIndex];
+  if(m.used[player.id][catId]!=null || m.rollsLeft===3) return;
+  const cat = GENERALA_CATS.find(c=>c.id===catId);
+  const points = cat.calc(m.dice);
+  m.used[player.id][catId] = points;
+  beep(points>0?880:220, 0.15, 0);
+  if(points>=40) confettiBurst(20);
+  generalaGotoNextTurn(false);
+}
+function endGeneralaLocalMatch(){
+  const m = state.generalaMatch;
+  const scores = {};
+  m.players.forEach(p => { scores[p.id] = Object.values(m.used[p.id]).reduce((s,x)=>s+x,0); });
+  const rounds = m.players.map(p => ({ playerId:p.id, used:m.used[p.id] }));
+  const record = { id: uid(), date: Date.now(), mode:'local', game:'generala', rounds,
+    players: m.players.map(p=>({name:p.name, points:scores[p.id]})) };
+  state.history.push(record);
+  m.players.forEach(pm => { const p = state.players.find(x=>x.id===pm.id); if(!p) return; p.games++; p.points += scores[pm.id]; });
+  saveAll();
+  state.generalaMatch = null;
+  if(state.arcadeLocal) arcadeGameEnded(scores);
+  else { state.screen='matchEnd'; state._lastRecord=record; render(); confettiBurst(40); }
+}
+
 function arcadeOnlineNext(){
   const o = state.online; const a = o.arcade;
   const id = arcadePickNext(a.enabled, a.played);
@@ -1198,6 +1611,9 @@ function render(){
     pregTurnLocal: renderPregTurnLocal,
     onlinePregPlaying: renderOnlinePregPlaying, onlinePregWaiting: renderOnlinePregWaiting,
     arcadeScoreboard: renderArcadeScoreboard,
+    ahorcadoTurnLocal: renderAhorcadoTurnLocal,
+    mimicaTurnLocal: renderMimicaTurnLocal, mimicaResult: renderMimicaResult,
+    generalaTurnLocal: renderGeneralaTurnLocal,
   };
   (fns[state.screen] || renderHome)(app);
 }
@@ -2019,8 +2435,9 @@ function renderOnlineLobbyHost(app){
         <h3>🎮 Juegos de la sala</h3>
         <div class="sub" style="margin-bottom:10px">Si elegís más de uno, al terminar cada juego van a ver el marcador general y podés pasar al siguiente sin perder a nadie de la sala — se elige al azar cuál sigue.</div>
         <div class="wrap">
-          ${Object.values(GAMES_META).map(g=>`<span class="chip" style="opacity:${o.arcade.enabled.includes(g.id)?1:.4};cursor:pointer" onclick="toggleOnlineGame('${g.id}')">${g.icon} ${esc(g.name)}</span>`).join('')}
+          ${GAMES_ONLINE_READY.map(id=>GAMES_META[id]).map(g=>`<span class="chip" style="opacity:${o.arcade.enabled.includes(g.id)?1:.4};cursor:pointer" onclick="toggleOnlineGame('${g.id}')">${g.icon} ${esc(g.name)}</span>`).join('')}
         </div>
+        <div class="sub" style="margin-top:8px">Ahorcado, Mímica y Generala por ahora solo están en modo local — online los sumamos pronto.</div>
       </div>
       <button class="btn btn-primary btn-lg btn-block" ${guestList.length===0?'disabled style="opacity:.5"':''} onclick="arcadeOnlineNext()">¡Arrancar partida!</button>
       <button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="closeOnline()">Cerrar sala</button>
