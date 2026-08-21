@@ -153,6 +153,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .trivia-opt{text-align:left;margin-bottom:0}
 .trivia-correct{background:rgba(107,203,61,.18)!important;border-color:var(--ok)!important;color:var(--ok)!important}
 .trivia-wrong{background:rgba(239,68,68,.15)!important;border-color:var(--danger)!important;color:var(--danger)!important}
+.trivia-picked{background:rgba(255,62,134,.16)!important;border-color:var(--accent)!important;color:var(--accent)!important}
 
 .score-list{display:flex;flex-direction:column;gap:8px}
 .score-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:2px solid var(--border);border-radius:14px;padding:10px 12px;animation:riseIn .35s ease both}
@@ -398,6 +399,8 @@ const state = {
   match: LS.get('ftf_match_inprogress', null),
   setup: null,
   online: null,
+  pregMatch: null,
+  arcadeLocal: null,
 };
 
 function saveAll(){
@@ -684,6 +687,338 @@ function animateScoreCounts(container){
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   PREGUNTADOS — banco de preguntas del juego "Preguntados" del
+   modo Arcade (juego real con puntaje, distinto del widget de
+   trivia "mientras esperás" de más arriba, que usa TRIVIA_BANK).
+   ═══════════════════════════════════════════════════════════════ */
+const PREGUNTADOS_BANK = [
+  // Cultura General
+  {cat:'Cultura General', q:'¿Cuál es la capital de Canadá?', opts:['Toronto','Ottawa','Vancouver','Montreal'], a:1},
+  {cat:'Cultura General', q:'El símbolo químico del oro es Au.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Cultura General', q:'¿Cuántas cuerdas tiene una guitarra clásica?', opts:['4','6','7','5'], a:1},
+  {cat:'Cultura General', q:'La Torre Eiffel se construyó para la Exposición Universal de 1889.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Cultura General', q:'¿Cuál es el animal terrestre más rápido del mundo?', opts:['León','Guepardo','Ñu','Antílope'], a:1},
+  {cat:'Cultura General', q:'El agua hierve a 100°C a nivel del mar.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Cultura General', q:'¿Qué idioma tiene más hablantes nativos en el mundo?', opts:['Inglés','Español','Mandarín','Hindi'], a:2},
+  {cat:'Cultura General', q:'La bandera de Japón tiene un círculo verde en el centro.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Cultura General', q:'¿Cuál es el país más poblado del mundo hoy en día?', opts:['China','India','EE.UU.','Indonesia'], a:1},
+  {cat:'Cultura General', q:'Un año bisiesto tiene 365 días.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Cultura General', q:'¿Cuál es la moneda oficial de Brasil?', opts:['Peso','Real','Dólar','Sol'], a:1},
+  {cat:'Cultura General', q:'El Sahara es el desierto más grande del mundo.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Cultura General', q:'¿Cuántos colores tiene el arcoíris tradicionalmente?', opts:['5','6','7','8'], a:2},
+  {cat:'Cultura General', q:'La Coca-Cola se inventó en Alemania.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Cultura General', q:'¿Cuál es el continente más pequeño?', opts:['Europa','Oceanía','Antártida','América'], a:1},
+  {cat:'Cultura General', q:'El punto más profundo del océano es la Fosa de las Marianas.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Cultura General', q:'¿Qué país regaló la Estatua de la Libertad a Estados Unidos?', opts:['Inglaterra','Francia','España','Italia'], a:1},
+  {cat:'Cultura General', q:'La Gran Barrera de Coral está en Australia.', opts:['Verdadero','Falso'], a:0},
+  // Historia
+  {cat:'Historia', q:'¿En qué año llegó Cristóbal Colón a América?', opts:['1492','1500','1488','1510'], a:0},
+  {cat:'Historia', q:'La Segunda Guerra Mundial terminó en 1945.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿Quién fue el primer presidente de Estados Unidos?', opts:['Lincoln','Washington','Jefferson','Adams'], a:1},
+  {cat:'Historia', q:'La Revolución Francesa comenzó en 1789.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿En qué año se declaró la independencia argentina?', opts:['1810','1816','1820','1806'], a:1},
+  {cat:'Historia', q:'El Imperio Romano de Occidente cayó en el año 476 d.C.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿Qué general cruzó los Andes para liberar Chile y Perú?', opts:['San Martín','Bolívar','Belgrano','Güemes'], a:0},
+  {cat:'Historia', q:'El Muro de Berlín cayó en 1989.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿Qué civilización antigua inventó la escritura cuneiforme?', opts:['Egipcios','Sumerios','Griegos','Romanos'], a:1},
+  {cat:'Historia', q:'Napoleón Bonaparte nació en Córcega.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿En qué año llegó el hombre a la Luna?', opts:['1965','1969','1972','1971'], a:1},
+  {cat:'Historia', q:'La Guerra Civil española terminó en 1939.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿Qué faraón egipcio es famoso por su máscara de oro, descubierta en 1922?', opts:['Ramsés II','Tutankamón','Akenatón','Keops'], a:1},
+  {cat:'Historia', q:'El Titanic se hundió en 1912.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿Qué imperio construyó Machu Picchu?', opts:['Azteca','Inca','Maya','Mapuche'], a:1},
+  {cat:'Historia', q:'La Peste Negra ocurrió en el siglo XIV.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Historia', q:'¿Quién escribió el Manifiesto Comunista junto a Karl Marx?', opts:['Lenin','Engels','Trotsky','Stalin'], a:1},
+  {cat:'Historia', q:'La Argentina sancionó su primera Constitución Nacional en 1853.', opts:['Verdadero','Falso'], a:0},
+  // Geografía
+  {cat:'Geografía', q:'¿Cuál es el país más grande del mundo por superficie?', opts:['Canadá','China','EE.UU.','Rusia'], a:3},
+  {cat:'Geografía', q:'Chile es el país más largo del mundo de norte a sur.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Geografía', q:'¿Cuál es la montaña más alta del mundo?', opts:['K2','Everest','Aconcagua','Kilimanjaro'], a:1},
+  {cat:'Geografía', q:'El Aconcagua está en Argentina.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Geografía', q:'¿Cuántos países limitan con Argentina?', opts:['4','5','6','3'], a:1},
+  {cat:'Geografía', q:'El río Paraná desemboca en el Río de la Plata.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Geografía', q:'¿Cuál es el lago de agua dulce más grande del mundo por superficie?', opts:['Titicaca','Baikal','Lago Superior','Mar Caspio'], a:2},
+  {cat:'Geografía', q:'La Patagonia está compartida entre Argentina y Chile.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Geografía', q:'¿Cuál es el desierto más árido del mundo (sin contar la Antártida)?', opts:['Sahara','Atacama','Gobi','Kalahari'], a:1},
+  {cat:'Geografía', q:'El Estrecho de Magallanes conecta el Atlántico con el Pacífico.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Geografía', q:'¿Qué país tiene más husos horarios, gracias a sus territorios de ultramar?', opts:['EE.UU.','Rusia','Francia','China'], a:2},
+  {cat:'Geografía', q:'La línea del Ecuador pasa por Brasil.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Geografía', q:'¿Qué océano separa a América de Europa y África?', opts:['Pacífico','Atlántico','Índico','Ártico'], a:1},
+  {cat:'Geografía', q:'Groenlandia pertenece a Dinamarca.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Geografía', q:'¿Qué cordillera recorre gran parte de Sudamérica de norte a sur?', opts:['Andes','Alpes','Himalaya','Rocosas'], a:0},
+  {cat:'Geografía', q:'Uruguay tiene costa sobre el Océano Pacífico.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Geografía', q:'¿Cuál es el país más pequeño del mundo?', opts:['Mónaco','Vaticano','San Marino','Liechtenstein'], a:1},
+  {cat:'Geografía', q:'El río Amazonas atraviesa Brasil, Perú y Colombia, entre otros países.', opts:['Verdadero','Falso'], a:0},
+  // Ciencia y Naturaleza
+  {cat:'Ciencia', q:'¿Cuál es el planeta más cercano al Sol?', opts:['Venus','Mercurio','Tierra','Marte'], a:1},
+  {cat:'Ciencia', q:'El agua se congela a 0°C a nivel del mar.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Cuántos huesos tiene el cuerpo humano adulto?', opts:['206','186','256','126'], a:0},
+  {cat:'Ciencia', q:'Los seres humanos comparten más del 90% de su ADN con los chimpancés.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Cuál es el gas más abundante en la atmósfera terrestre?', opts:['Oxígeno','Nitrógeno','CO2','Hidrógeno'], a:1},
+  {cat:'Ciencia', q:'La luz viaja más rápido que el sonido.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Qué órgano del cuerpo humano produce la insulina?', opts:['Hígado','Páncreas','Riñón','Bazo'], a:1},
+  {cat:'Ciencia', q:'Los pulpos tienen tres corazones.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Cuál es la unidad básica de la herencia genética?', opts:['Célula','Cromosoma','Gen','Proteína'], a:2},
+  {cat:'Ciencia', q:'El sonido no se propaga en el vacío.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Cuál es el metal más abundante en la corteza terrestre?', opts:['Hierro','Aluminio','Cobre','Calcio'], a:1},
+  {cat:'Ciencia', q:'Las plantas usan dióxido de carbono y liberan oxígeno durante la fotosíntesis.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Cuántos pares de cromosomas tiene una célula humana normal?', opts:['23','22','24','46'], a:0},
+  {cat:'Ciencia', q:'El Sol es una estrella de tamaño mediano.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Qué científico formuló la teoría de la relatividad?', opts:['Newton','Einstein','Bohr','Hawking'], a:1},
+  {cat:'Ciencia', q:'La velocidad de la luz es de aproximadamente 300.000 km/s.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ciencia', q:'¿Cuál es el elemento químico más liviano de la tabla periódica?', opts:['Helio','Hidrógeno','Litio','Oxígeno'], a:1},
+  {cat:'Ciencia', q:'Las abejas se comunican entre sí mediante una especie de "danza".', opts:['Verdadero','Falso'], a:0},
+  // Deportes
+  {cat:'Deportes', q:'¿Cada cuántos años se celebran los Juegos Olímpicos de verano?', opts:['2','4','3','5'], a:1},
+  {cat:'Deportes', q:'Argentina ganó el Mundial de fútbol de 2022 en Qatar.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Deportes', q:'¿Cuántos jugadores tiene un equipo de fútbol en cancha?', opts:['10','11','12','9'], a:1},
+  {cat:'Deportes', q:'El básquet fue inventado por un profesor canadiense, James Naismith.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Deportes', q:'¿En qué deporte se usa el término "ace" para un saque directo?', opts:['Fútbol','Tenis','Básquet','Rugby'], a:1},
+  {cat:'Deportes', q:'Un partido de rugby se juega con un balón ovalado.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Deportes', q:'¿Cuántos sets como máximo se juegan en un partido de tenis masculino de Grand Slam?', opts:['3','5','7','4'], a:1},
+  {cat:'Deportes', q:'Messi es el jugador que más veces ganó el Balón de Oro.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Deportes', q:'¿Qué país ganó más Mundiales de fútbol?', opts:['Argentina','Alemania','Italia','Brasil'], a:3},
+  {cat:'Deportes', q:'El maratón olímpico mide 42,195 km.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Deportes', q:'¿En qué ciudad se disputó el primer Mundial de fútbol, en 1930?', opts:['Roma','Montevideo','Buenos Aires','Río de Janeiro'], a:1},
+  {cat:'Deportes', q:'El boxeo divide a los competidores en categorías por peso.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Deportes', q:'¿Cuántos puntos vale un try en el rugby?', opts:['3','5','7','4'], a:1},
+  {cat:'Deportes', q:'La Vuelta a Francia de ciclismo recorre siempre y únicamente territorio francés.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Deportes', q:'¿Qué país organizó los Juegos Olímpicos de 2016?', opts:['China','Brasil','Reino Unido','Japón'], a:1},
+  {cat:'Deportes', q:'El vóley se juega con 6 jugadores por equipo en cancha.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Deportes', q:'¿En qué deporte se destacó Diego Maradona?', opts:['Básquet','Fútbol','Rugby','Tenis'], a:1},
+  {cat:'Deportes', q:'El handball (balonmano) se juega con las manos, no con los pies.', opts:['Verdadero','Falso'], a:0},
+  // Arte y Espectáculos
+  {cat:'Arte y Espectáculos', q:'¿Quién pintó la Mona Lisa?', opts:['Miguel Ángel','Da Vinci','Rafael','Donatello'], a:1},
+  {cat:'Arte y Espectáculos', q:'Pablo Picasso fue uno de los creadores del cubismo.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Cuántas cuerdas tiene un violín?', opts:['4','5','6','3'], a:0},
+  {cat:'Arte y Espectáculos', q:'La película "Titanic" ganó el Óscar a Mejor Película en 1998.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Quién compuso "Las Cuatro Estaciones"?', opts:['Mozart','Beethoven','Vivaldi','Bach'], a:2},
+  {cat:'Arte y Espectáculos', q:'Frida Kahlo era mexicana.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Qué banda británica lanzó el álbum "Abbey Road"?', opts:['Rolling Stones','The Beatles','Queen','Pink Floyd'], a:1},
+  {cat:'Arte y Espectáculos', q:'El Museo del Louvre está en París.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Quién dirigió la trilogía de "El Señor de los Anillos"?', opts:['Spielberg','Peter Jackson','Nolan','Cameron'], a:1},
+  {cat:'Arte y Espectáculos', q:'Miguel Ángel pintó el techo de la Capilla Sixtina.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Cuál es el instrumento musical que tiene 88 teclas?', opts:['Acordeón','Piano','Órgano','Xilofón'], a:1},
+  {cat:'Arte y Espectáculos', q:'Carlos Gardel es una figura clave del tango argentino.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Qué artista pintó "La noche estrellada"?', opts:['Monet','Van Gogh','Dalí','Renoir'], a:1},
+  {cat:'Arte y Espectáculos', q:'El festival de cine de Cannes se realiza en Francia.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Cuál de estos NO es un género musical?', opts:['Reggaetón','Cumbia','Softlex','Jazz'], a:2},
+  {cat:'Arte y Espectáculos', q:'Salvador Dalí fue un pintor surrealista español.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Arte y Espectáculos', q:'¿Qué escritor argentino escribió "Rayuela"?', opts:['Borges','Cortázar','Sabato','Puig'], a:1},
+  {cat:'Arte y Espectáculos', q:'El ballet "El lago de los cisnes" fue compuesto por Tchaikovsky.', opts:['Verdadero','Falso'], a:0},
+  // Tecnología
+  {cat:'Tecnología', q:'¿Qué significa la sigla "CPU"?', opts:['Central Process Unit','Central Processing Unit','Computer Processing Unit','Central Program Unit'], a:1},
+  {cat:'Tecnología', q:'Internet y la World Wide Web son exactamente lo mismo.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Tecnología', q:'¿Quién fundó Microsoft junto a Paul Allen?', opts:['Steve Jobs','Bill Gates','Elon Musk','Mark Zuckerberg'], a:1},
+  {cat:'Tecnología', q:'El primer iPhone se lanzó en 2007.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Tecnología', q:'¿Qué significa "HTML"?', opts:['HyperText Markup Language','High Tech Modern Language','Home Tool Markup Language','HyperTransfer Markup Language'], a:0},
+  {cat:'Tecnología', q:'Un byte equivale a 8 bits.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Tecnología', q:'¿Qué empresa creó el sistema operativo Android?', opts:['Apple','Google','Microsoft','Amazon'], a:1},
+  {cat:'Tecnología', q:'El WiFi transmite datos usando cables físicos.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Tecnología', q:'¿Qué lenguaje de programación es conocido por tener el símbolo de una serpiente?', opts:['Java','Python','Ruby','C++'], a:1},
+  {cat:'Tecnología', q:'Un "bug" en programación es un error en el código.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Tecnología', q:'¿Qué red social fundó Mark Zuckerberg en 2004?', opts:['Twitter','Instagram','Facebook','LinkedIn'], a:2},
+  {cat:'Tecnología', q:'La inteligencia artificial busca imitar procesos del razonamiento humano.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Tecnología', q:'¿Cuál de estos es un sistema operativo?', opts:['Chrome','Linux','Word','Excel'], a:1},
+  {cat:'Tecnología', q:'El término "algoritmo" proviene del nombre de un matemático persa, Al-Juarismi.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Tecnología', q:'¿Qué empresa creó el motor de búsqueda más usado del mundo?', opts:['Yahoo','Bing','Google','DuckDuckGo'], a:2},
+  {cat:'Tecnología', q:'"Código abierto" (open source) significa que el código fuente es público y modificable.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Tecnología', q:'¿Cuál de estos es un lenguaje de marcado, no de programación?', opts:['Java','HTML','Python','C'], a:1},
+  {cat:'Tecnología', q:'La "nube" (cloud) almacena datos en servidores remotos accesibles por internet.', opts:['Verdadero','Falso'], a:0},
+  // Matemática
+  {cat:'Matemática', q:'¿Cuánto es 7 x 8?', opts:['54','56','64','48'], a:1},
+  {cat:'Matemática', q:'El número Pi (π) es un número racional.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Matemática', q:'¿Cuánto suman los ángulos internos de un triángulo?', opts:['90°','180°','270°','360°'], a:1},
+  {cat:'Matemática', q:'La raíz cuadrada de 144 es 12.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Matemática', q:'¿Cómo se llama un polígono de 5 lados?', opts:['Hexágono','Pentágono','Heptágono','Octágono'], a:1},
+  {cat:'Matemática', q:'Un número primo solo es divisible por 1 y por sí mismo.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Matemática', q:'¿Cuánto es 2 elevado a la 10?', opts:['512','1024','2048','256'], a:1},
+  {cat:'Matemática', q:'El cero es un número par.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Matemática', q:'¿Cómo se llama el teorema que relaciona los catetos con la hipotenusa?', opts:['Tales','Pitágoras','Euclides','Fermat'], a:1},
+  {cat:'Matemática', q:'La suma de los ángulos internos de un cuadrilátero es 360°.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Matemática', q:'¿Cuánto es el 15% de 200?', opts:['20','30','25','35'], a:1},
+  {cat:'Matemática', q:'Todo número divisible por 2 es par.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Matemática', q:'¿Qué letra griega representa la relación entre la circunferencia y el diámetro?', opts:['Alfa','Pi','Sigma','Delta'], a:1},
+  {cat:'Matemática', q:'El conjunto de los números naturales incluye a los negativos.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Matemática', q:'¿Cuál es el resultado de derivar una constante?', opts:['1','Infinito','Cero','La misma constante'], a:2},
+  {cat:'Matemática', q:'Un triángulo equilátero tiene sus tres lados iguales.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Matemática', q:'¿Cómo se llama el sistema de coordenadas con eje X e Y?', opts:['Polar','Cartesiano','Cíclico','Binario'], a:1},
+  {cat:'Matemática', q:'El logaritmo de 1 en cualquier base es 0.', opts:['Verdadero','Falso'], a:0},
+  // Ingeniería Química
+  {cat:'Ingeniería Química', q:'¿Qué ley describe la relación entre presión y volumen de un gas a temperatura constante?', opts:['Ley de Charles','Ley de Boyle','Ley de Gay-Lussac','Ley de Avogadro'], a:1},
+  {cat:'Ingeniería Química', q:'La destilación separa componentes de una mezcla según su punto de ebullición.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería Química', q:'¿Qué representa la molaridad de una solución?', opts:['Moles de soluto por litro de solución','Gramos de soluto por litro','Moles por kilogramo de solvente','Porcentaje en peso'], a:0},
+  {cat:'Ingeniería Química', q:'Un catalizador se consume completamente durante la reacción química que acelera.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Ingeniería Química', q:'¿Qué equipo separa mezclas líquidas por diferencia de densidad e insolubilidad?', opts:['Reactor','Decantador','Compresor','Intercambiador de calor'], a:1},
+  {cat:'Ingeniería Química', q:'La Primera Ley de la Termodinámica dice que la energía no se crea ni se destruye, solo se transforma.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería Química', q:'¿Cómo se llama la transferencia de calor entre dos fluidos a distinta temperatura sin que se mezclen?', opts:['Extracción','Intercambio de calor','Absorción','Filtración'], a:1},
+  {cat:'Ingeniería Química', q:'El número de Reynolds permite predecir si un flujo es laminar o turbulento.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería Química', q:'¿Qué proceso industrial produce amoníaco a partir de nitrógeno e hidrógeno?', opts:['Proceso Haber-Bosch','Proceso Solvay','Proceso Contact','Craqueo catalítico'], a:0},
+  {cat:'Ingeniería Química', q:'Según la Segunda Ley de la Termodinámica, la entropía de un sistema aislado tiende a aumentar con el tiempo.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería Química', q:'¿Qué operación unitaria separa sólidos de un líquido con un medio poroso?', opts:['Filtración','Destilación','Absorción','Sedimentación'], a:0},
+  {cat:'Ingeniería Química', q:'En un fluido newtoniano, la viscosidad cambia según la velocidad de deformación aplicada.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Ingeniería Química', q:'¿Cómo se llama el equipo donde ocurre la reacción química principal de un proceso industrial?', opts:['Reactor','Rectificador','Ciclón','Sedimentador'], a:0},
+  {cat:'Ingeniería Química', q:'El balance de materia se basa en el principio de conservación de la masa.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería Química', q:'¿Qué proceso aumenta la concentración de una solución quitándole solvente por calor?', opts:['Cristalización','Evaporación','Absorción','Extracción'], a:1},
+  {cat:'Ingeniería Química', q:'Un proceso isotérmico ocurre a temperatura constante.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería Química', q:'¿Qué mide el número de Reynolds en mecánica de fluidos?', opts:['La relación entre fuerzas inerciales y viscosas','La presión del fluido','La temperatura del sistema','La densidad del fluido'], a:0},
+  {cat:'Ingeniería Química', q:'La ley de Fick describe la difusión de materia.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería Química', q:'¿Cuál de estos NO es un tipo de reactor químico industrial?', opts:['Reactor batch','Reactor de flujo pistón (PFR)','Reactor de tanque agitado (CSTR)','Reactor de rayos X'], a:3},
+  {cat:'Ingeniería Química', q:'En el punto crítico de una sustancia desaparece la distinción entre fase líquida y gaseosa.', opts:['Verdadero','Falso'], a:0},
+  // Ingeniería en Sistemas
+  {cat:'Ingeniería en Sistemas', q:'¿Qué estructura de datos sigue el principio "el último en entrar es el primero en salir" (LIFO)?', opts:['Cola','Pila','Árbol','Lista enlazada'], a:1},
+  {cat:'Ingeniería en Sistemas', q:'La complejidad O(n) significa que el tiempo de ejecución es constante.', opts:['Verdadero','Falso'], a:1},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué lenguaje se usa típicamente para consultar bases de datos relacionales?', opts:['SQL','HTML','CSS','XML'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'Un algoritmo de búsqueda binaria requiere que la lista esté ordenada.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Cómo se llama convertir código fuente en lenguaje máquina antes de ejecutarlo?', opts:['Interpretación','Compilación','Depuración','Ensamblado'], a:1},
+  {cat:'Ingeniería en Sistemas', q:'Una base de datos relacional organiza la información en tablas con filas y columnas.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué significa la sigla "API"?', opts:['Application Programming Interface','Advanced Programming Interface','Application Process Integration','Automated Program Interface'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'El modelo OSI tiene 7 capas para describir las comunicaciones de red.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Cuál de estos es un sistema de control de versiones?', opts:['Docker','Git','Kubernetes','Jenkins'], a:1},
+  {cat:'Ingeniería en Sistemas', q:'La recursividad es cuando una función se llama a sí misma.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué estructura de datos sigue el principio "el primero en entrar es el primero en salir" (FIFO)?', opts:['Pila','Cola','Árbol binario','Grafo'], a:1},
+  {cat:'Ingeniería en Sistemas', q:'Un número binario solo usa los dígitos 0 y 1.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué metodología ágil organiza el trabajo en sprints cortos?', opts:['Cascada','Scrum','Kanban puro','RUP'], a:1},
+  {cat:'Ingeniería en Sistemas', q:'El protocolo HTTPS agrega una capa de cifrado sobre HTTP.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué tipo de memoria de la computadora se borra al apagar el equipo?', opts:['ROM','RAM','Disco rígido','SSD'], a:1},
+  {cat:'Ingeniería en Sistemas', q:'Una red de área local se llama LAN.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Cuál de estos NO es un paradigma de programación?', opts:['Orientado a objetos','Funcional','Procedural','Circular'], a:3},
+  {cat:'Ingeniería en Sistemas', q:'La notación "Big O" describe la complejidad temporal o espacial de un algoritmo.', opts:['Verdadero','Falso'], a:0},
+  {cat:'Ingeniería en Sistemas', q:'¿Qué componente de la computadora se considera su "cerebro" de procesamiento?', opts:['RAM','CPU','Disco duro','Placa de video'], a:1},
+  {cat:'Ingeniería en Sistemas', q:'Una dirección IP identifica de forma única a un dispositivo dentro de una red.', opts:['Verdadero','Falso'], a:0},
+];
+const GAMES_META = {
+  tuttifruti: { id:'tuttifruti', name:'Tutti Fruti', icon:'🍉' },
+  preguntados: { id:'preguntados', name:'Preguntados', icon:'❓' },
+};
+const PREG_QUESTIONS_PER_MATCH = 10;
+const PREG_POINTS_PER_CORRECT = 100;
+function shuffleArr(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; }
+  return a;
+}
+function pregDrawQuestions(n){ return shuffleArr(PREGUNTADOS_BANK).slice(0, n); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ARCADE — orquestador de "varios juegos, mismos jugadores". Vive
+   ARRIBA de cada juego (state.match / state.online siguen siendo
+   del juego que está activo en cada momento) y solo se encarga de:
+   elegir qué juego sigue, y sumar los puntos de cada juego a un
+   marcador general. Cada juego avisa que terminó llamando a
+   arcadeGameEnded(deltas), con deltas = {jugadorId: puntosGanados}.
+   ═══════════════════════════════════════════════════════════════ */
+function arcadePickNext(enabled, played){
+  let pool = enabled.filter(id => !played.includes(id));
+  if(pool.length===0){ played.length = 0; pool = enabled.slice(); }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function arcadeLocalNext(){
+  const a = state.arcadeLocal;
+  const id = arcadePickNext(a.enabled, a.played);
+  a.played.push(id); a.current = id;
+  if(id==='preguntados') arcadeMountPreguntadosLocal(a);
+  else arcadeMountTuttiFrutiLocal(a);
+}
+function arcadeMountTuttiFrutiLocal(a){
+  state.match = {
+    mode: 'local', players: a.players, deck: a.deck, usedLetters: [], roundNumber: 1, currentLetter: null,
+    turnIndex: 0, roundAnswers: {}, scores: Object.fromEntries(a.players.map(p=>[p.id,0])), rounds: [],
+  };
+  saveMatch();
+  drawNextLetter();
+  startTurn();
+}
+function arcadeMountPreguntadosLocal(a){
+  const n = Math.min(PREG_QUESTIONS_PER_MATCH, PREGUNTADOS_BANK.length);
+  state.pregMatch = {
+    mode: 'local', players: a.players, questions: pregDrawQuestions(n),
+    turnIndex: 0, scores: Object.fromEntries(a.players.map(p=>[p.id,0])), rounds: [],
+  };
+  state.screen = 'pregTurnLocal'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function arcadeOnlineNext(){
+  const o = state.online; const a = o.arcade;
+  const id = arcadePickNext(a.enabled, a.played);
+  a.played.push(id); a.current = id;
+  if(id==='preguntados') hostStartPreguntados();
+  else {
+    // arranca una "pierna" nueva de Tutti Fruti dentro del Arcade: resetea el acumulado
+    // de puntos/rondas de la vez anterior que se jugó, para no arrastrar puntaje viejo
+    o.scores = { me:0 }; o.history = []; o.usedLetters = [];
+    hostStartRound();
+  }
+}
+function arcadeGameEnded(deltas){
+  const isOnline = !!state.online;
+  const a = isOnline ? state.online.arcade : state.arcadeLocal;
+  if(!a){
+    // no hay sesión de Arcade activa (ej: retomando una partida vieja después de un refresh) — no hay marcador general a donde volver
+    state.screen = 'matchEnd';
+    render();
+    return;
+  }
+  Object.entries(deltas).forEach(([pid, pts])=>{
+    const s = a.scoreboard[pid] || (a.scoreboard[pid] = { total:0, byGame:{} });
+    s.total += (pts||0);
+    s.byGame[a.current] = (s.byGame[a.current]||0) + (pts||0);
+  });
+  a.current = null;
+  const playersList = isOnline
+    ? [{id:'me', name: state.online.myName}].concat(Object.entries(state.online.guests).map(([pid,g])=>({id:pid, name:g.name})))
+    : a.players;
+  state._arcadePlayers = playersList;
+  if(isOnline){
+    hostBroadcastPersistent({ type:'arcadeScoreboard', scoreboard: a.scoreboard, playersList });
+  }
+  state.screen = 'arcadeScoreboard'; render();
+  confettiBurst(16);
+}
+function renderArcadeScoreboard(app){
+  const isOnline = !!state.online;
+  const a = isOnline ? state.online.arcade : state.arcadeLocal;
+  const players = state._arcadePlayers || (a ? (isOnline ? [] : a.players) : []);
+  const sb = (a && a.scoreboard) || {};
+  const sorted = [...players].sort((x,y)=>(sb[y.id]?.total||0)-(sb[x.id]?.total||0));
+  const gamesPlayed = [...new Set(players.flatMap(p => Object.keys((sb[p.id]||{}).byGame||{})))];
+  const isHost = !isOnline || state.online.role==='host';
+  app.innerHTML = `
+    ${topbar('🎮 Marcador general', gamesPlayed.map(g=>(GAMES_META[g]?.icon||'')+' '+(GAMES_META[g]?.name||g)).join(' · '))}
+    <div class="screen">
+      <div class="score-list">
+        ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}">
+          <span class="pos">${i+1}°</span><span class="nm grow">${esc(p.name)}</span>
+          <span class="pt" data-val="${sb[p.id]?.total||0}">0</span>
+        </div>
+        ${gamesPlayed.length>1 ? `<div class="sub" style="margin:-4px 0 10px 30px">${gamesPlayed.map(g=>`${GAMES_META[g]?.icon||''} ${(sb[p.id]||{}).byGame?.[g]||0}`).join('&nbsp;&nbsp;&nbsp;')}</div>` : ''}`).join('')}
+      </div>
+      ${isHost ? `
+        <div class="row" style="margin-top:18px">
+          <button class="btn btn-primary btn-lg grow" onclick="${isOnline?'arcadeOnlineNext()':'arcadeLocalNext()'}">🎲 Siguiente juego</button>
+        </div>
+        <button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="arcadeFinish()">🏁 Terminar acá</button>
+      ` : `<div class="sub center" style="margin-top:16px">Esperando que el anfitrión elija el próximo juego...</div>`}
+    </div>`;
+  animateScoreCounts(app);
+}
+function arcadeFinish(){
+  const isOnline = !!state.online;
+  const a = isOnline ? state.online.arcade : state.arcadeLocal;
+  const players = state._arcadePlayers || (a ? a.players : []);
+  const sb = (a && a.scoreboard) || {};
+  const record = { players: players.map(p=>({name:p.name, points: sb[p.id]?.total||0})), roundsCount: a ? a.played.length : 0, isArcade:true };
+  if(isOnline){
+    hostBroadcast({ type:'matchEnd', players: record.players, roundsCount: state.online.arcade.played.length, isArcade:true });
+    try{ state.online.peer.destroy(); }catch(e){}
+    state.online = null;
+  } else {
+    state.arcadeLocal = null;
+  }
+  state._lastRecord = record; state.screen = 'matchEnd'; render();
+  confettiBurst(40);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    NAV / RENDER
    ═══════════════════════════════════════════════════════════════ */
 function nav(screen){
@@ -707,6 +1042,9 @@ function render(){
     onlinePlaying: renderOnlinePlaying, onlineWaiting: renderOnlineWaiting, onlineReview: renderOnlineReview,
     onlineReviewWatch: renderOnlineReviewWatch,
     onlineScoreboard: renderOnlineScoreboard,
+    pregTurnLocal: renderPregTurnLocal,
+    onlinePregPlaying: renderOnlinePregPlaying, onlinePregWaiting: renderOnlinePregWaiting,
+    arcadeScoreboard: renderArcadeScoreboard,
   };
   (fns[state.screen] || renderHome)(app);
 }
@@ -727,6 +1065,7 @@ function renderHome(app){
       <div class="cta-grid">
         <div class="cta" onclick="openSetupLocal()"><span class="ic">📱</span><div class="t">Jugar local</div><div class="d">Pasando el celular</div></div>
         <div class="cta" onclick="nav('onlineHome')"><span class="ic">🌐</span><div class="t">Jugar online</div><div class="d">Cada uno desde el suyo</div></div>
+        <div class="cta wide" style="opacity:.85"><span class="ic">🎮</span><div><div class="t">Modo Arcade</div><div class="d">Ya no es solo Tutti Fruti — al armar la partida elegí qué juegos combinar (Tutti Fruti + Preguntados) y jugalos todos con la misma gente, con un marcador general</div></div></div>
         <div class="cta wide" onclick="inviteToPlay()"><span class="ic">📣</span><div><div class="t">Invitar a jugar</div><div class="d">Mandar un mensaje por WhatsApp para ver quién se prende</div></div></div>
       </div>
       <div class="kpi-row">
@@ -914,8 +1253,13 @@ function toggleLetter(l){ state.settings.letters[l] = !state.settings.letters[l]
    MODO LOCAL — pasar y jugar
    ═══════════════════════════════════════════════════════════════ */
 function openSetupLocal(){
-  state.setup = { playerIds: state.players.slice(0,4).map(p=>p.id), newPlayers: [], deckName: 'Clásico', deck: [...PRESETS['Clásico']] };
+  state.setup = { playerIds: state.players.slice(0,4).map(p=>p.id), newPlayers: [], deckName: 'Clásico', deck: [...PRESETS['Clásico']], gamesEnabled: ['tuttifruti','preguntados'] };
   state.screen = 'setupLocal'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function toggleSetupGame(id){
+  const su = state.setup; const i = su.gamesEnabled.indexOf(id);
+  if(i>=0){ if(su.gamesEnabled.length>1) su.gamesEnabled.splice(i,1); } else su.gamesEnabled.push(id);
+  render();
 }
 function renderSetupLocal(app){
   const su = state.setup;
@@ -943,6 +1287,13 @@ function renderSetupLocal(app){
         <h3>Tiempo por ronda</h3>
         <div class="seg">${[60,90,120,0].map(v=>`<button class="${state.settings.seconds===v?'active':''}" onclick="setSeconds(${v});render()">${v===0?'Manual':v+'s'}</button>`).join('')}</div>
       </div>
+      <div class="card">
+        <h3>🎮 Juegos de esta partida</h3>
+        <div class="sub" style="margin-bottom:10px">Si elegís más de uno, al terminar cada juego vas a ver el marcador general y podés pasar al siguiente sin perder a los jugadores — se elige al azar cuál sigue.</div>
+        <div class="wrap">
+          ${Object.values(GAMES_META).map(g=>`<span class="chip" style="opacity:${su.gamesEnabled.includes(g.id)?1:.4};cursor:pointer" onclick="toggleSetupGame('${g.id}')">${g.icon} ${esc(g.name)}</span>`).join('')}
+        </div>
+      </div>
       <div class="row">
         <button class="btn btn-ghost grow" onclick="state.setup=null;nav('home')">Cancelar</button>
         <button class="btn btn-primary btn-lg grow" onclick="startLocalMatch()">¡Arrancar!</button>
@@ -967,16 +1318,14 @@ function startLocalMatch(){
     }));
   if(players.length<2){ toast('Necesitás al menos 2 jugadores'); return; }
   saveAll();
-  state.match = {
-    mode: 'local', players: players.map(p=>({id:p.id, name:p.name, color:p.color})),
-    deck: su.deck, usedLetters: [], roundNumber: 1, currentLetter: null,
-    turnIndex: 0, roundAnswers: {}, scores: Object.fromEntries(players.map(p=>[p.id,0])),
-    rounds: [],
+  const enabled = (su.gamesEnabled && su.gamesEnabled.length) ? su.gamesEnabled.slice() : ['tuttifruti'];
+  state.arcadeLocal = {
+    players: players.map(p=>({id:p.id, name:p.name, color:p.color})),
+    deck: su.deck, deckName: su.deckName,
+    enabled, played: [], current: null, scoreboard: {},
   };
-  saveMatch();
   state.setup = null;
-  drawNextLetter();
-  startTurn();
+  arcadeLocalNext();
 }
 function resumeMatch(){
   if(!state.match) return;
@@ -1159,8 +1508,12 @@ function endLocalMatch(){
     p.bestRound = Math.max(p.bestRound||0, bestThisMatch);
   });
   saveAll(); clearMatch();
-  state.screen = 'matchEnd'; state._lastRecord = record; render();
-  confettiBurst(40);
+  if(state.arcadeLocal){
+    arcadeGameEnded(m.scores);
+  } else {
+    state.screen = 'matchEnd'; state._lastRecord = record; render();
+    confettiBurst(40);
+  }
 }
 function renderMatchEnd(app){
   const record = state._lastRecord;
@@ -1169,13 +1522,100 @@ function renderMatchEnd(app){
     <div class="screen" style="padding-top:40px;text-align:center">
       ${mascotSVG('cheer',88)}
       <h1 style="margin:10px 0 4px;font-family:var(--f-display);font-weight:700">${esc(sorted[0].name)} ganó</h1>
-      <div class="sub" style="margin-bottom:20px">${record.roundsCount ?? record.rounds.length} rondas jugadas</div>
+      <div class="sub" style="margin-bottom:20px">${record.isArcade ? (record.roundsCount+' juego'+(record.roundsCount===1?'':'s')+' jugados') : ((record.roundsCount ?? record.rounds.length)+' rondas jugadas')}</div>
       <div class="score-list">
         ${sorted.map((p,i)=>`<div class="score-item ${i===0?'first':''}"><span class="pos">${i+1}°</span><span class="nm">${esc(p.name)}</span><span class="pt" data-val="${p.points}">0</span></div>`).join('')}
       </div>
       <button class="btn btn-primary btn-lg btn-block" style="margin-top:24px" onclick="nav('home')">Volver al inicio</button>
     </div>`;
   animateScoreCounts(app);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PREGUNTADOS — local ("pasar y jugar"). A diferencia de Tutti
+   Fruti, la corrección es automática (opción múltiple, no hay
+   texto libre que corregir a mano), así que no hay pantalla de
+   corrección: se puntúa apenas termina el turno de cada jugador.
+   ═══════════════════════════════════════════════════════════════ */
+function renderPregTurnLocal(app){
+  const m = state.pregMatch; const player = m.players[m.turnIndex];
+  document.getElementById('bottomnav').style.display='none';
+  pregTurnAnswers = {}; pregTurnSubmitted = false;
+  app.innerHTML = `
+    <div class="handoff" id="handoff-overlay">
+      <span class="ic">❓</span>
+      <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
+      <div class="sub" style="margin-bottom:24px">Que nadie más mire la pantalla</div>
+      <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove();beginPregTurnTimer()">Listo, soy ${esc(player.name)}</button>
+    </div>
+    <div class="screen" style="padding-top:20px">
+      <div class="letter-badge">❓</div>
+      <div class="timer" id="preg-timer-display">${state.settings.seconds===0?'∞':(state.settings.seconds||90)}</div>
+      <div class="timerbar"><i id="preg-timer-bar" style="width:100%"></i></div>
+      <div id="preg-q-list">
+        ${m.questions.map((q,i)=>`<div class="card" style="margin-bottom:10px">
+          <div class="sub" style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">${esc(q.cat)}</div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:10px">${i+1}. ${esc(q.q)}</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${q.opts.map((opt,oi)=>`<button class="btn trivia-opt" id="preg-opt-${i}-${oi}" onclick="pregChoose(${i},${oi})">${esc(opt)}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitPregTurn()">✅ Terminé</button>
+    </div>`;
+}
+let pregTurnAnswers = {}; let pregTurnSubmitted = false; let pregTurnTimer = null;
+function pregChoose(qi, oi){
+  if(pregTurnSubmitted) return;
+  pregTurnAnswers[qi] = oi;
+  const q = state.pregMatch.questions[qi];
+  q.opts.forEach((_,x)=>{ const b = document.getElementById('preg-opt-'+qi+'-'+x); if(b) b.classList.remove('trivia-picked'); });
+  const chosen = document.getElementById('preg-opt-'+qi+'-'+oi); if(chosen) chosen.classList.add('trivia-picked');
+}
+function beginPregTurnTimer(){
+  const secs = state.settings.seconds || 90;
+  pregTurnSubmitted = false;
+  if(secs===0) return;
+  const endsAt = Date.now() + secs*1000;
+  clearInterval(pregTurnTimer);
+  const tick = ()=>{
+    const disp = document.getElementById('preg-timer-display'); const bar = document.getElementById('preg-timer-bar');
+    if(!disp){ clearInterval(pregTurnTimer); return; }
+    const remaining = Math.max(0, Math.ceil((endsAt-Date.now())/1000));
+    disp.textContent = remaining; bar.style.width = (remaining/secs*100)+'%'; disp.classList.toggle('low', remaining<=10);
+    if(remaining===3) soundCountdown();
+    if(remaining<=0){ clearInterval(pregTurnTimer); soundEnd(); submitPregTurn(); }
+  };
+  pregTurnTimer = setInterval(tick, 250); tick();
+}
+function submitPregTurn(){
+  if(pregTurnSubmitted) return;
+  pregTurnSubmitted = true;
+  clearInterval(pregTurnTimer);
+  const m = state.pregMatch; const player = m.players[m.turnIndex];
+  let correct = 0;
+  m.questions.forEach((q,i)=>{ if(pregTurnAnswers[i]===q.a) correct++; });
+  const points = correct * PREG_POINTS_PER_CORRECT;
+  m.scores[player.id] = (m.scores[player.id]||0) + points;
+  m.rounds.push({ playerId: player.id, correct, total: m.questions.length, points });
+  m.turnIndex++;
+  if(m.turnIndex < m.players.length){ state.screen = 'pregTurnLocal'; render(); }
+  else endPregLocalMatch();
+}
+function endPregLocalMatch(){
+  const m = state.pregMatch;
+  const record = { id: uid(), date: Date.now(), mode:'local', game:'preguntados',
+    players: m.players.map(p=>({name:p.name, points:m.scores[p.id]})) };
+  state.history.push(record);
+  m.players.forEach(pm => { const p = state.players.find(x=>x.id===pm.id); if(!p) return; p.games++; p.points += m.scores[pm.id]; });
+  saveAll();
+  state.pregMatch = null;
+  if(state.arcadeLocal){
+    arcadeGameEnded(m.scores);
+  } else {
+    state.screen = 'matchEnd'; state._lastRecord = record; render();
+    confettiBurst(40);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1222,7 +1662,9 @@ function hostCreateRoom(){
     const peer = new Peer('ftf-host-'+code);
     state.online = { role:'host', code, peer, name, conns: {}, guests: {}, deckName:'Clásico', deck:[...PRESETS['Clásico']],
       usedLetters: [], scores:{me:0}, myName:name, round:null, roundNum:0, history:[], awaitingAnswers:false,
-      chatLog: [], chatOpen:false, chatUnread:0 };
+      chatLog: [], chatOpen:false, chatUnread:0,
+      arcade: { enabled:['tuttifruti','preguntados'], played:[], current:null, scoreboard:{} },
+      pregRound:null, pregAwaiting:false, myPregAnswers:null };
     peer.on('open', ()=>{ nav('onlineLobbyHost'); showChatFab(); });
     peer.on('error', err => { console.error(err); toast('Error de conexión: '+err.type); });
     peer.on('connection', conn => {
@@ -1232,7 +1674,8 @@ function hostCreateRoom(){
         if(!state.online) return;
         delete state.online.conns[conn.peer]; delete state.online.guests[conn.peer];
         maybeFinishRoundHost();
-        if(state.screen==='onlineLobbyHost' || state.screen==='onlineWaiting') render();
+        maybeFinishPregRoundHost();
+        if(state.screen==='onlineLobbyHost' || state.screen==='onlineWaiting' || state.screen==='onlinePregWaiting') render();
       });
       state.online.conns[conn.peer] = conn;
     });
@@ -1271,6 +1714,11 @@ function handleHostMessage(conn, data){
     }
   } else if(data.type==='basta'){
     if(o.round) hostStopRoundForAll(false);
+  } else if(data.type==='pregAnswers'){
+    if(o.pregAwaiting && o.pregRound && data.roundNum===o.pregRound.roundNum && o.guests[conn.peer]){
+      o.guests[conn.peer].pregAnswers = data.answers;
+      maybeFinishPregRoundHost();
+    }
   } else if(data.type==='chat'){
     addChatMessage(data);
     chatBroadcastRelay(conn, data);
@@ -1300,11 +1748,23 @@ function renderOnlineLobbyHost(app){
         <h3>Tiempo por ronda</h3>
         <div class="seg">${[60,90,120].map(v=>`<button class="${state.settings.seconds===v?'active':''}" onclick="setSeconds(${v});render()">${v}s</button>`).join('')}</div>
       </div>
-      <button class="btn btn-primary btn-lg btn-block" ${guestList.length===0?'disabled style="opacity:.5"':''} onclick="hostStartRound()">¡Arrancar partida!</button>
+      <div class="card">
+        <h3>🎮 Juegos de la sala</h3>
+        <div class="sub" style="margin-bottom:10px">Si elegís más de uno, al terminar cada juego van a ver el marcador general y podés pasar al siguiente sin perder a nadie de la sala — se elige al azar cuál sigue.</div>
+        <div class="wrap">
+          ${Object.values(GAMES_META).map(g=>`<span class="chip" style="opacity:${o.arcade.enabled.includes(g.id)?1:.4};cursor:pointer" onclick="toggleOnlineGame('${g.id}')">${g.icon} ${esc(g.name)}</span>`).join('')}
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" ${guestList.length===0?'disabled style="opacity:.5"':''} onclick="arcadeOnlineNext()">¡Arrancar partida!</button>
       <button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="closeOnline()">Cerrar sala</button>
     </div>`;
 }
 function onlinePickDeck(name){ state.online.deckName = name; state.online.deck = [...allDecks()[name]]; }
+function toggleOnlineGame(id){
+  const en = state.online.arcade.enabled; const i = en.indexOf(id);
+  if(i>=0){ if(en.length>1) en.splice(i,1); } else en.push(id);
+  render();
+}
 function kickGuest(peerId){
   const o = state.online;
   const conn = o.conns[peerId];
@@ -1313,6 +1773,7 @@ function kickGuest(peerId){
   delete o.guests[peerId];
   delete o.conns[peerId];
   maybeFinishRoundHost();
+  maybeFinishPregRoundHost();
   render();
 }
 function shareRoomCode(){
@@ -1364,6 +1825,37 @@ function broadcastReviewUpdate(){
   if(!o || o.role!=='host' || !o.round || !o.reviewResults) return;
   hostBroadcast({ type:'reviewUpdate', letter:o.round.letter, deck:o.round.deck,
     players: o.lastPlayers.map(p=>({id:p.id,name:p.name})), results:o.reviewResults });
+}
+// -------- PREGUNTADOS ONLINE (mismas conexiones de la sala, corrección automática) --------
+function hostStartPreguntados(){
+  const o = state.online;
+  hostCancelPersistentBroadcast();
+  const n = Math.min(PREG_QUESTIONS_PER_MATCH, PREGUNTADOS_BANK.length);
+  const questions = pregDrawQuestions(n);
+  o.roundNum++;
+  Object.values(o.guests).forEach(g=>g.pregAnswers=null);
+  o.myPregAnswers = null;
+  o.pregAwaiting = true;
+  const secs = state.settings.seconds || 90;
+  o.pregRound = { questions, seconds: secs, roundNum: o.roundNum, localEndsAt: Date.now() + 1000 + secs*1000 };
+  const guestQuestions = questions.map(q => ({ q:q.q, opts:q.opts, cat:q.cat })); // sin 'a' — el invitado no ve la respuesta correcta
+  hostBroadcast({ type:'pregStart', questions:guestQuestions, seconds:secs, roundNum:o.roundNum });
+  state.screen = 'onlinePregPlaying'; render();
+}
+function maybeFinishPregRoundHost(){
+  const o = state.online;
+  if(!o || !o.pregAwaiting) return;
+  const allIn = o.myPregAnswers && Object.values(o.guests).every(g=>g.pregAnswers);
+  if(allIn){ o.pregAwaiting = false; finishPregRoundHost(); return; }
+  if(o.myPregAnswers && state.screen!=='onlinePregWaiting'){ state.screen='onlinePregWaiting'; render(); }
+}
+function finishPregRoundHost(){
+  const o = state.online; const r = o.pregRound;
+  const scoreFor = answers => { let c=0; r.questions.forEach((q,i)=>{ if(answers && answers[i]===q.a) c++; }); return c*PREG_POINTS_PER_CORRECT; };
+  const deltas = { me: scoreFor(o.myPregAnswers) };
+  Object.entries(o.guests).forEach(([pid,g])=>{ deltas[pid] = scoreFor(g.pregAnswers); });
+  o.pregRound = null; o.pregAwaiting = false;
+  arcadeGameEnded(deltas);
 }
 function renderOnlineReview(app){
   const o = state.online;
@@ -1477,7 +1969,7 @@ function handleGuestMessage(data){
     if(firstTime) confettiBurst(16);
   } else if(data.type==='matchEnd'){
     o.round = null;
-    state._lastRecord = { rounds: [], roundsCount: data.roundsCount, players: data.players };
+    state._lastRecord = { rounds: [], roundsCount: data.roundsCount, players: data.players, isArcade: !!data.isArcade };
     state.screen = 'matchEnd'; render();
     confettiBurst(40);
   } else if(data.type==='kicked'){
@@ -1491,12 +1983,25 @@ function handleGuestMessage(data){
   } else if(data.type==='reviewUpdate'){
     o.reviewWatch = { letter:data.letter, deck:data.deck, players:data.players, results:data.results };
     state.screen = 'onlineReviewWatch'; render();
+  } else if(data.type==='pregStart'){
+    o.pregRound = Object.assign({}, data, { localEndsAt: Date.now() + 1000 + data.seconds*1000 });
+    o.myPregAnswers = null;
+    state.screen = 'onlinePregPlaying'; render();
+  } else if(data.type==='arcadeScoreboard'){
+    o.arcade = o.arcade || { enabled:[], played:[], current:null, scoreboard:{} };
+    o.arcade.scoreboard = data.scoreboard; o.arcade.current = null;
+    o.round = null; o.pregRound = null;
+    state._arcadePlayers = data.playersList;
+    state.screen = 'arcadeScoreboard'; render();
+    confettiBurst(16);
   } else if(data.type==='chat'){
     addChatMessage(data);
   }
 }
 function guestLeaveRoom(message){
   clearInterval(waitingHeartbeat);
+  clearInterval(pregWaitingHeartbeat);
+  clearInterval(pregOnlineTimer);
   hideChatFab();
   try{ state.online?.peer?.destroy(); }catch(e){}
   state.online = null;
@@ -1527,9 +2032,13 @@ let onlineTick = null;
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden) return;
   if(state.screen==='onlinePlaying' && onlineTick) onlineTick();
+  if(state.screen==='onlinePregPlaying' && pregOnlineTick) pregOnlineTick();
   const o = state.online;
   if(state.screen==='onlineWaiting' && o && o.role==='guest' && o.myAnswers && o.conn){
     try{ if(o.conn.open) o.conn.send({ type:'answers', roundNum: o.round ? o.round.roundNum : undefined, answers: o.myAnswers }); }catch(e){}
+  }
+  if(state.screen==='onlinePregWaiting' && o && o.role==='guest' && o.myPregAnswers && o.conn){
+    try{ if(o.conn.open) o.conn.send({ type:'pregAnswers', roundNum: o.pregRound ? o.pregRound.roundNum : undefined, answers: o.myPregAnswers }); }catch(e){}
   }
 });
 function renderOnlinePlaying(app){
@@ -1636,6 +2145,98 @@ function renderOnlineWaiting(app){
       </div>`).join('')}
     </div>`;
 }
+let pregOnlineTimer = null; let pregOnlineTick = null; let pregOnlineAnswers = {}; let pregOnlineSubmitted = false;
+function renderOnlinePregPlaying(app){
+  const o = state.online; const r = o.pregRound;
+  pregOnlineSubmitted = false; pregOnlineAnswers = {};
+  document.getElementById('bottomnav').style.display='none';
+  app.innerHTML = `
+    <div class="screen" style="padding-top:20px">
+      <div class="letter-badge">❓</div>
+      <div class="timer" id="preg-o-timer-display">${r.seconds}</div>
+      <div class="timerbar"><i id="preg-o-timer-bar" style="width:100%"></i></div>
+      <div id="preg-o-q-list">
+        ${r.questions.map((q,i)=>`<div class="card" style="margin-bottom:10px">
+          <div class="sub" style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">${esc(q.cat)}</div>
+          <div style="font-weight:700;color:var(--text);margin-bottom:10px">${i+1}. ${esc(q.q)}</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            ${q.opts.map((opt,oi)=>`<button class="btn trivia-opt" id="preg-o-opt-${i}-${oi}" onclick="pregOnlineChoose(${i},${oi})">${esc(opt)}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" style="margin-top:8px" onclick="submitPregOnlineAnswers(true)">✅ Listo</button>
+    </div>`;
+  clearInterval(pregOnlineTimer);
+  const tick = ()=>{
+    const msLeft = r.localEndsAt - Date.now(); const secLeft = Math.max(0, Math.ceil(msLeft/1000));
+    const disp = document.getElementById('preg-o-timer-display'); if(!disp){ clearInterval(pregOnlineTimer); return; }
+    if(secLeft > r.seconds){ disp.textContent = '¡Ya arranca!'; return; }
+    disp.textContent = secLeft; document.getElementById('preg-o-timer-bar').style.width = (secLeft/r.seconds*100)+'%';
+    disp.classList.toggle('low', secLeft<=10);
+    if(secLeft===3) soundCountdown();
+    if(secLeft<=0){ clearInterval(pregOnlineTimer); soundEnd(); submitPregOnlineAnswers(false); }
+  };
+  pregOnlineTick = tick;
+  pregOnlineTimer = setInterval(tick, 250); tick();
+}
+function pregOnlineChoose(qi, oi){
+  if(pregOnlineSubmitted) return;
+  pregOnlineAnswers[qi] = oi;
+  const q = state.online.pregRound.questions[qi];
+  q.opts.forEach((_,x)=>{ const b = document.getElementById('preg-o-opt-'+qi+'-'+x); if(b) b.classList.remove('trivia-picked'); });
+  const chosen = document.getElementById('preg-o-opt-'+qi+'-'+oi); if(chosen) chosen.classList.add('trivia-picked');
+}
+function submitPregOnlineAnswers(manual){
+  if(!state.online.pregRound || pregOnlineSubmitted) return;
+  pregOnlineSubmitted = true;
+  clearInterval(pregOnlineTimer);
+  const r = state.online.pregRound;
+  const answers = r.questions.map((_,i)=> pregOnlineAnswers[i]!=null ? pregOnlineAnswers[i] : -1);
+  const o = state.online;
+  if(o.role==='host'){
+    o.myPregAnswers = answers;
+    maybeFinishPregRoundHost();
+  } else {
+    o.myPregAnswers = answers;
+    try{ o.conn.send({ type:'pregAnswers', roundNum: r.roundNum, answers }); }catch(e){}
+    state.screen = 'onlinePregWaiting'; render();
+  }
+}
+let pregWaitingHeartbeat = null;
+function renderOnlinePregWaiting(app){
+  const o = state.online;
+  if(o.role!=='host'){
+    app.innerHTML = `
+      ${topbar('Esperando al resto')}
+      <div class="screen center" style="padding-top:50px">
+        <div style="font-size:44px;margin-bottom:12px">✅</div>
+        <div class="sub">Ya mandaste tus respuestas. Esperando que terminen los demás...</div>
+      </div>
+      <div class="screen" style="padding-top:0">
+        ${renderTriviaWidget()}
+        <button class="btn btn-ghost btn-block" style="margin-top:14px" onclick="if(confirm('¿Salir de la sala? Vas a volver al inicio.'))guestLeaveRoom()">Salir de la sala</button>
+      </div>`;
+    clearInterval(pregWaitingHeartbeat);
+    pregWaitingHeartbeat = setInterval(()=>{
+      if(state.screen!=='onlinePregWaiting' || !state.online || state.online.role==='host'){ clearInterval(pregWaitingHeartbeat); return; }
+      const oo = state.online;
+      try{ if(oo.conn && oo.conn.open && oo.myPregAnswers) oo.conn.send({ type:'pregAnswers', roundNum: oo.pregRound ? oo.pregRound.roundNum : undefined, answers: oo.myPregAnswers }); }catch(e){}
+    }, 4000);
+    return;
+  }
+  clearInterval(pregWaitingHeartbeat);
+  const guestEntries = Object.entries(o.guests);
+  app.innerHTML = `
+    ${topbar('Esperando al resto', 'Si alguien no contesta más, lo podés sacar')}
+    <div class="screen">
+      <div class="lobby-player"><span class="pulse" style="background:var(--ok);animation:none"></span><span class="grow">${esc(o.myName)} (vos) — listo</span></div>
+      ${guestEntries.map(([pid,g])=>`<div class="lobby-player">
+        <span class="pulse" style="${g.pregAnswers?'background:var(--ok);animation:none':'background:var(--warn)'}"></span>
+        <span class="grow">${esc(g.name)}${g.pregAnswers?' — listo':' — esperando...'}</span>
+        ${!g.pregAnswers?`<button class="btn btn-sm btn-danger" onclick="kickGuest('${pid}')">Sacar</button>`:''}
+      </div>`).join('')}
+    </div>`;
+}
 function renderOnlineScoreboard(app){
   const o = state.online;
   let players, scores, results;
@@ -1679,11 +2280,16 @@ function endOnlineMatch(){
   const record = { id: uid(), date: Date.now(), mode:'online', rounds: o.history,
     players: [{name:o.myName, points:o.scores.me||0}].concat(Object.entries(o.guests).map(([pid,g])=>({name:g.name, points:o.scores[pid]||0}))) };
   state.history.push(record); saveAll();
-  hostBroadcast({ type:'matchEnd', players: record.players, roundsCount: o.roundNum });
-  try{ o.peer.destroy(); }catch(e){}
-  state.online = null;
-  state.screen = 'matchEnd'; state._lastRecord = record; render();
-  confettiBurst(40);
+  if(o.arcade){
+    const deltas = Object.assign({}, o.scores);
+    arcadeGameEnded(deltas);
+  } else {
+    hostBroadcast({ type:'matchEnd', players: record.players, roundsCount: o.roundNum });
+    try{ o.peer.destroy(); }catch(e){}
+    state.online = null;
+    state.screen = 'matchEnd'; state._lastRecord = record; render();
+    confettiBurst(40);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
