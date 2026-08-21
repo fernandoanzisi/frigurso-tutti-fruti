@@ -1862,7 +1862,7 @@ function submitPregTurn(){
 }
 function endPregLocalMatch(){
   const m = state.pregMatch;
-  const record = { id: uid(), date: Date.now(), mode:'local', game:'preguntados',
+  const record = { id: uid(), date: Date.now(), mode:'local', game:'preguntados', rounds: m.rounds,
     players: m.players.map(p=>({name:p.name, points:m.scores[p.id]})) };
   state.history.push(record);
   m.players.forEach(pm => { const p = state.players.find(x=>x.id===pm.id); if(!p) return; p.games++; p.points += m.scores[pm.id]; });
