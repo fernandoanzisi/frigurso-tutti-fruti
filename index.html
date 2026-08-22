@@ -1048,6 +1048,162 @@ const PREGUNTADOS_BANK = [
   {cat:'Medicina', q:'El colesterol alto sin control es un factor de riesgo cardiovascular.', opts:['Verdadero','Falso'], a:0, exp:'El exceso de colesterol puede acumularse en las arterias y aumentar el riesgo de infarto.'},
   {cat:'Medicina', q:'¿Qué especialista se ocupa de la salud de los niños?', opts:['Pediatra','Geriatra','Cardiólogo','Traumatólogo'], a:0, exp:'El pediatra atiende la salud de bebés, niños y adolescentes.'},
   {cat:'Medicina', q:'Dormir bien es importante para la recuperación física y la salud mental.', opts:['Verdadero','Falso'], a:0, exp:'Durante el sueño el cuerpo repara tejidos y el cerebro consolida la memoria.'},
+
+  {cat:'Excel', q:'¿Qué símbolo hay que escribir al principio de una celda para indicar que vas a poner una fórmula?', opts:['=','#','@','$'], a:0, exp:'El signo igual le avisa a Excel que lo que sigue es una fórmula, no texto suelto.'},
+  {cat:'Excel', q:'¿Cómo se llama la intersección entre una fila y una columna en una planilla?', opts:['Celda','Rango','Hoja','Libro'], a:0, exp:'Cada celda se identifica por su columna y fila, por ejemplo B4.'},
+  {cat:'Excel', q:'¿Qué función suma automáticamente un rango de celdas?', opts:['=SUMA()','=TOTAL()','=ADD()','=CONTAR()'], a:0, exp:'Por ejemplo =SUMA(A1:A10) suma todos los valores de esa columna.'},
+  {cat:'Excel', q:'¿Qué hace la función PROMEDIO en Excel?', opts:['Calcula el promedio de un rango de números','Cuenta celdas vacías','Ordena una lista','Convierte texto a número'], a:0, exp:'Suma todos los valores del rango y los divide por la cantidad de celdas.'},
+  {cat:'Excel', q:'¿Cómo se llama un archivo de Excel?', opts:['Libro','Hoja','Celda','Documento'], a:0, exp:'Un "libro" de Excel puede contener varias "hojas" adentro, como las pestañas de abajo.'},
+  {cat:'Excel', q:'¿Qué función te dice cuántas celdas de un rango cumplen una condición?', opts:['CONTAR.SI','SUMA.SI','BUSCARV','SI'], a:0, exp:'CONTAR.SI cuenta, mientras que SUMAR.SI suma los valores que cumplen la condición.'},
+  {cat:'Excel', q:'¿Para qué sirve la función BUSCARV (VLOOKUP)?', opts:['Buscar un valor en una tabla y traer un dato relacionado','Sumar una columna entera','Ordenar de la A a la Z','Contar filas vacías'], a:0, exp:'Por ejemplo, buscar un código de producto y traer su precio desde otra tabla.'},
+  {cat:'Excel', q:'¿Qué es una "tabla dinámica" en Excel?', opts:['Una herramienta para resumir y analizar grandes cantidades de datos','Un tipo de gráfico circular','Una macro automática','Un tipo de letra'], a:0, exp:'Permite cruzar y resumir miles de filas de datos en pocos clics, sin escribir fórmulas.'},
+  {cat:'Excel', q:'¿Qué función usarías para sumar solo las celdas que cumplen una condición?', opts:['SUMAR.SI','CONTAR','PROMEDIO','MAX'], a:0, exp:'Por ejemplo, sumar solo las ventas de un vendedor específico.'},
+  {cat:'Excel', q:'En una fórmula, ¿qué significa poner un signo $ antes de la letra y el número de una celda (ej. $A$1)?', opts:['Fija la referencia para que no cambie al copiar la fórmula','Convierte el número en moneda','Borra el contenido de la celda','Multiplica el valor por 100'], a:0, exp:'Se llama "referencia absoluta" y es muy útil al copiar una fórmula a otras celdas.'},
+  {cat:'Excel', q:'¿Qué extensión de archivo usan los libros de Excel modernos?', opts:['.xlsx','.docx','.pptx','.pdf'], a:0, exp:'.docx es de Word y .pptx es de PowerPoint.'},
+  {cat:'Excel', q:'¿Qué función devuelve el valor más alto de un rango de celdas?', opts:['MAX','TOP','MAYOR.VALOR','ALTO'], a:0, exp:'Su opuesta es MIN, que devuelve el valor más bajo del rango.'},
+  {cat:'Excel', q:'¿Qué es un "rango" en Excel?', opts:['Un grupo de celdas seleccionadas juntas','El nombre de una hoja','Un tipo de gráfico','Una fórmula especial'], a:0, exp:'Por ejemplo A1:A10 es un rango de 10 celdas en la columna A.'},
+  {cat:'Excel', q:'¿Para qué sirve "Inmovilizar" o "Congelar paneles" en Excel?', opts:['Para mantener visibles encabezados al desplazarte por una planilla grande','Para bloquear el archivo con contraseña','Para que no se pueda editar ninguna celda','Para imprimir en blanco y negro'], a:0, exp:'Muy útil en planillas largas, para no perder de vista los títulos de las columnas.'},
+  {cat:'Excel', q:'¿Qué función te permite combinar el texto de varias celdas en una sola?', opts:['CONCATENAR','SUMA','BUSCAR','TEXTO'], a:0, exp:'Por ejemplo, unir "nombre" y "apellido" en una sola celda.'},
+  {cat:'Excel', q:'¿Qué es un "filtro" en una tabla de Excel?', opts:['Mostrar solo las filas que cumplen ciertas condiciones','Cambiar el color de fondo de toda la hoja','Ordenar alfabéticamente sin excepción','Borrar duplicados automáticamente'], a:0, exp:'Permite ver, por ejemplo, solo las ventas de un mes puntual, sin borrar el resto de los datos.'},
+  {cat:'Excel', q:'¿Qué hace la función SI (IF) en Excel?', opts:['Devuelve un valor si se cumple una condición y otro si no','Suma todas las celdas de una hoja','Cuenta cuántas hojas tiene el libro','Cambia el idioma de la planilla'], a:0, exp:'Por ejemplo: =SI(A1>100,"Aprobado","No aprobado").'},
+  {cat:'Excel', q:'¿Cómo se llaman las "pestañas" de abajo que permiten moverte entre distintas partes de un mismo archivo de Excel?', opts:['Hojas','Libros','Rangos','Celdas'], a:0, exp:'Un mismo libro puede tener muchas hojas, cada una con sus propios datos.'},
+  {cat:'Excel', q:'En Excel podés hacer un gráfico a partir de los datos de una tabla.', opts:['Verdadero','Falso'], a:0, exp:'Se pueden armar gráficos de barras, líneas, tortas y más, sin salir del programa.'},
+  {cat:'Excel', q:'¿Qué función cuenta cuántas celdas de un rango tienen un número cargado?', opts:['CONTAR','CONTARA','SUMA','CONTAR.BLANCO'], a:0, exp:'CONTARA en cambio cuenta celdas que tengan cualquier tipo de contenido, no solo números.'},
+  {cat:'Excel', q:'¿Para qué sirve "Ordenar y filtrar" en una lista larga de datos?', opts:['Para organizar la información y encontrarla más fácil','Para traducir el archivo a otro idioma','Para achicar el tamaño del archivo','Para agregar contraseña'], a:0, exp:'Permite, por ejemplo, ver los productos ordenados de mayor a menor precio.'},
+  {cat:'Excel', q:'¿Qué es una "macro" en Excel?', opts:['Una secuencia de acciones grabada para automatizar tareas repetitivas','Un tipo de gráfico 3D','La barra de herramientas principal','Un modo de solo lectura'], a:0, exp:'Sirve para no repetir a mano los mismos pasos cada vez, por ejemplo dar formato a un reporte.'},
+  {cat:'Excel', q:'Si en una celda escribís 2+2 sin el signo = adelante, ¿qué pasa?', opts:['Excel lo trata como texto y no calcula el resultado','Excel calcula 4 automáticamente','Excel da error siempre','Excel lo redondea a 0'], a:0, exp:'Sin el = al principio, Excel no interpreta lo escrito como una fórmula.'},
+  {cat:'Excel', q:'¿Cómo se llama la combinación de columna y fila que identifica a cada celda (ej. B4)?', opts:['Referencia de celda','Rango dinámico','Nombre de hoja','Índice de tabla'], a:0, exp:'Esa referencia es la que se usa dentro de las fórmulas para apuntar a esa celda.'},
+  {cat:'Excel', q:'Se puede proteger una hoja de Excel con contraseña para que otros no la modifiquen.', opts:['Verdadero','Falso'], a:0, exp:'Muy útil para compartir una planilla sin que se cambien accidentalmente las fórmulas.'},
+
+  {cat:'PowerPoint', q:'¿Cómo se le llama a cada página de una presentación de PowerPoint?', opts:['Diapositiva','Hoja','Celda','Capítulo'], a:0, exp:'Una presentación es, en definitiva, una secuencia de diapositivas.'},
+  {cat:'PowerPoint', q:'¿Qué extensión de archivo usan las presentaciones modernas de PowerPoint?', opts:['.pptx','.xlsx','.docx','.mp4'], a:0, exp:'.xlsx es de Excel y .docx es de Word.'},
+  {cat:'PowerPoint', q:'¿Para qué sirve el "Patrón de diapositivas" en PowerPoint?', opts:['Definir un diseño que se repite en todas las diapositivas','Grabar la presentación en video','Traducir el texto automáticamente','Contar cuántas diapositivas hay'], a:0, exp:'Así no hay que repetir el mismo diseño manualmente en cada diapositiva.'},
+  {cat:'PowerPoint', q:'¿Qué es una "transición" en una presentación?', opts:['El efecto visual al pasar de una diapositiva a otra','El título de la presentación','Un tipo de gráfico','El archivo de sonido de fondo'], a:0, exp:'Por ejemplo, un desvanecido o un deslizamiento al cambiar de diapositiva.'},
+  {cat:'PowerPoint', q:'¿Qué es una "animación" dentro de una diapositiva de PowerPoint?', opts:['Un efecto que hace que un elemento aparezca o se mueva dentro de la diapositiva','El cambio de una diapositiva a otra','Un tipo de letra especial','La barra de progreso de la presentación'], a:0, exp:'A diferencia de la transición, la animación ocurre dentro de la misma diapositiva.'},
+  {cat:'PowerPoint', q:'Buena práctica de presentaciones: ¿qué conviene evitar en una diapositiva para que el público te preste atención a vos?', opts:['Poner demasiado texto','Usar imágenes','Usar un título claro','Numerar las diapositivas'], a:0, exp:'Si hay mucho texto, el público lee la pantalla en vez de escuchar a quien expone.'},
+  {cat:'PowerPoint', q:'¿Cómo se llama el modo que muestra la presentación a pantalla completa, lista para exponer?', opts:['Presentación con diapositivas','Vista Esquema','Clasificador de diapositivas','Vista Notas'], a:0, exp:'Es el modo que ve el público durante la exposición.'},
+  {cat:'PowerPoint', q:'¿Qué son las "notas del orador" en PowerPoint?', opts:['Texto de ayuda que solo ve quien presenta, no el público','El resumen final de la presentación','Los comentarios del público','La lista de diapositivas'], a:0, exp:'Sirven como chuleta o guía para quien está exponiendo, sin que el público las vea.'},
+  {cat:'PowerPoint', q:'Se pueden insertar videos dentro de una diapositiva de PowerPoint.', opts:['Verdadero','Falso'], a:0, exp:'Además de video se pueden insertar audios, imágenes y gráficos.'},
+  {cat:'PowerPoint', q:'¿Qué es el "Clasificador de diapositivas"?', opts:['Una vista en miniatura de todas las diapositivas para reordenarlas','Un corrector ortográfico','Una función para contar palabras','Un tipo de plantilla'], a:0, exp:'Es útil para ver de un vistazo el orden completo de la presentación y reorganizarla.'},
+  {cat:'PowerPoint', q:'¿Para qué sirve elegir una "plantilla" de diseño en PowerPoint?', opts:['Darle a toda la presentación un estilo visual consistente','Guardar el archivo automáticamente','Traducir la presentación','Comprimir las imágenes'], a:0, exp:'Ahorra tiempo porque no hay que diseñar cada diapositiva desde cero.'},
+  {cat:'PowerPoint', q:'¿Qué elemento sirve para mostrar datos numéricos de forma visual dentro de una diapositiva?', opts:['Un gráfico','Un hipervínculo','Una nota al pie','Un encabezado'], a:0, exp:'Un gráfico de barras o de torta suele comunicar mejor que una tabla llena de números.'},
+  {cat:'PowerPoint', q:'Para que se lea bien de lejos, ¿qué tamaño de letra conviene usar en una diapositiva?', opts:['Grande, no muy chico','Lo más chico posible para que entre más texto','Da igual el tamaño','Solo mayúsculas'], a:0, exp:'Si la letra es muy chica, la gente del fondo de la sala no va a poder leerla.'},
+  {cat:'PowerPoint', q:'¿Qué es un "hipervínculo" en una diapositiva?', opts:['Un enlace que lleva a otro lugar al hacer clic','Un tipo de animación','El título de la diapositiva','Un efecto de sonido'], a:0, exp:'Puede llevar a otra diapositiva, a un archivo o a una página web.'},
+  {cat:'PowerPoint', q:'Para que el texto se lea bien sobre el fondo de una diapositiva conviene usar...', opts:['Colores con alto contraste entre fondo y texto','Colores parecidos entre sí','Siempre fondo blanco y letra blanca','No importa el contraste'], a:0, exp:'Por ejemplo, texto oscuro sobre fondo claro, o al revés.'},
+  {cat:'PowerPoint', q:'Se puede exportar una presentación de PowerPoint como PDF.', opts:['Verdadero','Falso'], a:0, exp:'Muy útil para compartirla sin que se desarme el diseño en otra computadora.'},
+  {cat:'PowerPoint', q:'¿Qué es un "esquema" (outline) en PowerPoint?', opts:['Una vista con solo los títulos y textos, para organizar el contenido','Un tipo de gráfico de barras','Un efecto de sonido','El nombre del archivo'], a:0, exp:'Sirve para pensar la estructura de la presentación antes de ponerse a diseñar.'},
+  {cat:'PowerPoint', q:'¿Para qué se usa el "diseño" (layout) de una diapositiva?', opts:['Definir dónde van el título, el texto y las imágenes','Cambiar el idioma','Guardar como video','Contar diapositivas'], a:0, exp:'PowerPoint trae varios diseños prearmados para organizar el contenido.'},
+  {cat:'PowerPoint', q:'¿Cuál de estas es una buena regla para armar diapositivas claras?', opts:['Una idea principal por diapositiva','Meter todo el discurso escrito en la diapositiva','Usar la mayor cantidad de colores posible','Nunca usar imágenes'], a:0, exp:'Cuantas más ideas se mezclan en una sola diapositiva, más cuesta seguirla.'},
+  {cat:'PowerPoint', q:'¿Qué permite hacer el "Modo Presentador" al exponer conectado a un proyector?', opts:['Ver tus notas y la próxima diapositiva mientras el público solo ve la actual','Grabar automáticamente tu voz','Traducir la presentación en vivo','Ocultar el mouse'], a:0, exp:'Es una gran ayuda para no perder el hilo mientras se expone.'},
+
+  {cat:'Power BI', q:'¿Para qué se usa principalmente Power BI?', opts:['Para conectar, analizar y visualizar datos en informes y paneles','Para escribir documentos de texto','Para editar fotos','Para mandar correos masivos'], a:0, exp:'Transforma datos crudos en gráficos y tableros fáciles de entender.'},
+  {cat:'Power BI', q:'¿Qué es un "dashboard" (panel) en Power BI?', opts:['Una pantalla con varios gráficos e indicadores que resumen información clave','Un tipo de base de datos','Un lenguaje de programación','Un archivo de Excel'], a:0, exp:'Permite ver de un vistazo cómo viene un negocio o un área, sin revisar planillas enteras.'},
+  {cat:'Power BI', q:'¿De qué empresa es Power BI?', opts:['Microsoft','Google','Apple','Adobe'], a:0, exp:'Se integra bien con otras herramientas de Microsoft, como Excel.'},
+  {cat:'Power BI', q:'¿Qué es DAX en Power BI?', opts:['El lenguaje de fórmulas para crear cálculos y medidas','Un tipo de gráfico circular','El nombre del archivo de Power BI','Un asistente de inteligencia artificial'], a:0, exp:'Se parece un poco a las fórmulas de Excel, pero pensado para grandes volúmenes de datos.'},
+  {cat:'Power BI', q:'¿Qué extensión tienen los archivos de Power BI Desktop?', opts:['.pbix','.pptx','.xlsx','.pbi'], a:0, exp:'Ahí se guarda el informe con sus datos, cálculos y visualizaciones.'},
+  {cat:'Power BI', q:'¿De dónde puede traer datos Power BI para armar un informe?', opts:['De muchas fuentes distintas: Excel, bases de datos, la web, etc.','Solo de archivos de Excel','Solo de internet','Solo de otro Power BI'], a:0, exp:'Esa flexibilidad es una de sus grandes ventajas frente a trabajar todo a mano en una sola planilla.'},
+  {cat:'Power BI', q:'¿Qué es una "medida" (measure) en Power BI?', opts:['Un cálculo definido con fórmulas DAX, como una suma o un promedio','El tamaño del archivo','Un tipo de gráfico','La cantidad de usuarios conectados'], a:0, exp:'Por ejemplo, una medida puede calcular el total de ventas del mes en curso.'},
+  {cat:'Power BI', q:'¿Para qué sirve un "segmentador" (slicer) en un informe de Power BI?', opts:['Permitir filtrar los datos del informe de forma interactiva','Borrar datos del origen','Cambiar el idioma del informe','Exportar a PDF automáticamente'], a:0, exp:'Por ejemplo, elegir un mes o una sucursal y que todo el informe se actualice solo.'},
+  {cat:'Power BI', q:'Power BI permite publicar y compartir informes en la nube para que otros los vean online.', opts:['Verdadero','Falso'], a:0, exp:'Eso se hace a través de Power BI Service, la versión web/en la nube de la herramienta.'},
+  {cat:'Power BI', q:'¿Qué parte de Power BI se usa para diseñar y armar los informes en la computadora?', opts:['Power BI Desktop','Power BI Mobile','Power BI Service solamente','Power Query solamente'], a:0, exp:'Power BI Mobile, en cambio, es para consultar los informes ya armados desde el celular.'},
+  {cat:'Power BI', q:'¿Qué es "Power Query" dentro de Power BI?', opts:['La herramienta para conectar, limpiar y transformar los datos','Un tipo de gráfico avanzado','El buscador de Power BI','Un asistente de voz'], a:0, exp:'Es el primer paso antes de analizar: dejar los datos ordenados y consistentes.'},
+  {cat:'Power BI', q:'¿Qué tipo de gráfico se usa comúnmente para comparar valores entre categorías?', opts:['Gráfico de barras','Mapa de calor 3D','Tabla dinámica','Ninguno de los anteriores'], a:0, exp:'Por ejemplo, comparar las ventas de distintos productos en el mismo mes.'},
+  {cat:'Power BI', q:'¿Qué ventaja tiene un dashboard interactivo frente a un informe fijo en papel?', opts:['Se puede explorar y filtrar los datos en el momento','No necesita datos actualizados','Es más barato de imprimir','No se puede compartir'], a:0, exp:'Quien lo mira puede hacerse sus propias preguntas sin depender de que alguien arme un reporte nuevo.'},
+  {cat:'Power BI', q:'¿Qué es una "relación" entre tablas en Power BI?', opts:['Una conexión que indica cómo se vinculan los datos de dos tablas','Un tipo de gráfico especial','Un permiso de usuario','Un filtro visual'], a:0, exp:'Por ejemplo, vincular una tabla de ventas con una tabla de productos a través de un código en común.'},
+  {cat:'Power BI', q:'¿Para qué sirve "actualizar" (refrescar) los datos de un informe de Power BI?', opts:['Traer la información más reciente desde el origen de datos','Cambiar el diseño del informe','Borrar todos los gráficos','Traducir el informe'], a:0, exp:'Así el informe no queda desactualizado con el paso del tiempo.'},
+  {cat:'Power BI', q:'¿Qué es un KPI (indicador clave) en un informe de gestión?', opts:['Una métrica que muestra si se está cumpliendo un objetivo del negocio','Un tipo de archivo de Power BI','Un lenguaje de programación','El nombre de un gráfico circular'], a:0, exp:'Por ejemplo, el porcentaje de ventas alcanzado respecto a la meta del mes.'},
+  {cat:'Power BI', q:'En Power BI se pueden combinar datos de Excel con datos de otras fuentes en un mismo informe.', opts:['Verdadero','Falso'], a:0, exp:'Esa capacidad de combinar orígenes distintos es una de sus mayores fortalezas.'},
+  {cat:'Power BI', q:'¿Qué tipo de perfil suele usar Power BI en una empresa para tomar decisiones?', opts:['Analistas, gerentes y equipos que necesitan ver la información resumida','Solo programadores','Solo diseñadores gráficos','Nadie, es solo decorativo'], a:0, exp:'Ayuda a decidir con datos concretos en vez de solo con intuición.'},
+  {cat:'Power BI', q:'¿Qué significa "BI" en Power BI?', opts:['Business Intelligence (inteligencia de negocios)','Basic Interface','Binary Index','Big Images'], a:0, exp:'Es toda una disciplina orientada a usar datos para tomar mejores decisiones de negocio.'},
+  {cat:'Power BI', q:'¿Cuál es una de las ventajas de usar Power BI en vez de mirar los datos "en crudo" en una planilla enorme?', opts:['Permite visualizarlos de forma más clara y encontrar patrones rápido','Ocupa menos espacio en el celular','Es gratis siempre para cualquier uso','Reemplaza la necesidad de tener datos'], a:0, exp:'Un buen gráfico puede mostrar en segundos algo que en una tabla llevaría mucho más tiempo notar.'},
+
+  {cat:'Finanzas e Inversiones', q:'¿Qué es un "plazo fijo"?', opts:['Depositar dinero en un banco por un tiempo determinado a cambio de un interés','Un préstamo que pide el banco','Una tarjeta de crédito sin límite','Un tipo de seguro de auto'], a:0, exp:'Al vencer el plazo, se recupera el dinero depositado más el interés pactado.'},
+  {cat:'Finanzas e Inversiones', q:'Si hacés un plazo fijo a 30 días, ¿podés retirar el dinero libremente antes de esos 30 días?', opts:['No, generalmente queda inmovilizado hasta el vencimiento','Sí, en cualquier momento sin ninguna condición','Solo los fines de semana','Solo si el banco está cerrado'], a:0, exp:'Por eso conviene elegir un plazo acorde a cuándo se va a necesitar ese dinero de nuevo.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué son los Fondos Comunes de Inversión (FCI)?', opts:['Un conjunto de ahorros de muchos inversores administrado por profesionales','Un tipo de tarjeta de débito','Un impuesto sobre las ganancias','Un seguro obligatorio del auto'], a:0, exp:'El dinero de muchas personas se junta y una sociedad gerente lo invierte según la estrategia del fondo.'},
+  {cat:'Finanzas e Inversiones', q:'Los fondos FIMA son Fondos Comunes de Inversión administrados a través de...', opts:['El Banco de la Nación Argentina','Un banco extranjero sin filial en el país','Una billetera virtual únicamente','El Estado directamente como impuesto'], a:0, exp:'Son una de las opciones de inversión más conocidas y usadas en Argentina.'},
+  {cat:'Finanzas e Inversiones', q:'Comparado con un plazo fijo tradicional, ¿qué suele ofrecer un fondo común de inversión de "money market" (como un FIMA de rendimiento diario)?', opts:['Mayor liquidez para retirar el dinero más rápido','Una tasa de interés fija garantizada por ley','Cero riesgo bajo cualquier circunstancia','Un límite máximo de $1000 para invertir'], a:0, exp:'Suele poder rescatarse en 24 a 48 horas, mientras que un plazo fijo queda atado hasta su vencimiento.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es la "tasa de interés"?', opts:['El porcentaje que se cobra o se gana por prestar o depositar dinero','El precio fijo de un producto','Un impuesto municipal','El costo de una tarjeta de crédito solamente'], a:0, exp:'Puede ser a favor (cuando ahorrás) o en contra (cuando pedís un préstamo).'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es la "inflación"?', opts:['El aumento generalizado y sostenido de los precios','La suba del dólar solamente','Un impuesto que cobra el banco','La cantidad de billetes que imprime el Estado en un día'], a:0, exp:'Hace que, con el tiempo, la misma cantidad de dinero alcance para comprar menos cosas.'},
+  {cat:'Finanzas e Inversiones', q:'Si la inflación es más alta que la tasa de interés de tu ahorro, ¿qué pasa con tu poder de compra?', opts:['Se reduce, aunque tengas más pesos nominales','Aumenta siempre','Se mantiene exactamente igual','Se duplica automáticamente'], a:0, exp:'Por eso importa comparar el rendimiento de una inversión contra la inflación, no solo mirar el número de pesos.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué significa "diversificar" una inversión?', opts:['Repartir el dinero en distintos activos para reducir el riesgo','Poner todo el dinero en un solo lugar','Gastar todo el dinero de una vez','Sacar un préstamo grande'], a:0, exp:'Así, si algo sale mal en una inversión, no se pierde todo el ahorro.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es el "interés compuesto"?', opts:['Cuando los intereses ganados también generan más intereses con el tiempo','Un interés que se cobra una sola vez','Un interés que solo aplica a préstamos','Lo mismo que la inflación'], a:0, exp:'Por eso empezar a ahorrar temprano hace una diferencia tan grande a largo plazo.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es un "presupuesto" personal o familiar?', opts:['Un plan de cuánto se espera ganar y gastar en un período','Un tipo de tarjeta bancaria','Un impuesto anual obligatorio','Un seguro de vida'], a:0, exp:'Ayuda a no gastar más de lo que se gana y a planificar el ahorro.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es una "acción" en el mercado de valores?', opts:['Una parte pequeña de la propiedad de una empresa','Un préstamo garantizado por el Estado','Un tipo de cuenta de ahorro sin riesgo','Un impuesto sobre las ventas'], a:0, exp:'Quien compra acciones se convierte en dueño de una porción muy pequeña de esa empresa.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es un "bono"?', opts:['Un instrumento de deuda: le prestás dinero a un Estado o empresa a cambio de intereses','Una acción de una empresa','Un tipo de moneda extranjera','Un descuento en el supermercado'], a:0, exp:'A diferencia de la acción, con el bono no sos dueño de la empresa, sos su acreedor.'},
+  {cat:'Finanzas e Inversiones', q:'Regla básica de finanzas personales: ¿qué se recomienda armar antes de invertir, para cubrir imprevistos?', opts:['Un fondo de emergencia con ahorro disponible rápido','Una tarjeta de crédito sin límite','Un préstamo grande a largo plazo','Ninguna previsión, invertir todo de una'], a:0, exp:'Así, un imprevisto no obliga a vender una inversión de golpe en mal momento.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué significa que una inversión tenga "liquidez"?', opts:['Qué tan rápido y fácil se puede convertir en dinero disponible','Cuánto interés paga por año','El color del comprobante del banco','El país donde está el banco'], a:0, exp:'Un fondo de money market suele ser más líquido que un plazo fijo a 90 días, por ejemplo.'},
+  {cat:'Finanzas e Inversiones', q:'En general, ¿qué relación suele existir entre el riesgo y la ganancia esperada de una inversión?', opts:['A mayor riesgo, mayor ganancia potencial pero también mayor posibilidad de pérdida','A mayor riesgo, siempre menor ganancia','No tienen ninguna relación','El riesgo no existe si el banco es grande'], a:0, exp:'Por eso no existe una inversión "perfecta" que dé mucha ganancia sin ningún riesgo.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es el "costo de oportunidad" al elegir una inversión?', opts:['Lo que dejás de ganar por no elegir la mejor alternativa disponible','El costo fijo que cobra el banco','Un impuesto sobre las inversiones','El precio de abrir una cuenta'], a:0, exp:'Elegir una opción siempre implica resignar las demás alternativas posibles.'},
+  {cat:'Finanzas e Inversiones', q:'Cuanto antes empezás a ahorrar e invertir, más tiempo tiene el interés compuesto para hacer crecer tu dinero.', opts:['Verdadero','Falso'], a:0, exp:'El tiempo es uno de los factores más poderosos a favor de quien invierte.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es un "gasto fijo" en un presupuesto?', opts:['Un gasto que se repite todos los meses por un monto similar','Un gasto que solo se hace una vez en la vida','Un impuesto que cobra el Estado','Un tipo de inversión de alto riesgo'], a:0, exp:'Por ejemplo el alquiler, las cuotas de un préstamo o los servicios básicos.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es un "gasto variable"?', opts:['Un gasto que cambia de mes a mes según el consumo','Un gasto que nunca cambia','Un tipo de plazo fijo','Un impuesto fijo mensual'], a:0, exp:'Por ejemplo, salidas, compras extra o regalos, que no son iguales todos los meses.'},
+  {cat:'Finanzas e Inversiones', q:'¿Para qué sirve comparar tasas de interés entre distintos bancos antes de hacer un plazo fijo?', opts:['Para elegir la opción que te dé mejor rendimiento por tu dinero','Porque todos los bancos están obligados a dar la misma tasa','Para pagar menos impuestos','No sirve, siempre es igual'], a:0, exp:'Las tasas pueden variar bastante de un banco a otro para el mismo producto.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué es la tasa "TNA" (Tasa Nominal Anual) que suelen mostrar los bancos?', opts:['Una forma estándar de expresar el interés anual de un producto financiero','Un impuesto que se paga una sola vez','El nombre de un fondo de inversión','El código de una tarjeta de débito'], a:0, exp:'Sirve para poder comparar distintas opciones de ahorro o crédito en las mismas condiciones.'},
+  {cat:'Finanzas e Inversiones', q:'¿Qué organismo regula los Fondos Comunes de Inversión en Argentina?', opts:['La Comisión Nacional de Valores (CNV)','El Ministerio de Educación','La AFIP únicamente','No hay ningún organismo regulador'], a:0, exp:'La CNV supervisa el mercado de capitales para proteger a quienes invierten.'},
+  {cat:'Finanzas e Inversiones', q:'Ahorrar una parte de los ingresos todos los meses, aunque sea poco, ayuda a largo plazo a...', opts:['Construir un colchón financiero y alcanzar metas futuras','Pagar más impuestos','Perder poder adquisitivo siempre','No tiene ningún beneficio'], a:0, exp:'El hábito de ahorrar de forma constante suele importar más que el monto puntual de cada mes.'},
+
+  {cat:'Administración y Ventas', q:'¿Qué es la "administración" de una empresa?', opts:['Planificar, organizar, dirigir y controlar los recursos para lograr objetivos','Solamente vender productos','Solamente cobrar facturas','Solamente contratar personal'], a:0, exp:'Es una disciplina mucho más amplia que solo una de esas tareas puntuales.'},
+  {cat:'Administración y Ventas', q:'¿Qué es una "factura"?', opts:['Un documento que certifica una compra o venta, con el detalle y precio','Un tipo de cheque','Un contrato de alquiler','Un recibo de sueldo'], a:0, exp:'Es el respaldo formal de una operación comercial, tanto para quien compra como para quien vende.'},
+  {cat:'Administración y Ventas', q:'¿Qué diferencia hay entre "cliente" y "consumidor"?', opts:['El cliente compra, el consumidor usa el producto (pueden ser la misma persona o no)','Son exactamente lo mismo siempre','El consumidor paga y el cliente no','No hay ninguna diferencia posible'], a:0, exp:'Por ejemplo, un padre que compra pañales es el cliente, pero el consumidor es el bebé.'},
+  {cat:'Administración y Ventas', q:'¿Qué es el "stock" o inventario de un negocio?', opts:['La cantidad de mercadería disponible para vender','El dinero en la caja registradora','La lista de empleados','El horario de atención'], a:0, exp:'Llevar bien el stock evita quedarse sin productos o comprar de más.'},
+  {cat:'Administración y Ventas', q:'¿Qué es un "presupuesto" en el contexto de una venta?', opts:['Una estimación del costo antes de cerrar la venta','Un impuesto sobre las ventas','Un tipo de factura ya pagada','Un contrato firmado y definitivo'], a:0, exp:'Se le entrega al posible cliente antes de que confirme la compra.'},
+  {cat:'Administración y Ventas', q:'¿Qué significa "fidelizar" a un cliente?', opts:['Lograr que vuelva a comprar y se mantenga leal al negocio','Cobrarle más caro que a los demás','Venderle una sola vez y no más','Ignorar sus reclamos'], a:0, exp:'Conseguir un cliente nuevo suele costar más que mantener a uno que ya confía en el negocio.'},
+  {cat:'Administración y Ventas', q:'¿Qué es el "margen de ganancia"?', opts:['La diferencia entre el precio de venta y el costo del producto','El precio total de venta','El impuesto que se paga por vender','El sueldo del vendedor'], a:0, exp:'Es lo que realmente queda como ganancia después de cubrir el costo de lo vendido.'},
+  {cat:'Administración y Ventas', q:'¿Qué es un "organigrama"?', opts:['Un esquema que muestra la estructura jerárquica de una empresa','Un tipo de factura','Un gráfico de ventas mensuales','Un plan de marketing'], a:0, exp:'Ayuda a entender quién depende de quién y cómo están organizadas las áreas.'},
+  {cat:'Administración y Ventas', q:'¿Qué área de una empresa se encarga típicamente de contratar y gestionar al personal?', opts:['Recursos Humanos','Contabilidad','Logística','Atención al cliente'], a:0, exp:'También se ocupa de la capacitación, los sueldos y el clima laboral.'},
+  {cat:'Administración y Ventas', q:'¿Qué es el "marketing"?', opts:['El conjunto de estrategias para promocionar y vender entendiendo al cliente','Solamente la publicidad en redes sociales','Solamente el diseño del logo','Solamente cobrar más caro'], a:0, exp:'Incluye investigar al cliente, definir el producto, el precio y cómo comunicarlo.'},
+  {cat:'Administración y Ventas', q:'¿Qué es un "proveedor"?', opts:['Una empresa o persona que le vende insumos o mercadería a otro negocio','El cliente final de un producto','El dueño de la empresa','Un tipo de impuesto'], a:0, exp:'Por ejemplo, quien le vende la harina a una panadería es su proveedor.'},
+  {cat:'Administración y Ventas', q:'¿Qué es la "atención al cliente"?', opts:['El servicio de acompañar, ayudar y resolver dudas de quien compra','Solo el momento de cobrar','Solo responder reclamos por escrito','Un área que no existe en las pymes'], a:0, exp:'Una buena atención puede ser tan importante como el producto mismo para que el cliente vuelva.'},
+  {cat:'Administración y Ventas', q:'¿Qué significa la sigla "PyME"?', opts:['Pequeña y Mediana Empresa','Producto y Mercado Estable','Plan y Meta Empresarial','Precio y Margen Estimado'], a:0, exp:'Las PyMEs son una parte fundamental de la economía en Argentina.'},
+  {cat:'Administración y Ventas', q:'En ventas, ¿qué significa "cerrar una venta"?', opts:['Lograr que el cliente confirme la compra','Cerrar el local al final del día','Cancelar un pedido','Devolver un producto'], a:0, exp:'Es el objetivo final de todo el proceso comercial con un cliente.'},
+  {cat:'Administración y Ventas', q:'¿Qué es la "competencia" para un negocio?', opts:['Otras empresas que ofrecen productos o servicios similares','Los empleados del mismo negocio','Los clientes que no compran nunca','Un tipo de impuesto municipal'], a:0, exp:'Conocer a la competencia ayuda a diferenciarse y mejorar la propuesta propia.'},
+  {cat:'Administración y Ventas', q:'¿Qué es una "meta de ventas"?', opts:['Un objetivo numérico de cuánto se espera vender en un período','Un tipo de descuento fijo','El sueldo de un vendedor','Un impuesto sobre las ganancias'], a:0, exp:'Sirve para medir si el negocio está cumpliendo con lo planificado.'},
+  {cat:'Administración y Ventas', q:'¿Qué es la "posventa"?', opts:['La atención y seguimiento al cliente después de comprar','El momento exacto de pagar','Un tipo de factura especial','El precio final con descuento'], a:0, exp:'Incluye cosas como la garantía, el soporte técnico o simplemente preguntar si quedó conforme.'},
+  {cat:'Administración y Ventas', q:'¿Qué significa "negociar" en una venta?', opts:['Buscar un acuerdo entre comprador y vendedor sobre las condiciones','Bajar siempre el precio al mínimo','Nunca ceder en nada','Cancelar la venta automáticamente'], a:0, exp:'Una buena negociación busca que ambas partes queden conformes con el resultado.'},
+  {cat:'Administración y Ventas', q:'¿Qué es un "plan de negocio"?', opts:['Un documento que describe la idea, el mercado y la estrategia de un emprendimiento','Un tipo de factura mensual','El horario de un local','La lista de precios solamente'], a:0, exp:'Suele incluir también una proyección de costos e ingresos esperados.'},
+  {cat:'Administración y Ventas', q:'¿Por qué es importante escuchar las quejas o reclamos de un cliente?', opts:['Porque ayudan a mejorar y a no perder al cliente','Porque es obligatorio por ley responder en 24hs siempre','Porque generan una multa si no se atienden','No es importante, se pueden ignorar'], a:0, exp:'Un reclamo bien resuelto puede incluso fortalecer la confianza del cliente en el negocio.'},
+
+  {cat:'Valores de la vida', q:'La honestidad significa decir la verdad y actuar de forma coherente con lo que uno piensa.', opts:['Verdadero','Falso'], a:0, exp:'Ser honesto también implica no engañar ni aprovecharse de la confianza de los demás.'},
+  {cat:'Valores de la vida', q:'¿Qué significa "empatía"?', opts:['Ponerse en el lugar del otro y entender lo que siente','Estar siempre de acuerdo con todos','Ignorar los problemas ajenos','Ganar siempre en una discusión'], a:0, exp:'No implica estar de acuerdo con el otro, sino entender su punto de vista.'},
+  {cat:'Valores de la vida', q:'Si un compañero de equipo se equivoca, ¿cuál actitud ayuda más al grupo?', opts:['Ayudarlo a corregirlo con respeto','Burlarse delante de todos','Ignorarlo por completo','Quejarse a sus espaldas'], a:0, exp:'Un error bien manejado en equipo se convierte en un aprendizaje, no en un conflicto.'},
+  {cat:'Valores de la vida', q:'¿Qué es la "responsabilidad"?', opts:['Cumplir lo que uno se compromete y hacerse cargo de sus actos','Culpar a otros por los propios errores','Hacer solo lo que a uno le conviene','Prometer cosas sin intención de cumplirlas'], a:0, exp:'Incluye también asumir las consecuencias cuando algo sale mal.'},
+  {cat:'Valores de la vida', q:'El trabajo en equipo funciona mejor cuando cada uno...', opts:['Aporta lo suyo y también escucha a los demás','Impone siempre su propia idea','Trabaja solo, sin coordinar con nadie','Compite para quedar mejor que sus compañeros'], a:0, exp:'Un buen equipo combina las fortalezas de cada integrante en vez de competir entre ellos.'},
+  {cat:'Valores de la vida', q:'¿Qué es la "perseverancia"?', opts:['Seguir intentando a pesar de las dificultades','Rendirse apenas algo se complica','Hacer solo lo fácil','Depender siempre de otros para todo'], a:0, exp:'Muchos logros importantes llevaron varios intentos antes de conseguirse.'},
+  {cat:'Valores de la vida', q:'Pedir disculpas cuando uno se equivoca es un signo de madurez, no de debilidad.', opts:['Verdadero','Falso'], a:0, exp:'Reconocer un error a tiempo suele fortalecer la confianza con los demás, no debilitarla.'},
+  {cat:'Valores de la vida', q:'¿Qué significa "respetar" a otra persona?', opts:['Tratarla con consideración aunque piense distinto','Estar de acuerdo con todo lo que dice','Evitarla si opina diferente','Solo respetar a quien piensa igual'], a:0, exp:'El respeto no depende de estar de acuerdo, sino de cómo se trata al otro.'},
+  {cat:'Valores de la vida', q:'¿Por qué es importante la puntualidad?', opts:['Porque demuestra respeto por el tiempo de los demás','Porque es una norma sin ningún motivo real','Solo importa en el trabajo, no en la vida diaria','No tiene ninguna importancia real'], a:0, exp:'Llegar tarde afecta también los planes de las personas que sí llegaron a horario.'},
+  {cat:'Valores de la vida', q:'¿Qué es la "gratitud"?', opts:['Reconocer y valorar lo que otros hacen por uno','Sentir que a uno nunca le deben nada','Exigir siempre más de lo que se recibe','Compararse constantemente con los demás'], a:0, exp:'Practicar la gratitud está asociado con mayor bienestar emocional.'},
+  {cat:'Valores de la vida', q:'Si alguien te cuenta un secreto en confianza, lo correcto es...', opts:['Respetar esa confianza y no contarlo sin permiso','Contárselo a todos tus amigos','Usarlo en su contra','Publicarlo en redes sociales'], a:0, exp:'Traicionar una confianza suele romper una relación de forma difícil de reparar.'},
+  {cat:'Valores de la vida', q:'¿Qué significa ser "solidario"?', opts:['Ayudar a otros de forma desinteresada','Ayudar solo cuando conviene a uno','Esperar siempre algo a cambio','Ignorar a quien pide ayuda'], a:0, exp:'La solidaridad no busca una recompensa a cambio de la ayuda que se ofrece.'},
+  {cat:'Valores de la vida', q:'Escuchar con atención a alguien, sin interrumpir, es una forma de mostrar respeto.', opts:['Verdadero','Falso'], a:0, exp:'Saber escuchar es una habilidad tan importante como saber hablar.'},
+  {cat:'Valores de la vida', q:'¿Qué es la "tolerancia"?', opts:['Aceptar y respetar las diferencias de los demás','Imponer la propia forma de pensar a todos','Rechazar todo lo que es distinto','Ignorar a quien piensa diferente'], a:0, exp:'Convivir con personas distintas a uno enriquece mucho más de lo que parece a primera vista.'},
+  {cat:'Valores de la vida', q:'¿Por qué es valioso el esfuerzo, incluso cuando el resultado no es perfecto?', opts:['Porque el proceso de intentarlo enseña y hace crecer','Porque solo importa ganar siempre','El esfuerzo no tiene ningún valor si no se gana','Es mejor no intentarlo si no hay garantía de éxito'], a:0, exp:'Muchas veces se aprende más del camino recorrido que del resultado final.'},
+  {cat:'Valores de la vida', q:'¿Qué es la "humildad"?', opts:['Reconocer los propios errores y límites, sin creerse superior','Creer que uno siempre tiene la razón','Menospreciar los logros propios','Competir para sentirse mejor que otros'], a:0, exp:'Ser humilde no significa no valorarse, sino no sentirse por encima de los demás.'},
+  {cat:'Valores de la vida', q:'Un buen líder de equipo se caracteriza por...', opts:['Escuchar, guiar y valorar el aporte de cada integrante','Dar órdenes sin explicar nada','Quedarse con el crédito del trabajo de todos','Ignorar las opiniones del equipo'], a:0, exp:'Un buen líder suma a los demás en vez de opacarlos.'},
+  {cat:'Valores de la vida', q:'Cumplir la palabra que uno da es una forma concreta de generar confianza con los demás.', opts:['Verdadero','Falso'], a:0, exp:'La confianza se construye de a poco, con acciones coherentes en el tiempo.'},
+  {cat:'Valores de la vida', q:'¿Qué significa tener "actitud positiva" frente a un problema?', opts:['Buscar soluciones en vez de quedarse solo lamentando el problema','Fingir que el problema no existe','Culpar siempre a otros','Evitar cualquier desafío'], a:0, exp:'No implica ignorar la dificultad, sino enfocarse en cómo resolverla.'},
+  {cat:'Valores de la vida', q:'¿Por qué es importante cuidar el medio ambiente en las decisiones de todos los días?', opts:['Porque los recursos naturales son limitados y afectan al futuro','Porque no tiene ningún efecto real','Solo les importa a algunos países','Es un tema que no involucra a las personas comunes'], a:0, exp:'Pequeñas decisiones cotidianas, multiplicadas por millones de personas, generan un impacto real.'},
+
+  {cat:'Matemática', q:'¿Cuánto es 24 + 38?', opts:['62','58','64','52'], a:0, exp:'24 + 38 = 62.'},
+  {cat:'Matemática', q:'¿Cuánto es 90 - 37?', opts:['53','63','47','57'], a:0, exp:'90 - 37 = 53.'},
+  {cat:'Matemática', q:'¿Cuánto es 12 × 7?', opts:['84','74','96','82'], a:0, exp:'12 × 7 = 84.'},
+  {cat:'Matemática', q:'¿Cuánto es 144 ÷ 12?', opts:['12','11','14','13'], a:0, exp:'144 ÷ 12 = 12.'},
+  {cat:'Matemática', q:'Juan tenía $500 y gastó $180 en el almacén. ¿Cuánto dinero le queda?', opts:['$320','$380','$280','$350'], a:0, exp:'500 - 180 = 320.'},
+  {cat:'Matemática', q:'Una docena de huevos son 12 unidades. ¿Cuántos huevos hay en 3 docenas y media?', opts:['42','36','30','48'], a:0, exp:'3,5 × 12 = 42 huevos.'},
+  {cat:'Matemática', q:'Si un kilo de pan cuesta $1200, ¿cuánto cuestan 2 kilos y medio?', opts:['$3000','$2400','$3600','$2800'], a:0, exp:'2,5 × 1200 = 3000.'},
+  {cat:'Matemática', q:'¿Cuánto es el 10% de 250?', opts:['25','10','50','2.5'], a:0, exp:'El 10% se calcula dividiendo por 10: 250 ÷ 10 = 25.'},
+  {cat:'Matemática', q:'¿Cuánto es el 50% de 180?', opts:['90','80','100','45'], a:0, exp:'El 50% es la mitad: 180 ÷ 2 = 90.'},
+  {cat:'Matemática', q:'Un auto recorre 60 km en una hora a velocidad constante. ¿Cuántos km recorre en 3 horas?', opts:['180 km','120 km','200 km','160 km'], a:0, exp:'60 × 3 = 180 km.'},
+  {cat:'Matemática', q:'Ana repartió 48 caramelos en partes iguales entre 6 amigos. ¿Cuántos caramelos recibió cada uno?', opts:['8','6','9','7'], a:0, exp:'48 ÷ 6 = 8 caramelos por amigo.'},
+  {cat:'Matemática', q:'¿Cuánto es 7 × 8?', opts:['56','54','64','48'], a:0, exp:'7 × 8 = 56.'},
+  {cat:'Matemática', q:'Si compraste 3 artículos de $150 cada uno, ¿cuánto pagaste en total?', opts:['$450','$400','$500','$350'], a:0, exp:'3 × 150 = 450.'},
+  {cat:'Matemática', q:'¿Cuál es el resultado de 100 - 45 - 20?', opts:['35','45','30','25'], a:0, exp:'100 - 45 = 55; 55 - 20 = 35.'},
+  {cat:'Matemática', q:'¿Cuánto es la mitad de 96?', opts:['48','46','52','44'], a:0, exp:'96 ÷ 2 = 48.'},
+  {cat:'Matemática', q:'Un colectivo sale cada 15 minutos. Si el último pasó a las 9:00, ¿a qué hora pasa el próximo?', opts:['9:15','9:10','9:20','9:30'], a:0, exp:'9:00 + 15 minutos = 9:15.'},
+  {cat:'Matemática', q:'¿Cuánto es 9 × 9?', opts:['81','72','90','79'], a:0, exp:'9 × 9 = 81.'},
+  {cat:'Matemática', q:'Pedro ahorra $2000 por mes. ¿Cuánto va a tener ahorrado después de 5 meses, sin gastar nada?', opts:['$10.000','$8.000','$12.000','$9.000'], a:0, exp:'2000 × 5 = 10.000.'},
+  {cat:'Matemática', q:'¿Cuánto es 15 + 27 + 8?', opts:['50','48','52','45'], a:0, exp:'15 + 27 = 42; 42 + 8 = 50.'},
+  {cat:'Matemática', q:'Si una pizza se corta en 8 porciones y 3 personas comen 2 porciones cada una, ¿cuántas porciones quedan?', opts:['2','3','1','4'], a:0, exp:'3 × 2 = 6 porciones comidas; 8 - 6 = 2 porciones quedan.'},
 ];
 const GAMES_META = {
   tuttifruti: { id:'tuttifruti', name:'Tutti Fruti', icon:'🍉' },
@@ -1918,8 +2074,21 @@ function toggleLetter(l){ state.settings.letters[l] = !state.settings.letters[l]
    MODO LOCAL — pasar y jugar
    ═══════════════════════════════════════════════════════════════ */
 function openSetupLocal(){
-  state.setup = { playerIds: state.players.slice(0,4).map(p=>p.id), newPlayers: [], deckName: 'Clásico', deck: [...PRESETS['Clásico']], gamesEnabled: ['tuttifruti','preguntados'] };
+  state.setup = { mode:'grupal', playerIds: state.players.slice(0,4).map(p=>p.id), newPlayers: [], deckName: 'Clásico', deck: [...PRESETS['Clásico']], gamesEnabled: ['tuttifruti','preguntados'] };
   state.screen = 'setupLocal'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function setupSetMode(mode){
+  const su = state.setup;
+  su.mode = mode;
+  if(mode==='solo'){
+    // en solo el jugador es uno nada más: si había varios elegidos, nos quedamos con el primero
+    const single = su.playerIds[0] ?? null;
+    su.playerIds = single ? [single] : [];
+    su.newPlayers = single ? [] : su.newPlayers.slice(0,1);
+    const i = su.gamesEnabled.indexOf('mimica'); if(i>=0) su.gamesEnabled.splice(i,1); // mímica necesita a alguien más adivinando
+    if(su.gamesEnabled.length===0) su.gamesEnabled.push('tuttifruti');
+  }
+  render();
 }
 function toggleSetupGame(id){
   const su = state.setup; const i = su.gamesEnabled.indexOf(id);
@@ -1928,17 +2097,27 @@ function toggleSetupGame(id){
 }
 function renderSetupLocal(app){
   const su = state.setup;
+  const solo = su.mode==='solo';
+  const gamesForMode = Object.values(GAMES_META).filter(g => !solo || g.id!=='mimica');
   app.innerHTML = `
     ${topbar('Nueva partida local')}
     <div class="screen">
       <div class="card">
-        <h3>¿Quién juega? <span class="n">(${su.playerIds.length + su.newPlayers.length})</span></h3>
+        <h3>¿Cómo jugás?</h3>
+        <div class="seg">
+          <button class="${!solo?'active':''}" onclick="setupSetMode('grupal')">👥 Grupal</button>
+          <button class="${solo?'active':''}" onclick="setupSetMode('solo')">🙋 Solo</button>
+        </div>
+        ${solo ? `<div class="sub" style="margin-top:8px">Jugás vos, mejorando tu propio puntaje. Mímica no aplica en modo solo (necesita a alguien más adivinando).</div>` : ''}
+      </div>
+      <div class="card">
+        <h3>${solo ? '¿Cómo te llamás?' : '¿Quién juega?'} <span class="n">(${su.playerIds.length + su.newPlayers.length})</span></h3>
         <div class="wrap" style="margin-bottom:10px">
           ${state.players.map(p=>`<span class="chip" style="opacity:${su.playerIds.includes(p.id)?1:.4};cursor:pointer" onclick="toggleSetupPlayer('${p.id}')">
             <span class="avatar" style="background:${p.color};width:16px;height:16px;font-size:9px">${esc(p.name[0]||'?').toUpperCase()}</span>${esc(p.name)}</span>`).join('')}
           ${su.newPlayers.map((n,i)=>`<span class="chip">${esc(n)} <span class="x" onclick="su.newPlayers.splice(${i},1);render()">✕</span></span>`).join('')}
         </div>
-        <div class="row"><input id="su-newname" placeholder="Agregar jugador nuevo" onkeydown="if(event.key==='Enter')setupAddNew()">
+        <div class="row"><input id="su-newname" placeholder="${solo?'Tu nombre':'Agregar jugador nuevo'}" onkeydown="if(event.key==='Enter')setupAddNew()">
         <button class="btn" onclick="setupAddNew()">+</button></div>
       </div>
       <div class="card">
@@ -1956,7 +2135,7 @@ function renderSetupLocal(app){
         <h3>🎮 Juegos de esta partida</h3>
         <div class="sub" style="margin-bottom:10px">Si elegís más de uno, al terminar cada juego vas a ver el marcador general y podés pasar al siguiente sin perder a los jugadores — se elige al azar cuál sigue.</div>
         <div class="wrap">
-          ${Object.values(GAMES_META).map(g=>`<span class="chip" style="opacity:${su.gamesEnabled.includes(g.id)?1:.4};cursor:pointer" onclick="toggleSetupGame('${g.id}')">${g.icon} ${esc(g.name)}</span>`).join('')}
+          ${gamesForMode.map(g=>`<span class="chip" style="opacity:${su.gamesEnabled.includes(g.id)?1:.4};cursor:pointer" onclick="toggleSetupGame('${g.id}')">${g.icon} ${esc(g.name)}</span>`).join('')}
         </div>
       </div>
       <div class="row">
@@ -1966,12 +2145,21 @@ function renderSetupLocal(app){
     </div>`;
 }
 function toggleSetupPlayer(id){
-  const su = state.setup; const i = su.playerIds.indexOf(id);
+  const su = state.setup;
+  if(su.mode==='solo'){
+    su.newPlayers = [];
+    su.playerIds = su.playerIds.includes(id) ? [] : [id];
+    render(); return;
+  }
+  const i = su.playerIds.indexOf(id);
   if(i>=0) su.playerIds.splice(i,1); else su.playerIds.push(id); render();
 }
 function setupAddNew(){
   const inp = document.getElementById('su-newname'); const v = inp.value.trim();
-  if(!v) return; state.setup.newPlayers.push(v); render();
+  if(!v) return;
+  const su = state.setup;
+  if(su.mode==='solo'){ su.playerIds = []; su.newPlayers = [v]; inp.value=''; render(); return; }
+  su.newPlayers.push(v); inp.value=''; render();
 }
 function setupPickDeck(name){ state.setup.deckName = name; state.setup.deck = [...allDecks()[name]]; render(); }
 function startLocalMatch(){
@@ -1981,7 +2169,9 @@ function startLocalMatch(){
       const p = { id: uid(), name, color: AVATAR_COLORS[state.players.length % AVATAR_COLORS.length], games:0, points:0, bestRound:0 };
       state.players.push(p); return p;
     }));
-  if(players.length<2){ toast('Necesitás al menos 2 jugadores'); return; }
+  if(su.mode==='solo'){
+    if(players.length<1){ toast('Poné tu nombre'); return; }
+  } else if(players.length<2){ toast('Necesitás al menos 2 jugadores'); return; }
   saveAll();
   const enabled = (su.gamesEnabled && su.gamesEnabled.length) ? su.gamesEnabled.slice() : ['tuttifruti'];
   state.arcadeLocal = {
