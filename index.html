@@ -3273,6 +3273,30 @@ function initChatUI(){
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   BOTÓN "ATRÁS" DEL CELULAR — la app nunca agregaba entradas al
+   historial del navegador, así que la flechita de atrás del celular
+   sacaba directo de la app entera en vez de volver a la pantalla
+   anterior. Regla simple: si no estás en Inicio, atrás te lleva a
+   Inicio (avisando antes si hay una partida en curso que se
+   perdería); si ya estás en Inicio, atrás hace lo de siempre y sale.
+   ═══════════════════════════════════════════════════════════════ */
+function initBackButton(){
+  history.pushState({ ftfApp:true }, '', location.href);
+  window.addEventListener('popstate', ()=>{
+    if(state.screen==='home') return; // no volvemos a empujar: el próximo atrás sale de la app de verdad
+    const hasProgress = !!(state.online || state.pregMatch || state.arcadeLocal ||
+      state.ahorcadoMatch || state.mimicaMatch || state.generalaMatch);
+    if(hasProgress && !confirm('¿Salir de la partida? Vas a perder el progreso de esta partida.')){
+      history.pushState({ ftfApp:true }, '', location.href);
+      return;
+    }
+    if(state.online){ if(state.online.role==='host') closeOnline(); else guestLeaveRoom(); }
+    else nav('home');
+    history.pushState({ ftfApp:true }, '', location.href);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════ */
 function boot(){
@@ -3287,6 +3311,7 @@ function boot(){
   }
   render();
   initChatUI();
+  initBackButton();
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 }
 boot();
