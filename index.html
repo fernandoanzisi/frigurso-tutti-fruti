@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Frigurso Tutti Fruti</title>
+<title>Frigurso Mini Juegos</title>
 <meta name="theme-color" content="#0b1220">
-<meta name="description" content="El Tutti Fruti más completo: local o multijugador online con cualquiera">
+<meta name="description" content="Aprendemos jugando: Tutti Fruti, Preguntados, Ahorcado, Armapalabras, Mímica y Generala — local o con quien quieras">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -339,7 +339,7 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 <div id="fg-splash" aria-hidden="true">
   <div class="fg-sash"></div>
   <div class="fg-wordmark">Frigurso</div>
-  <div class="fg-tagline">Tutti Fruti</div>
+  <div class="fg-tagline">Mini Juegos</div>
 </div>
 
 <div id="fg-lock">
@@ -2163,7 +2163,7 @@ function renderHome(app){
   const totalGames = state.history.length;
   const topPlayer = [...state.players].sort((a,b)=>b.points-a.points)[0];
   app.innerHTML = `
-    ${topbar('🍉 Frigurso Tutti Fruti', 'El tutti fruti más completo del mundo')}
+    ${topbar('🎮 Frigurso Mini Juegos', 'Aprendemos jugando')}
     <div class="screen">
       <div class="center" style="margin:-6px 0 12px">${mascotSVG('happy',68)}</div>
       <div class="cta-grid">
