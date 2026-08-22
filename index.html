@@ -184,6 +184,16 @@ button{cursor:pointer;border:none;background:none;font-family:inherit}
 .gen-cat.used{opacity:.5}
 .gen-cat:disabled{opacity:.4}
 
+.eng-slots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:16px 0 12px}
+.eng-slot{width:38px;height:44px;border-radius:10px;border:2px solid var(--border);background:var(--card2);
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;font-family:var(--f-display)}
+.eng-slot.filled{border-color:var(--accent);color:var(--accent)}
+.eng-tiles{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.eng-tile{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;font-size:18px;font-weight:800;border:none;transition:transform .1s ease}
+.eng-tile:active{transform:scale(.9)}
+.eng-tile:disabled{opacity:.25;background:var(--card2);color:transparent}
+
 .room-code{font-size:40px;font-weight:700;font-family:var(--f-display);letter-spacing:.14em;text-align:center;color:var(--accent);
   background:var(--card2);border:2px dashed var(--accent);border-radius:16px;padding:16px;margin:14px 0}
 .lobby-player{display:flex;align-items:center;gap:10px;background:var(--card2);border:2px solid var(--border);border-radius:13px;padding:10px 12px;margin-bottom:7px;animation:riseIn .35s ease both}
@@ -1211,10 +1221,12 @@ const GAMES_META = {
   ahorcado: { id:'ahorcado', name:'Ahorcado', icon:'🔤' },
   mimica: { id:'mimica', name:'Mímica', icon:'🎭' },
   generala: { id:'generala', name:'Generala', icon:'🎲' },
+  ingles: { id:'ingles', name:'Armapalabras', icon:'🇬🇧' },
 };
-// online todavía solo soporta estos dos — los otros 3 son nuevos y por ahora son solo local
-// (ver [[project_frigurso_tutti_fruti]]: se decidió local primero, online queda para otra vuelta)
-const GAMES_ONLINE_READY = ['tuttifruti','preguntados'];
+// online soporta estos — Mímica queda afuera a propósito (necesita estar presente actuando,
+// depende demasiado de la camarita que puede no conectar) y Generala queda afuera porque es
+// una partida larga (10 categorías por jugador), no encaja con el ritmo rápido de una sala online
+const GAMES_ONLINE_READY = ['tuttifruti','preguntados','ahorcado','ingles'];
 const PREG_QUESTIONS_PER_MATCH = 10;
 const PREG_POINTS_PER_CORRECT = 100;
 function shuffleArr(arr){
@@ -1304,6 +1316,46 @@ const GENERALA_CATS = [
 function rollDie(){ return 1 + Math.floor(Math.random()*6); }
 
 /* ═══════════════════════════════════════════════════════════════
+   ARMAPALABRAS — vocabulario básico en inglés, armando la palabra
+   letra por letra (sin tildes/Ñ en el inglés, no hace falta acá)
+   ═══════════════════════════════════════════════════════════════ */
+const ENGLISH_BANK = [
+  {cat:'Animales', es:'Perro', en:'DOG'},{cat:'Animales', es:'Gato', en:'CAT'},{cat:'Animales', es:'Pájaro', en:'BIRD'},
+  {cat:'Animales', es:'Pez', en:'FISH'},{cat:'Animales', es:'Caballo', en:'HORSE'},{cat:'Animales', es:'Vaca', en:'COW'},
+  {cat:'Animales', es:'Cerdo', en:'PIG'},{cat:'Animales', es:'Oveja', en:'SHEEP'},{cat:'Animales', es:'Ratón', en:'MOUSE'},
+  {cat:'Animales', es:'León', en:'LION'},{cat:'Animales', es:'Oso', en:'BEAR'},{cat:'Animales', es:'Conejo', en:'RABBIT'},
+  {cat:'Colores', es:'Rojo', en:'RED'},{cat:'Colores', es:'Azul', en:'BLUE'},{cat:'Colores', es:'Verde', en:'GREEN'},
+  {cat:'Colores', es:'Amarillo', en:'YELLOW'},{cat:'Colores', es:'Negro', en:'BLACK'},{cat:'Colores', es:'Blanco', en:'WHITE'},
+  {cat:'Colores', es:'Naranja', en:'ORANGE'},{cat:'Colores', es:'Rosa', en:'PINK'},{cat:'Colores', es:'Marrón', en:'BROWN'},
+  {cat:'Colores', es:'Gris', en:'GRAY'},
+  {cat:'Comida', es:'Pan', en:'BREAD'},{cat:'Comida', es:'Leche', en:'MILK'},{cat:'Comida', es:'Queso', en:'CHEESE'},
+  {cat:'Comida', es:'Huevo', en:'EGG'},{cat:'Comida', es:'Manzana', en:'APPLE'},{cat:'Comida', es:'Agua', en:'WATER'},
+  {cat:'Comida', es:'Carne', en:'MEAT'},{cat:'Comida', es:'Arroz', en:'RICE'},{cat:'Comida', es:'Sopa', en:'SOUP'},
+  {cat:'Comida', es:'Pollo', en:'CHICKEN'},
+  {cat:'Familia', es:'Madre', en:'MOTHER'},{cat:'Familia', es:'Padre', en:'FATHER'},{cat:'Familia', es:'Hermano', en:'BROTHER'},
+  {cat:'Familia', es:'Hermana', en:'SISTER'},{cat:'Familia', es:'Abuelo', en:'GRANDFATHER'},{cat:'Familia', es:'Abuela', en:'GRANDMOTHER'},
+  {cat:'Familia', es:'Hijo', en:'SON'},{cat:'Familia', es:'Hija', en:'DAUGHTER'},{cat:'Familia', es:'Tío', en:'UNCLE'},{cat:'Familia', es:'Tía', en:'AUNT'},
+  {cat:'Números', es:'Uno', en:'ONE'},{cat:'Números', es:'Dos', en:'TWO'},{cat:'Números', es:'Tres', en:'THREE'},
+  {cat:'Números', es:'Cuatro', en:'FOUR'},{cat:'Números', es:'Cinco', en:'FIVE'},{cat:'Números', es:'Seis', en:'SIX'},
+  {cat:'Números', es:'Siete', en:'SEVEN'},{cat:'Números', es:'Ocho', en:'EIGHT'},{cat:'Números', es:'Nueve', en:'NINE'},{cat:'Números', es:'Diez', en:'TEN'},
+  {cat:'Cuerpo', es:'Cabeza', en:'HEAD'},{cat:'Cuerpo', es:'Mano', en:'HAND'},{cat:'Cuerpo', es:'Pie', en:'FOOT'},
+  {cat:'Cuerpo', es:'Ojo', en:'EYE'},{cat:'Cuerpo', es:'Boca', en:'MOUTH'},{cat:'Cuerpo', es:'Nariz', en:'NOSE'},
+  {cat:'Cuerpo', es:'Oreja', en:'EAR'},{cat:'Cuerpo', es:'Brazo', en:'ARM'},{cat:'Cuerpo', es:'Pierna', en:'LEG'},{cat:'Cuerpo', es:'Dedo', en:'FINGER'},
+  {cat:'Ropa', es:'Camisa', en:'SHIRT'},{cat:'Ropa', es:'Pantalón', en:'PANTS'},{cat:'Ropa', es:'Zapato', en:'SHOE'},
+  {cat:'Ropa', es:'Sombrero', en:'HAT'},{cat:'Ropa', es:'Medias', en:'SOCKS'},{cat:'Ropa', es:'Vestido', en:'DRESS'},
+  {cat:'Ropa', es:'Campera', en:'JACKET'},{cat:'Ropa', es:'Cinturón', en:'BELT'},
+  {cat:'Verbos', es:'Correr', en:'RUN'},{cat:'Verbos', es:'Comer', en:'EAT'},{cat:'Verbos', es:'Dormir', en:'SLEEP'},
+  {cat:'Verbos', es:'Leer', en:'READ'},{cat:'Verbos', es:'Escribir', en:'WRITE'},{cat:'Verbos', es:'Jugar', en:'PLAY'},
+  {cat:'Verbos', es:'Cantar', en:'SING'},{cat:'Verbos', es:'Bailar', en:'DANCE'},{cat:'Verbos', es:'Nadar', en:'SWIM'},{cat:'Verbos', es:'Caminar', en:'WALK'},
+  {cat:'La casa', es:'Casa', en:'HOUSE'},{cat:'La casa', es:'Puerta', en:'DOOR'},{cat:'La casa', es:'Ventana', en:'WINDOW'},
+  {cat:'La casa', es:'Mesa', en:'TABLE'},{cat:'La casa', es:'Silla', en:'CHAIR'},{cat:'La casa', es:'Cama', en:'BED'},
+  {cat:'La casa', es:'Cocina', en:'KITCHEN'},{cat:'La casa', es:'Baño', en:'BATHROOM'},{cat:'La casa', es:'Techo', en:'ROOF'},{cat:'La casa', es:'Jardín', en:'GARDEN'},
+];
+const ENGLISH_WORDS_PER_MATCH = 8;
+const ENGLISH_POINTS_PER_CORRECT = 100;
+function englishDrawWords(n){ return shuffleArr(ENGLISH_BANK).slice(0, n); }
+
+/* ═══════════════════════════════════════════════════════════════
    ARCADE — orquestador de "varios juegos, mismos jugadores". Vive
    ARRIBA de cada juego (state.match / state.online siguen siendo
    del juego que está activo en cada momento) y solo se encarga de:
@@ -1327,6 +1379,7 @@ function arcadeLocalNext(){
   else if(id==='ahorcado') arcadeMountAhorcadoLocal(a);
   else if(id==='mimica') arcadeMountMimicaLocal(a);
   else if(id==='generala') arcadeMountGeneralaLocal(a);
+  else if(id==='ingles') arcadeMountEnglishLocal(a);
   else arcadeMountTuttiFrutiLocal(a);
 }
 function arcadeMountTuttiFrutiLocal(a){
@@ -1657,6 +1710,166 @@ function endGeneralaLocalMatch(){
   else { state.screen='matchEnd'; state._lastRecord=record; render(); confettiBurst(40); }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   ARMAPALABRAS — local. Cada jugador arma, en su turno privado, la
+   traducción al inglés de una tanda de palabras tocando las letras
+   desordenadas en el orden correcto. Sin "perder" — si te trabás,
+   podés saltear y seguir. Batch compartido para que el puntaje de
+   todos sea comparable, igual que Preguntados.
+   ═══════════════════════════════════════════════════════════════ */
+let engWords = []; let engIdx = 0; let engCorrect = 0;
+let engBuilt = []; let engBuiltTiles = []; let engTiles = [];
+let engTimer = null; let engEnded = false;
+function arcadeMountEnglishLocal(a){
+  state.englishMatch = {
+    mode:'local', players:a.players, words: englishDrawWords(ENGLISH_WORDS_PER_MATCH), turnIndex:0,
+    scores: Object.fromEntries(a.players.map(p=>[p.id,0])), rounds:[],
+  };
+  state.screen = 'englishTurnLocal'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function renderEnglishTurnLocal(app){
+  const m = state.englishMatch; const player = m.players[m.turnIndex];
+  document.getElementById('bottomnav').style.display='none';
+  engWords = m.words; engIdx = 0; engCorrect = 0; engEnded = false;
+  const secs = state.settings.seconds || 90;
+  app.innerHTML = `
+    <div class="handoff" id="handoff-overlay">
+      <span class="ic">🇬🇧</span>
+      <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
+      <div class="sub" style="margin-bottom:24px">Que nadie más mire la pantalla</div>
+      <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove();beginEnglishTimer()">Listo, soy ${esc(player.name)}</button>
+    </div>
+    <div class="screen" style="padding-top:20px">
+      <div class="timer" id="eng-timer-display">${secs}</div>
+      <div class="timerbar"><i id="eng-timer-bar" style="width:100%"></i></div>
+      <div class="sub center" style="margin:10px 0 4px">Palabra <b id="eng-progress">1/${engWords.length}</b> · Acertadas: <b id="eng-correct">0</b></div>
+      <div class="card center" style="padding:20px">
+        <div class="sub" id="eng-cat" style="text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px"></div>
+        <div id="eng-clue" style="font-size:24px;font-weight:800;font-family:var(--f-display)"></div>
+      </div>
+      <div class="eng-slots" id="eng-slots"></div>
+      <div class="eng-tiles" id="eng-tiles"></div>
+      <div id="eng-feedback" class="sub center" style="min-height:20px;margin-top:6px"></div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-ghost grow" onclick="engUndo()">⌫ Borrar</button>
+        <button class="btn btn-ghost grow" onclick="engSkip()">⏭️ Saltear</button>
+      </div>
+    </div>`;
+}
+function engMountWord(){
+  const w = engWords[engIdx];
+  engBuilt = []; engBuiltTiles = [];
+  engTiles = shuffleArr(w.en.split('').map((letter,i)=>({letter, i}))).map(t=>({...t, used:false}));
+  document.getElementById('eng-progress').textContent = (engIdx+1)+'/'+engWords.length;
+  document.getElementById('eng-correct').textContent = engCorrect;
+  document.getElementById('eng-cat').textContent = w.cat;
+  document.getElementById('eng-clue').textContent = w.es;
+  document.getElementById('eng-feedback').textContent = '';
+  engRenderBoard();
+}
+function engRenderBoard(){
+  const w = engWords[engIdx];
+  const slots = document.getElementById('eng-slots'); const tiles = document.getElementById('eng-tiles');
+  if(!slots || !tiles) return;
+  slots.innerHTML = w.en.split('').map((_,i)=>`<span class="eng-slot ${engBuilt[i]?'filled':''}">${engBuilt[i]||''}</span>`).join('');
+  tiles.innerHTML = engTiles.map((t,ti)=>`<button class="eng-tile" ${t.used?'disabled':''} onclick="engTapTile(${ti})">${t.letter}</button>`).join('');
+}
+function engTapTile(ti){
+  if(engEnded) return;
+  const t = engTiles[ti]; if(!t || t.used) return;
+  t.used = true; engBuilt.push(t.letter); engBuiltTiles.push(ti);
+  engRenderBoard();
+  const w = engWords[engIdx];
+  if(engBuilt.length === w.en.length){
+    const built = engBuilt.join('');
+    const fb = document.getElementById('eng-feedback');
+    if(built === w.en){
+      engCorrect++; document.getElementById('eng-correct').textContent = engCorrect;
+      fb.textContent = '✅ ¡Correcto! = '+w.es; fb.style.color = 'var(--ok)';
+      beep(880,0.12,0);
+      setTimeout(engAdvance, 700);
+    } else {
+      fb.textContent = '❌ Todavía no — probá de nuevo'; fb.style.color = 'var(--danger)';
+      beep(220,0.18,0);
+    }
+  }
+}
+function engUndo(){
+  if(engEnded || engBuilt.length===0) return;
+  const lastTileIdx = engBuiltTiles.pop(); engBuilt.pop();
+  engTiles[lastTileIdx].used = false;
+  document.getElementById('eng-feedback').textContent = '';
+  engRenderBoard();
+}
+function engSkip(){
+  if(engEnded) return;
+  const w = engWords[engIdx];
+  const fb = document.getElementById('eng-feedback');
+  fb.textContent = 'Era: '+w.en+' ('+w.es+')'; fb.style.color = 'var(--text3)';
+  beep(320,0.12,0);
+  setTimeout(engAdvance, 900);
+}
+function engAdvance(){
+  if(engEnded) return;
+  engIdx++;
+  if(engIdx < engWords.length) engMountWord();
+  else engFinishTurn();
+}
+function beginEnglishTimer(){
+  const secs = state.settings.seconds || 90;
+  engMountWord();
+  const endsAt = Date.now() + secs*1000;
+  clearInterval(engTimer);
+  const tick = ()=>{
+    const disp = document.getElementById('eng-timer-display'); const bar = document.getElementById('eng-timer-bar');
+    if(!disp){ clearInterval(engTimer); return; }
+    const remaining = Math.max(0, Math.ceil((endsAt-Date.now())/1000));
+    disp.textContent = remaining; bar.style.width = (remaining/secs*100)+'%'; disp.classList.toggle('low', remaining<=10);
+    if(remaining===3) soundCountdown();
+    if(remaining<=0){ clearInterval(engTimer); soundEnd(); engFinishTurn(); }
+  };
+  engTimer = setInterval(tick, 250); tick();
+}
+function engFinishTurn(){
+  if(engEnded) return; engEnded = true;
+  clearInterval(engTimer);
+  const m = state.englishMatch; const player = m.players[m.turnIndex];
+  const points = engCorrect * ENGLISH_POINTS_PER_CORRECT;
+  m.scores[player.id] = (m.scores[player.id]||0) + points;
+  m.rounds.push({ playerId: player.id, correct: engCorrect, total: engWords.length, points });
+  state._englishResult = { name: player.name, correct: engCorrect, total: engWords.length, points, isLast: m.turnIndex >= m.players.length-1 };
+  state.screen = 'englishResult'; render();
+  confettiBurst(16);
+}
+function renderEnglishResult(app){
+  const r = state._englishResult;
+  app.innerHTML = `
+    ${topbar('¡Se acabó el tiempo!')}
+    <div class="screen center" style="padding-top:40px;text-align:center">
+      ${mascotSVG('cheer',72)}
+      <h2 style="margin:12px 0 4px">${esc(r.name)} armó ${r.correct} de ${r.total}</h2>
+      <div class="sub" style="margin-bottom:20px">+${r.points} pts</div>
+      <button class="btn btn-primary btn-lg btn-block" onclick="englishNextTurn()">${r.isLast ? 'Ver resultado' : 'Siguiente jugador'}</button>
+    </div>`;
+}
+function englishNextTurn(){
+  const m = state.englishMatch;
+  m.turnIndex++;
+  if(m.turnIndex < m.players.length){ state.screen = 'englishTurnLocal'; render(); }
+  else endEnglishLocalMatch();
+}
+function endEnglishLocalMatch(){
+  const m = state.englishMatch;
+  const record = { id: uid(), date: Date.now(), mode:'local', game:'ingles', rounds: m.rounds,
+    players: m.players.map(p=>({name:p.name, points:m.scores[p.id]})) };
+  state.history.push(record);
+  m.players.forEach(pm => { const p = state.players.find(x=>x.id===pm.id); if(!p) return; p.games++; p.points += m.scores[pm.id]; });
+  saveAll();
+  state.englishMatch = null;
+  if(state.arcadeLocal) arcadeGameEnded(m.scores);
+  else { state.screen='matchEnd'; state._lastRecord=record; render(); confettiBurst(40); }
+}
+
 function arcadeOnlineNext(){
   const o = state.online; const a = o.arcade;
   const id = arcadePickNext(a.enabled, a.played);
@@ -1770,6 +1983,7 @@ function render(){
     ahorcadoTurnLocal: renderAhorcadoTurnLocal,
     mimicaTurnLocal: renderMimicaTurnLocal, mimicaResult: renderMimicaResult,
     generalaTurnLocal: renderGeneralaTurnLocal,
+    englishTurnLocal: renderEnglishTurnLocal, englishResult: renderEnglishResult,
   };
   (fns[state.screen] || renderHome)(app);
 }
