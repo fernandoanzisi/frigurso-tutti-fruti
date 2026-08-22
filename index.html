@@ -1465,18 +1465,22 @@ function ahorcadoGuess(letter){
 }
 function ahorcadoFinishTurn(won){
   const m = state.ahorcadoMatch; const player = m.players[m.turnIndex]; const w = m.words[m.turnIndex];
+  const isOnline = m.mode==='online';
   m._done = true;
   document.querySelectorAll('#ah-keyboard button').forEach(b=>b.disabled=true);
   const points = won ? Math.max(20, 100 - m.wrong*15) : 0;
-  m.scores[player.id] = (m.scores[player.id]||0) + points;
-  m.rounds.push({ playerId: player.id, word: w.word, won, wrong:m.wrong, points });
+  if(!isOnline){
+    m.scores[player.id] = (m.scores[player.id]||0) + points;
+    m.rounds.push({ playerId: player.id, word: w.word, won, wrong:m.wrong, points });
+  }
   const resEl = document.getElementById('ah-result');
   resEl.style.display = 'block';
   resEl.innerHTML = `<div style="font-size:32px">${won?'🎉':'😵'}</div>
     <div style="font-weight:700;margin:6px 0">${won?'¡'+esc(player.name)+' acertó!':'Se acabaron las vidas'}</div>
     <div class="sub" style="margin-bottom:14px">La palabra era: <b>${esc(w.word)}</b> · +${points} pts</div>
-    <button class="btn btn-primary btn-lg btn-block" onclick="ahorcadoNextTurn()">${m.turnIndex < m.players.length-1 ? 'Siguiente jugador' : 'Ver resultado'}</button>`;
+    ${isOnline ? '' : `<button class="btn btn-primary btn-lg btn-block" onclick="ahorcadoNextTurn()">${m.turnIndex < m.players.length-1 ? 'Siguiente jugador' : 'Ver resultado'}</button>`}`;
   if(won) confettiBurst(16); else soundEnd();
+  if(isOnline) setTimeout(()=>onlineAhorcadoTurnDone(points), 1400);
 }
 function ahorcadoNextTurn(){
   const m = state.ahorcadoMatch;
@@ -1727,19 +1731,8 @@ function arcadeMountEnglishLocal(a){
   };
   state.screen = 'englishTurnLocal'; render(); document.getElementById('bottomnav').style.display='none';
 }
-function renderEnglishTurnLocal(app){
-  const m = state.englishMatch; const player = m.players[m.turnIndex];
-  document.getElementById('bottomnav').style.display='none';
-  engWords = m.words; engIdx = 0; engCorrect = 0; engEnded = false;
-  const secs = state.settings.seconds || 90;
-  app.innerHTML = `
-    <div class="handoff" id="handoff-overlay">
-      <span class="ic">🇬🇧</span>
-      <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
-      <div class="sub" style="margin-bottom:24px">Que nadie más mire la pantalla</div>
-      <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove();beginEnglishTimer()">Listo, soy ${esc(player.name)}</button>
-    </div>
-    <div class="screen" style="padding-top:20px">
+function engBoardHTML(secs){
+  return `
       <div class="timer" id="eng-timer-display">${secs}</div>
       <div class="timerbar"><i id="eng-timer-bar" style="width:100%"></i></div>
       <div class="sub center" style="margin:10px 0 4px">Palabra <b id="eng-progress">1/${engWords.length}</b> · Acertadas: <b id="eng-correct">0</b></div>
@@ -1753,8 +1746,21 @@ function renderEnglishTurnLocal(app){
       <div class="row" style="margin-top:8px">
         <button class="btn btn-ghost grow" onclick="engUndo()">⌫ Borrar</button>
         <button class="btn btn-ghost grow" onclick="engSkip()">⏭️ Saltear</button>
-      </div>
-    </div>`;
+      </div>`;
+}
+function renderEnglishTurnLocal(app){
+  const m = state.englishMatch; const player = m.players[m.turnIndex];
+  document.getElementById('bottomnav').style.display='none';
+  engWords = m.words; engIdx = 0; engCorrect = 0; engEnded = false;
+  const secs = state.settings.seconds || 90;
+  app.innerHTML = `
+    <div class="handoff" id="handoff-overlay">
+      <span class="ic">🇬🇧</span>
+      <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
+      <div class="sub" style="margin-bottom:24px">Que nadie más mire la pantalla</div>
+      <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove();beginEnglishTimer()">Listo, soy ${esc(player.name)}</button>
+    </div>
+    <div class="screen" style="padding-top:20px">${engBoardHTML(secs)}</div>`;
 }
 function engMountWord(){
   const w = engWords[engIdx];
@@ -1815,8 +1821,8 @@ function engAdvance(){
   if(engIdx < engWords.length) engMountWord();
   else engFinishTurn();
 }
-function beginEnglishTimer(){
-  const secs = state.settings.seconds || 90;
+function beginEnglishTimer(overrideSecs){
+  const secs = overrideSecs || state.settings.seconds || 90;
   engMountWord();
   const endsAt = Date.now() + secs*1000;
   clearInterval(engTimer);
@@ -1833,8 +1839,9 @@ function beginEnglishTimer(){
 function engFinishTurn(){
   if(engEnded) return; engEnded = true;
   clearInterval(engTimer);
-  const m = state.englishMatch; const player = m.players[m.turnIndex];
   const points = engCorrect * ENGLISH_POINTS_PER_CORRECT;
+  if(state.online){ onlineEnglishTurnDone(points); return; }
+  const m = state.englishMatch; const player = m.players[m.turnIndex];
   m.scores[player.id] = (m.scores[player.id]||0) + points;
   m.rounds.push({ playerId: player.id, correct: engCorrect, total: engWords.length, points });
   state._englishResult = { name: player.name, correct: engCorrect, total: engWords.length, points, isLast: m.turnIndex >= m.players.length-1 };
@@ -1875,12 +1882,168 @@ function arcadeOnlineNext(){
   const id = arcadePickNext(a.enabled, a.played);
   a.played.push(id); a.current = id;
   if(id==='preguntados') hostStartPreguntados();
+  else if(id==='ahorcado') hostStartAhorcadoOnline();
+  else if(id==='ingles') hostStartEnglishOnline();
   else {
     // arranca una "pierna" nueva de Tutti Fruti dentro del Arcade: resetea el acumulado
     // de puntos/rondas de la vez anterior que se jugó, para no arrastrar puntaje viejo
     o.scores = { me:0 }; o.history = []; o.usedLetters = [];
     hostStartRound();
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AHORCADO / ARMAPALABRAS — online. A diferencia de Tutti Fruti y
+   Preguntados (todos responden en paralelo), estos dos son "un
+   jugador activo por vez, los demás esperan": el anfitrión arma un
+   orden de turnos (él mismo + cada invitado) y va avisando a cada
+   uno cuándo le toca. Reutiliza las mismas funciones de juego que
+   ya usa el modo local (ahorcadoGuess, engTapTile, etc.) — cada
+   dispositivo solo conoce SU propio turno, nunca el de los demás.
+   ═══════════════════════════════════════════════════════════════ */
+function hostStartAhorcadoOnline(){
+  const o = state.online;
+  hostCancelPersistentBroadcast();
+  const order = ['me'].concat(Object.keys(o.guests));
+  const words = shuffleArr(AHORCADO_BANK).slice(0, order.length);
+  o.ahorcado = { order, turnIdx: -1, words, deltas: {} };
+  hostAhorcadoNextTurn();
+}
+function hostAhorcadoNextTurn(){
+  const o = state.online; const g = o.ahorcado; if(!g) return;
+  g.turnIdx++;
+  if(g.turnIdx >= g.order.length){ const deltas = g.deltas; o.ahorcado = null; arcadeGameEnded(deltas); return; }
+  const activeId = g.order[g.turnIdx];
+  const w = g.words[g.turnIdx];
+  const activeName = activeId==='me' ? o.myName : ((o.guests[activeId]||{}).name || 'Jugador');
+  Object.entries(o.conns).forEach(([pid,conn])=>{
+    if(pid===activeId) return;
+    try{ conn.send({ type:'ahorcadoWatch', playerName:activeName }); }catch(e){}
+  });
+  if(activeId==='me'){
+    mountOnlineAhorcadoTurn(w.word, w.cat);
+  } else {
+    try{ o.conns[activeId].send({ type:'ahorcadoYourTurn', word:w.word, cat:w.cat }); }catch(e){}
+    state._ahorcadoWatching = activeName; state.screen = 'onlineAhorcadoWatch'; render();
+  }
+}
+function maybeSkipAhorcadoTurn(disconnectedPeerId){
+  const o = state.online; const g = o.ahorcado;
+  if(g && g.order[g.turnIdx]===disconnectedPeerId){ g.deltas[disconnectedPeerId] = g.deltas[disconnectedPeerId] || 0; hostAhorcadoNextTurn(); }
+}
+function mountOnlineAhorcadoTurn(word, cat){
+  const o = state.online;
+  const myName = o.role==='host' ? o.myName : o.name;
+  state.ahorcadoMatch = {
+    mode:'online', players:[{id:'me', name:myName}], words:[{word,cat}], turnIndex:0,
+    scores:{me:0}, rounds:[], guessed:[], wrong:0, _done:false,
+  };
+  state.screen = 'onlineAhorcadoPlaying'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function renderOnlineAhorcadoPlaying(app){
+  const m = state.ahorcadoMatch; const w = m.words[0];
+  document.getElementById('bottomnav').style.display='none';
+  app.innerHTML = `
+    <div class="screen" style="padding-top:20px">
+      <div class="sub center" style="text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">${esc(w.cat)}</div>
+      <div class="ahorcado-word" id="ah-word">${ahorcadoWordDisplay()}</div>
+      <div class="ahorcado-lives" id="ah-lives">${ahorcadoLivesDisplay()}</div>
+      <div class="letters-grid" id="ah-keyboard">
+        ${ALL_LETTERS.map(l=>`<button class="letter-tog" id="ah-key-${l}" onclick="ahorcadoGuess('${l}')">${l}</button>`).join('')}
+      </div>
+      <div id="ah-result" style="display:none;margin-top:16px;text-align:center"></div>
+    </div>`;
+}
+let ahorcadoResultRetry = null;
+function sendAhorcadoResultToHost(points){
+  const o = state.online;
+  const send = ()=>{ try{ if(o.conn && o.conn.open) o.conn.send({ type:'ahorcadoResult', points }); }catch(e){} };
+  send();
+  clearInterval(ahorcadoResultRetry);
+  ahorcadoResultRetry = setInterval(send, 3000);
+  o._resendAhorcado = send;
+}
+function onlineAhorcadoTurnDone(points){
+  const o = state.online;
+  state._ahorcadoWatching = null; state.screen = 'onlineAhorcadoWatch'; render();
+  if(o.role==='host'){ o.ahorcado.deltas['me'] = points; hostAhorcadoNextTurn(); }
+  else sendAhorcadoResultToHost(points);
+}
+function renderOnlineAhorcadoWatch(app){
+  document.getElementById('bottomnav').style.display='none';
+  app.innerHTML = `
+    ${topbar(state._ahorcadoWatching ? 'Le toca a '+state._ahorcadoWatching : 'Enviando resultado...')}
+    <div class="screen center" style="padding-top:60px">
+      <div style="font-size:44px;margin-bottom:12px">🔤</div>
+      <div class="sub">${state._ahorcadoWatching ? 'Esperando que termine su turno...' : 'Esperando confirmación del anfitrión...'}</div>
+    </div>`;
+}
+
+function hostStartEnglishOnline(){
+  const o = state.online;
+  hostCancelPersistentBroadcast();
+  const order = ['me'].concat(Object.keys(o.guests));
+  const words = englishDrawWords(ENGLISH_WORDS_PER_MATCH);
+  o.english = { order, turnIdx: -1, words, deltas: {} };
+  hostEnglishNextTurn();
+}
+function hostEnglishNextTurn(){
+  const o = state.online; const g = o.english; if(!g) return;
+  g.turnIdx++;
+  if(g.turnIdx >= g.order.length){ const deltas = g.deltas; o.english = null; arcadeGameEnded(deltas); return; }
+  const activeId = g.order[g.turnIdx];
+  const activeName = activeId==='me' ? o.myName : ((o.guests[activeId]||{}).name || 'Jugador');
+  const secs = state.settings.seconds || 90;
+  Object.entries(o.conns).forEach(([pid,conn])=>{
+    if(pid===activeId) return;
+    try{ conn.send({ type:'englishWatch', playerName:activeName }); }catch(e){}
+  });
+  if(activeId==='me'){
+    mountOnlineEnglishTurn(g.words, secs);
+  } else {
+    try{ o.conns[activeId].send({ type:'englishYourTurn', words:g.words, seconds:secs }); }catch(e){}
+    state._englishWatching = activeName; state.screen = 'onlineEnglishWatch'; render();
+  }
+}
+function maybeSkipEnglishTurn(disconnectedPeerId){
+  const o = state.online; const g = o.english;
+  if(g && g.order[g.turnIdx]===disconnectedPeerId){ g.deltas[disconnectedPeerId] = g.deltas[disconnectedPeerId] || 0; hostEnglishNextTurn(); }
+}
+function mountOnlineEnglishTurn(words, seconds){
+  engWords = words; engIdx = 0; engCorrect = 0; engEnded = false;
+  state._engOnlineSeconds = seconds || 90;
+  state.screen = 'onlineEnglishPlaying'; render(); document.getElementById('bottomnav').style.display='none';
+}
+function renderOnlineEnglishPlaying(app){
+  document.getElementById('bottomnav').style.display='none';
+  const secs = state._engOnlineSeconds || 90;
+  app.innerHTML = `<div class="screen" style="padding-top:20px">${engBoardHTML(secs)}</div>`;
+  beginEnglishTimer(secs);
+}
+let englishResultRetry = null;
+function sendEnglishResultToHost(points){
+  const o = state.online;
+  const send = ()=>{ try{ if(o.conn && o.conn.open) o.conn.send({ type:'englishResult', points }); }catch(e){} };
+  send();
+  clearInterval(englishResultRetry);
+  englishResultRetry = setInterval(send, 3000);
+  o._resendEnglish = send;
+}
+function onlineEnglishTurnDone(points){
+  const o = state.online;
+  toast('¡Terminaste! '+engCorrect+'/'+engWords.length+' correctas (+'+points+' pts)');
+  state._englishWatching = null; state.screen = 'onlineEnglishWatch'; render();
+  if(o.role==='host'){ o.english.deltas['me'] = points; hostEnglishNextTurn(); }
+  else sendEnglishResultToHost(points);
+}
+function renderOnlineEnglishWatch(app){
+  document.getElementById('bottomnav').style.display='none';
+  app.innerHTML = `
+    ${topbar(state._englishWatching ? 'Le toca a '+state._englishWatching : 'Enviando resultado...')}
+    <div class="screen center" style="padding-top:60px">
+      <div style="font-size:44px;margin-bottom:12px">🇬🇧</div>
+      <div class="sub">${state._englishWatching ? 'Esperando que termine su turno...' : 'Esperando confirmación del anfitrión...'}</div>
+    </div>`;
 }
 function arcadeGameEnded(deltas){
   const isOnline = !!state.online;
@@ -1984,6 +2147,8 @@ function render(){
     mimicaTurnLocal: renderMimicaTurnLocal, mimicaResult: renderMimicaResult,
     generalaTurnLocal: renderGeneralaTurnLocal,
     englishTurnLocal: renderEnglishTurnLocal, englishResult: renderEnglishResult,
+    onlineAhorcadoPlaying: renderOnlineAhorcadoPlaying, onlineAhorcadoWatch: renderOnlineAhorcadoWatch,
+    onlineEnglishPlaying: renderOnlineEnglishPlaying, onlineEnglishWatch: renderOnlineEnglishWatch,
   };
   (fns[state.screen] || renderHome)(app);
 }
@@ -2761,6 +2926,8 @@ function hostCreateRoom(){
         hostBroadcastRoster();
         maybeFinishRoundHost();
         maybeFinishPregRoundHost();
+        maybeSkipAhorcadoTurn(conn.peer);
+        maybeSkipEnglishTurn(conn.peer);
         if(state.screen==='onlineLobbyHost' || state.screen==='onlineWaiting' || state.screen==='onlinePregWaiting') render();
       });
       state.online.conns[conn.peer] = conn;
@@ -2806,6 +2973,12 @@ function handleHostMessage(conn, data){
       o.guests[conn.peer].pregAnswers = data.answers;
       maybeFinishPregRoundHost();
     }
+  } else if(data.type==='ahorcadoResult'){
+    const g = o.ahorcado;
+    if(g && g.order[g.turnIdx]===conn.peer){ g.deltas[conn.peer] = data.points; hostAhorcadoNextTurn(); }
+  } else if(data.type==='englishResult'){
+    const g = o.english;
+    if(g && g.order[g.turnIdx]===conn.peer){ g.deltas[conn.peer] = data.points; hostEnglishNextTurn(); }
   } else if(data.type==='chat'){
     addChatMessage(data);
     chatBroadcastRelay(conn, data);
@@ -2841,7 +3014,7 @@ function renderOnlineLobbyHost(app){
         <div class="wrap">
           ${GAMES_ONLINE_READY.map(id=>GAMES_META[id]).map(g=>`<span class="chip" style="opacity:${o.arcade.enabled.includes(g.id)?1:.4};cursor:pointer" onclick="toggleOnlineGame('${g.id}')">${g.icon} ${esc(g.name)}</span>`).join('')}
         </div>
-        <div class="sub" style="margin-top:8px">Ahorcado, Mímica y Generala por ahora solo están en modo local — online los sumamos pronto.</div>
+        <div class="sub" style="margin-top:8px">Mímica y Generala por ahora solo están en modo local — Mímica necesita que estén todos presentes, y Generala es una partida larga.</div>
       </div>
       <button class="btn btn-primary btn-lg btn-block" ${guestList.length===0?'disabled style="opacity:.5"':''} onclick="arcadeOnlineNext()">¡Arrancar partida!</button>
       <button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="closeOnline()">Cerrar sala</button>
@@ -2864,6 +3037,8 @@ function kickGuest(peerId){
   hostBroadcastRoster();
   maybeFinishRoundHost();
   maybeFinishPregRoundHost();
+  maybeSkipAhorcadoTurn(peerId);
+  maybeSkipEnglishTurn(peerId);
   render();
 }
 function shareRoomCode(){
@@ -3067,6 +3242,7 @@ function handleGuestMessage(data){
     state.screen = 'onlineScoreboard'; render();
     if(firstTime) confettiBurst(16);
   } else if(data.type==='matchEnd'){
+    clearInterval(ahorcadoResultRetry); clearInterval(englishResultRetry);
     o.round = null;
     state._lastRecord = { rounds: [], roundsCount: data.roundsCount, players: data.players, isArcade: !!data.isArcade };
     state.screen = 'matchEnd'; render();
@@ -3087,12 +3263,31 @@ function handleGuestMessage(data){
     o.myPregAnswers = null;
     state.screen = 'onlinePregPlaying'; render();
   } else if(data.type==='arcadeScoreboard'){
+    clearInterval(ahorcadoResultRetry); clearInterval(englishResultRetry);
     o.arcade = o.arcade || { enabled:[], played:[], current:null, scoreboard:{} };
     o.arcade.scoreboard = data.scoreboard; o.arcade.current = null;
-    o.round = null; o.pregRound = null;
+    o.round = null; o.pregRound = null; state.ahorcadoMatch = null;
     state._arcadePlayers = data.playersList;
     state.screen = 'arcadeScoreboard'; render();
     confettiBurst(16);
+  } else if(data.type==='ahorcadoWatch'){
+    clearInterval(ahorcadoResultRetry); clearInterval(englishResultRetry);
+    o._resendAhorcado = null; o._resendEnglish = null;
+    state._ahorcadoWatching = data.playerName;
+    state.screen = 'onlineAhorcadoWatch'; render();
+  } else if(data.type==='ahorcadoYourTurn'){
+    clearInterval(ahorcadoResultRetry); clearInterval(englishResultRetry);
+    o._resendAhorcado = null; o._resendEnglish = null;
+    mountOnlineAhorcadoTurn(data.word, data.cat);
+  } else if(data.type==='englishWatch'){
+    clearInterval(ahorcadoResultRetry); clearInterval(englishResultRetry);
+    o._resendAhorcado = null; o._resendEnglish = null;
+    state._englishWatching = data.playerName;
+    state.screen = 'onlineEnglishWatch'; render();
+  } else if(data.type==='englishYourTurn'){
+    clearInterval(ahorcadoResultRetry); clearInterval(englishResultRetry);
+    o._resendAhorcado = null; o._resendEnglish = null;
+    mountOnlineEnglishTurn(data.words, data.seconds);
   } else if(data.type==='roster'){
     o.roster = data.peers || [];
     videoSyncCalls();
@@ -3143,6 +3338,8 @@ document.addEventListener('visibilitychange', ()=>{
   if(state.screen==='onlinePregWaiting' && o && o.role==='guest' && o.myPregAnswers && o.conn){
     try{ if(o.conn.open) o.conn.send({ type:'pregAnswers', roundNum: o.pregRound ? o.pregRound.roundNum : undefined, answers: o.myPregAnswers }); }catch(e){}
   }
+  if(o && o._resendAhorcado) o._resendAhorcado();
+  if(o && o._resendEnglish) o._resendEnglish();
 });
 function renderOnlinePlaying(app){
   const o = state.online; const r = o.round;
