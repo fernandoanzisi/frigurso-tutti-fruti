@@ -1221,7 +1221,7 @@ const GAMES_META = {
   ahorcado: { id:'ahorcado', name:'Ahorcado', icon:'🔤' },
   mimica: { id:'mimica', name:'Mímica', icon:'🎭' },
   generala: { id:'generala', name:'Generala', icon:'🎲' },
-  ingles: { id:'ingles', name:'Armapalabras', icon:'🇬🇧' },
+  ingles: { id:'ingles', name:'Armapalabras', icon:'🧩' },
 };
 // online soporta estos — Mímica queda afuera a propósito (necesita estar presente actuando,
 // depende demasiado de la camarita que puede no conectar) y Generala queda afuera porque es
@@ -1755,7 +1755,7 @@ function renderEnglishTurnLocal(app){
   const secs = state.settings.seconds || 90;
   app.innerHTML = `
     <div class="handoff" id="handoff-overlay">
-      <span class="ic">🇬🇧</span>
+      <span class="ic">🧩</span>
       <h2>Pasale el celular a<br><span style="color:var(--accent)">${esc(player.name)}</span></h2>
       <div class="sub" style="margin-bottom:24px">Que nadie más mire la pantalla</div>
       <button class="btn btn-primary btn-lg" onclick="document.getElementById('handoff-overlay').remove();beginEnglishTimer()">Listo, soy ${esc(player.name)}</button>
@@ -2041,7 +2041,7 @@ function renderOnlineEnglishWatch(app){
   app.innerHTML = `
     ${topbar(state._englishWatching ? 'Le toca a '+state._englishWatching : 'Enviando resultado...')}
     <div class="screen center" style="padding-top:60px">
-      <div style="font-size:44px;margin-bottom:12px">🇬🇧</div>
+      <div style="font-size:44px;margin-bottom:12px">🧩</div>
       <div class="sub">${state._englishWatching ? 'Esperando que termine su turno...' : 'Esperando confirmación del anfitrión...'}</div>
     </div>`;
 }
